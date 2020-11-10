@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.3
+# v0.12.7
 
 using Markdown
 using InteractiveUtils
@@ -15,6 +15,9 @@ end
 
 # ╔═╡ 23dab282-10cc-11eb-0ade-c7f191741071
 using Random, Distributions, Plots, StatsBase, PlutoUI
+
+# ╔═╡ 020b1160-22ef-11eb-2974-e9d551ada921
+Random.seed!(123)
 
 # ╔═╡ b93e3ee0-10c8-11eb-3db9-0f2cfebf6f7a
 md"""
@@ -58,10 +61,10 @@ Global parameters:
 h = 1
 
 # ╔═╡ d21a5c10-17e3-11eb-0609-55c20e102990
-Dm = 125
+Dm = 250
 
 # ╔═╡ 440da79e-17e4-11eb-06b8-7f3022339dfe
-b = 0.2
+b = 0.1
 
 # ╔═╡ 1eb68d20-17e2-11eb-3166-d7bff64901ed
 begin
@@ -352,6 +355,22 @@ function mating_extended(d::Deme{A}, fitnesses) where A
 	Deme(newdeme, d.K, d.θ)
 end 
 
+# ╔═╡ 447b6040-2079-11eb-0d3c-f7c17caae8dc
+function mating_PnB(d::Deme{A}, rm, Vs) where A
+	newdeme = Vector{A}(undef,0)
+	fitnesses = exp.(malthusian_fitness(d,rm,Vs))
+	for i=1:length(d)
+		B1 = d.agents[i]
+		noff = number_of_offspring(d,B1,rm,Vs)
+		B2 = sample(d.agents, weights(fitnesses))
+		#B2 = rand(d.agents)
+		for c in 1:noff 
+				push!(newdeme, mate(B1,B2))
+		end
+	end
+	Deme(newdeme, d.K, d.θ)
+end 		
+
 # ╔═╡ 1ec87310-1232-11eb-0bbc-895d245932fc
 function evolving_deme_extended(d::Deme, ngen, fitnesses; fun=heterozygosities)
 	stats = [fun(d)]
@@ -435,13 +454,28 @@ function mutate(d::Deme{A},μ) where A
 end 
 
 # ╔═╡ 9c0e46b0-125a-11eb-0a79-1f336e865689
-function evolving_deme_popvar(d::Deme, ngen, rm, Vs, μ; fun=heterozygosities, fit=malthusian_fitness, trait_mean = trait_mean)
+function evolving_deme_popvar_old(d::Deme, ngen, rm, Vs, μ; fun=heterozygosities, fit=malthusian_fitness, trait_mean = trait_mean)
 	stats = [fun(d)]
 	pop = [length(d)]
 	tm = [trait_mean(d)]
 	for n=1:ngen
 		d = replicate(d)
 		d = random_mating(d)
+		d = mutate(d,μ)
+		push!(stats, fun(d))
+		push!(pop, length(d))
+		push!(tm, trait_mean(d))
+	end
+	(stats=stats, pop = pop, tm = tm, deme=d, ngen=ngen)
+end
+
+# ╔═╡ 506821c0-207b-11eb-2bab-ddb764410ac0
+function evolving_deme_popvar(d::Deme, ngen, rm, Vs, μ; fun=heterozygosities, fit=malthusian_fitness, trait_mean = trait_mean)
+	stats = [fun(d)]
+	pop = [length(d)]
+	tm = [trait_mean(d)]
+	for n=1:ngen
+		d = mating_PnB(d,rm,Vs)
 		d = mutate(d,μ)
 		push!(stats, fun(d))
 		push!(pop, length(d))
@@ -506,6 +540,26 @@ function random_walk(h::Habitat, p)
     new_h
 end
 
+# ╔═╡ f2cfe500-2077-11eb-1103-6f128af0a6ad
+function Gaussian_dispersion_kernel(h::Habitat,σ)
+    new_h = emptycopy(h)
+	dist = Normal(0,σ)
+	dist_trunc = truncated(dist,-2*σ,2*σ)
+	bin_1 = pdf(dist, σ)
+	for (i, deme) in enumerate(h.demes)
+        for agent in deme.agents
+            step = -bin_1 < rand(dist_trunc) < bin_1  ? rand([-1,1]) : 0 
+            if step == -1 && i == 1
+                step = 0
+            elseif step == 1  && i == length(h)
+                step = 0
+            end
+            push!(new_h.demes[i+step], agent)
+        end
+    end
+    new_h
+end
+
 # ╔═╡ dc3037a0-1659-11eb-1810-5382c488bc14
 function linear_gradient(Dm,b)
     KK = [i*b for i in 0:Dm-1]
@@ -519,12 +573,12 @@ g = linear_gradient(Dm,b)
 begin
 	hab = Habitat([Deme(randagent(DiscreteNonParametric([0,α],[p,1-p]), 0, 0),K,i) for i in g])
 	for i in 1:N
-		push!(hab.demes[round(Int64,Dm/2)].agents,randagent(DiscreteNonParametric([0,α],[p,1-p]), L))
+	push!(hab.demes[round(Int64,Dm/2)].agents,randagent(DiscreteNonParametric([0,α],[p,1-p]), L))
 	end
 end
 
 # ╔═╡ 63ef89e0-16d5-11eb-3b67-914ea2874f00
-function evolving_habitat(h::Habitat{D}, ngen, rm, Vs, μ, p) where D
+function evolving_habitat_old(h::Habitat{D}, ngen, rm, Vs, μ, p) where D
 	for n = 1:ngen
 		h = random_walk(h,p)
 		new_h = Vector{D}(undef, length(h))
@@ -539,19 +593,42 @@ function evolving_habitat(h::Habitat{D}, ngen, rm, Vs, μ, p) where D
 	(h=h, ngen=ngen)
 end
 
+# ╔═╡ fe9b85c0-2080-11eb-069e-c730f12ff71c
+function evolving_habitat(h::Habitat{D}, ngen, rm, Vs, μ, p) where D
+	for n = 1:ngen
+		#h = random_walk(h,p)
+		h = Gaussian_dispersion_kernel(h,σ)
+		new_h = Vector{D}(undef, length(h))
+		for (i, d) in enumerate(h.demes)
+			d = mating_PnB(d,rm,Vs)
+			d = mutate(d,μ)
+			new_h[i] = d
+		end
+		h = Habitat(new_h)
+	end
+	(h=h, ngen=ngen)
+end
+
 # ╔═╡ dc134e70-16d5-11eb-2c19-8dc7a5d152b7
-sim_hab = evolving_habitat(hab,5000,1.06,0.5,10^-6,0.25)
+sim_hab = evolving_habitat(hab,5000,1.025,2,10^-6,0.50)
 
 # ╔═╡ 26f50f4e-17c6-11eb-336f-fdb8ab47ab73
 pop_sizes = [length(deme) for deme  in sim_hab[1].demes]
+
+# ╔═╡ 02aac282-229c-11eb-2123-e58f1f0da0e6
+s = α^2/(2*Vs)
+
+# ╔═╡ a5033c20-229b-11eb-0ee4-555c034050f5
+margin = (sqrt(2)*b*σ)/((2*rm*sqrt(Vs))-b*σ) .>= 0.15.*pop_sizes.*σ*sqrt(s)
 
 # ╔═╡ 6e5a0990-17c6-11eb-03cc-1bc05b8c5bf8
 begin
 	pop_sizes_p = map(mean, pop_sizes)
 	p1 = plot(pop_sizes_p, grid=false, color=:black, label=false)
-	hline!([K], label = "Carrying capacity")
+	hline!([K], label = "K")
+	hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
 	vline!([Dm/2], label = "Starting deme")
-	#scatter!([0.15*N*σ*sqrt(α^2/(2*Vs))], label = "E(collaps)")
+	plot!([margin]*10, label = "Deterministic range margin")
 	xlabel!("Space")
 	ylabel!("Population size N")
 end
@@ -566,16 +643,13 @@ trait_means = [trait_mean(deme) for deme in sim_hab[1].demes]
 begin
 	trait_agents = []
 	cordst = []
-	
 	for (i, deme) in enumerate(sim_hab[1].demes)
-		
 		for agent in deme.agents
 			t = sum(agent)
 			p = (i,t)
 			push!(cordst,i)
 			push!(trait_agents,t)
 		end
-		
 	end
 end
 
@@ -604,9 +678,6 @@ for (i, deme) in enumerate(sim_hab[1].demes)
 		end
 	end
 end
-			
-		
-
 
 # ╔═╡ 5497f602-17fa-11eb-1fae-fbd03f58d6d6
 begin
@@ -618,10 +689,11 @@ begin
 end
 
 # ╔═╡ 8fdab3c0-17e0-11eb-21ad-0593b5d1837f
-plot(p1,p2,p3)
+plot(p1,p2,p3, legend = false)
 
 # ╔═╡ Cell order:
 # ╠═23dab282-10cc-11eb-0ade-c7f191741071
+# ╠═020b1160-22ef-11eb-2974-e9d551ada921
 # ╟─b93e3ee0-10c8-11eb-3db9-0f2cfebf6f7a
 # ╟─6e53a382-10cc-11eb-0873-adb1d891562b
 # ╠═59b194b0-17e2-11eb-1a9f-6d0fdc23f69f
@@ -673,6 +745,7 @@ plot(p1,p2,p3)
 # ╠═521567b0-1245-11eb-1c3a-e31e283d59c7
 # ╠═873f5780-1249-11eb-105c-d16a6160ec4f
 # ╠═66e5d820-1243-11eb-2162-755e424f3c4c
+# ╠═447b6040-2079-11eb-0d3c-f7c17caae8dc
 # ╠═1ec87310-1232-11eb-0bbc-895d245932fc
 # ╠═bbe52202-1233-11eb-06d4-7f58dcfed50e
 # ╠═c6b23d80-1247-11eb-2ef5-a7295f4aff4f
@@ -681,6 +754,7 @@ plot(p1,p2,p3)
 # ╠═56d2c210-12dc-11eb-3bc6-ada36466cb3a
 # ╠═59bf0c90-12dc-11eb-1bca-9d27f3eb8f8e
 # ╠═9c0e46b0-125a-11eb-0a79-1f336e865689
+# ╠═506821c0-207b-11eb-2bab-ddb764410ac0
 # ╠═d7bbd560-125a-11eb-14e4-8f0f82421b69
 # ╠═e16d6190-12d8-11eb-267b-c55ef9f6b415
 # ╠═0a888190-12de-11eb-0da6-c9e35bccea74
@@ -693,13 +767,17 @@ plot(p1,p2,p3)
 # ╠═f7d402b0-1655-11eb-1b68-ddfc8f11b202
 # ╠═d7f6f030-1658-11eb-315d-5156b938eaba
 # ╠═f1948e30-1658-11eb-28ca-630b90938e3d
+# ╠═f2cfe500-2077-11eb-1103-6f128af0a6ad
 # ╠═dc3037a0-1659-11eb-1810-5382c488bc14
 # ╠═dde40220-1659-11eb-04e5-bfbde2b81208
 # ╠═73c3eda0-165a-11eb-3356-9b27c2dba452
 # ╠═63ef89e0-16d5-11eb-3b67-914ea2874f00
+# ╠═fe9b85c0-2080-11eb-069e-c730f12ff71c
 # ╠═dc134e70-16d5-11eb-2c19-8dc7a5d152b7
 # ╠═26f50f4e-17c6-11eb-336f-fdb8ab47ab73
 # ╠═6e5a0990-17c6-11eb-03cc-1bc05b8c5bf8
+# ╠═02aac282-229c-11eb-2123-e58f1f0da0e6
+# ╠═a5033c20-229b-11eb-0ee4-555c034050f5
 # ╠═c498e510-17c6-11eb-3299-a5c233e28518
 # ╟─a8fdf1a0-17e0-11eb-1f45-7ddb59d9ec2d
 # ╠═8348b390-17c8-11eb-1829-f3fad57d7a02
