@@ -913,18 +913,21 @@ end
 simulated_points = [(a,b) = (SS[i],BS[i]) for i in 1:length(SS)]
 
 # ╔═╡ 0e6c9060-2df7-11eb-2c34-43b3bf3cc99c
+# Note, Polechova & Barton have double logarithmic axes!
 begin
 	x = 0:0.1:60
-	pBS = plot(x,0.15*x, legend = false, xlim=(0,60), ylim=(0,6))
+	pBS = plot(x,0.15*x, legend = false, xlim=(0,60), ylim=(0,6), xscale=:log10, yscale=:log10)
 	xlabel!("N*σ*sqrt(s)")
 	ylabel!("B")
-	for (i,point) in enumerate(simulated_points)
-			if PD[i] < 1
-				scatter!([point], color=:red, label = "expansion")
-			else PD[i] > 1
-				scatter!([point], color=:black, label = "contraction")
-			end
-	end
+    colors = [x < 1. ? :red : :black for x in simulated_points]
+    scatter(simulated_points, color=colors)  # I think this should work too, not tested
+	#for (i,point) in enumerate(simulated_points)
+	#		if PD[i] < 1
+	#			scatter!([point], color=:red, label = "expansion")
+	#		else PD[i] > 1
+	#			scatter!([point], color=:black, label = "contraction")
+	#		end
+	#end
 	pBS
 end
 
