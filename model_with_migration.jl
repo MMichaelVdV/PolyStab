@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.7
+# v0.12.11
 
 using Markdown
 using InteractiveUtils
@@ -19,52 +19,54 @@ This notebook contains an extension of single deme population genetics to a line
 """
 
 # ╔═╡ 6e53a382-10cc-11eb-0873-adb1d891562b
+# please document! also don't rely on global variables! these should all be in one of the structs you define (either as fields, or lengths of arrays etc.). Unless they are input arguments to the main function call.
 begin
 		
-	N = 50 #100
+	N = 50 #100     # deme level
 	
-	L = 250
+	L = 250  # agent level
 	
-	p = 0.5
+	p = 0.5  # initialization?
 	
-	t = 5000
+	t = 5000  # simulation 
 	
-	Vs = 1/2 #2
+	Vs = 1/2 #2  # deme level
 	
-	rm = 1.06 #1.025
+	rm = 1.06 #1.025  # deme level
 	
-	α = 0.1 #0.25
+	α = 0.1 #0.25  # individual level
 	
-	θ = 12.5
+	θ = 12.5  # deme level
 	
-	K = 50 #125
+	K = 50 #125  # deme level
 	
-	μ =0.000001
+	μ = 0.000001  # deme level
 	
-	σ = sqrt(1/2)
+	σ = sqrt(1/2)  # habitat level
 	
-	h = 0.1
+	h = 0.1  # ?
 	
-	b = 0.1
+	b = 0.1  # habitat level
 	
 	Dm = 250
 end
 
 # ╔═╡ 1eb68d20-17e2-11eb-3166-d7bff64901ed
+# Could you document this a bit more? Why do we use these relations? I guess it's from Polechova & Barton? Why did they choose these kind of relations? This is the kind of stuff you will look at later and have forgotten why this was so, so some comments would be good.
 begin
-	num_demes(σ,Vs,α) = round(Int64,10*4*sqrt(σ^2*Vs)/α)
-	num_loci(nd,b,α) = round(Int64,nd*b/α)
-	num_ind(K,b,σ,h,Vs,rm) = round(Int64,K*((1-b*σ)/(2*h^2*sqrt(Vs)*rm)))
+	num_demes(σ, Vs, α) = round(Int64, 10*4*sqrt(σ^2 * Vs)/α)
+	num_loci(nd, b, α) = round(Int64, nd*b/α)
+	num_ind(K, b, σ, h, Vs, rm) = round(Int64, K*((1.0 - b*σ)/(2*h^2*sqrt(Vs)*rm)))
 end
 
 # ╔═╡ 29c22850-17e2-11eb-06ed-492978d8d4ea
-nd = num_demes(σ,Vs,α)
+nd = num_demes(σ, Vs, α)
 
 # ╔═╡ 3fe1c320-17e2-11eb-0759-d508c9753c04
-nl = num_loci(nd,b,α)
+nl = num_loci(nd, b, α)
 
 # ╔═╡ 4093d510-17e2-11eb-2157-c5a8d98967c9
-ni = num_ind(K,b,σ,h,Vs,rm)
+ni = num_ind(K, b, σ, h, Vs, rm)
 
 # ╔═╡ 55fe6b60-10c9-11eb-18a6-e9963284f863
 struct Agent{T}
@@ -106,7 +108,7 @@ begin
 	Base.getindex(d::Deme, i, j) = d.agents[i][j]
 	Base.rand(d::Deme) = rand(d.agents)
 	Base.rand(d::Deme, n::Integer) = rand(d.agents, n)
-	Base.sum(a::Agent) = sum(a.loci)
+	Base.sum(a::Agent) = sum(a.loci) 
 end
 
 # ╔═╡ e8008b00-10ca-11eb-135b-35d961573890
@@ -131,9 +133,12 @@ begin
 	emptycopy(h::Habitat) = Habitat(emptycopy.(h.demes))
 end
 
+# ╔═╡ 7a674f20-3082-11eb-2956-01e2f8acb4be
+
+
 # ╔═╡ 30074380-10cb-11eb-3600-f58f98f07fcd
-function mate(a::Agent{T}, b::Agent{T}) where T
-    newloci = Vector{T}(undef, length(a))
+function mate(a::Agent, b::Agent)
+    newloci = similar(a.loci)
     for i in 1:length(a)
 		newloci[i] = rand() < 0.5 ? a[i] : b[i] 
     end
@@ -141,8 +146,8 @@ function mate(a::Agent{T}, b::Agent{T}) where T
 end 
 
 # ╔═╡ 3be1ee80-10cb-11eb-275b-b73888bb0061
-function random_mating(d::Deme{A}) where {A}
-    newdeme = Vector{A}(undef, length(d))
+function random_mating(d::Deme)
+    newdeme = similar(d.agents)
     for i=1:length(d)
 		newdeme[i] = mate(rand(d, 2)...)
 	end
@@ -161,7 +166,7 @@ function allelefreq(d::Deme)
 	for j in 1:length(d[1])
 		s = 0
     	for i in d.agents
-        	if i.loci[j] == α
+        	if i.loci[j] == α   # this is a global variable! avoid!
             	s += 1
 			end
         end
@@ -902,7 +907,7 @@ end
 
 # ╔═╡ f706af60-2df5-11eb-3a8f-d53b0fbd0456
 """This line simulates data for fig. 2"""
-#PS, GS, BS, SS, PD = expansion_sim(500,50)
+# PS, GS, BS, SS, PD = expansion_sim(500,50)
 
 # ╔═╡ e1d305c0-2df6-11eb-1e2c-67d412f00606
 simulated_points = [(a,b) = (SS[i],BS[i]) for i in 1:length(SS)]
@@ -991,6 +996,7 @@ end
 # ╠═ccb28910-12e7-11eb-0869-8be87d5a4ae6
 # ╠═6ff28710-12e8-11eb-2708-c90089167cd6
 # ╠═070648f2-10cb-11eb-2f40-3573a65cb627
+# ╟─7a674f20-3082-11eb-2956-01e2f8acb4be
 # ╠═30074380-10cb-11eb-3600-f58f98f07fcd
 # ╠═3be1ee80-10cb-11eb-275b-b73888bb0061
 # ╠═f2877110-1223-11eb-1140-afde4ce678cd
