@@ -362,57 +362,10 @@ replicate(d)
 # ╔═╡ 59bf0c90-12dc-11eb-1bca-9d27f3eb8f8e
 mating_extended(d, fitnesses)
 
-# ╔═╡ 9c0e46b0-125a-11eb-0a79-1f336e865689
-function evolving_deme_popvar(d::Deme, ngen, rm, Vs; fun=heterozygosities, fit=malthusian_fitness, trait_mean = trait_mean)
-	stats = [fun(d)]
-	pop = [length(d)]
-	tm = [trait_mean(d)]
-	for n=1:ngen
-		d = replicate(d)
-		fitnesses = exp.(malthusian_fitness(d,rm,Vs))
-		d = mating_extended(d, fitnesses)
-		push!(stats, fun(d))
-		push!(pop, length(d))
-		push!(tm, trait_mean(d))
-	end
-	(stats=stats, pop = pop, tm = tm, deme=d, ngen=ngen)
-end
-
-# ╔═╡ d7bbd560-125a-11eb-14e4-8f0f82421b69
-sim_popvar = evolving_deme_popvar(d, t, rm, Vs)
-
-# ╔═╡ e16d6190-12d8-11eb-267b-c55ef9f6b415
-begin
-	Hₒ_popvar = map(mean, sim_popvar.stats)
-	plot(Hₒ_popvar, grid=false, color=:black, label="\$H_o(t)\$")
-	plot!(0:sim_extended.ngen+1, 
-		t->expected_heterozygosity(p*(1-p), t, N),
-		linestyle=:dash, color=:black, 
-		label = "\$(1-1/N)^t H_o(0)\$")
-	xlabel!("\$t\$")
-	ylabel!("\$H(t)\$")
-end
-
 # ╔═╡ 0a888190-12de-11eb-0da6-c9e35bccea74
 md"""
 Population size N grows to carrying capacity K and fluctuates around it when z ≈ θ. 
 """
-
-# ╔═╡ 6cae5990-12dd-11eb-0f7d-f3d75a1710f0
-begin
-	popsize = map(mean, sim_popvar.pop)
-	plot(popsize, grid=false, color=:black, label="Simulated population size")
-	xlabel!("\$t\$")
-	ylabel!("Population size")
-end
-
-# ╔═╡ a707c190-12eb-11eb-3caf-5d6c88a0ab92
-begin
-	traitmean_pv = map(mean, sim_popvar.tm)
-	plot(traitmean_pv, grid=false, color=:black, label="Stabilizing selection")
-	xlabel!("\$t\$")
-	ylabel!("Trait mean")
-end
 
 # ╔═╡ 1f8abf20-12d6-11eb-381c-5f57e823b01c
 md"""
@@ -438,17 +391,76 @@ end
 # ╔═╡ 5703ea90-12e4-11eb-21db-65b7a2302b24
 a = d[1]
 
-# ╔═╡ 706bab82-12e4-11eb-270b-ffa33a42e131
-b = mutate(a, 0.5)
-
 # ╔═╡ 9f1bba12-12e4-11eb-2969-e5430d1d5acf
 function mutation_rate(a::Agent,b::Agent)
 	sum(abs.(a.loci .- b.loci)/α)/length(a)
 end
 	
 
+# ╔═╡ 894e3f90-1655-11eb-3a5a-ffe9bd36d3cc
+function mutate(d::Deme{A},μ) where A
+    newdeme = Vector{A}(undef, length(d))
+    for i=1:length(d)
+		newdeme[i] = mutate(d.agents[i],μ)
+	end
+	Deme(newdeme, d.K, d.θ)
+end 
+
+# ╔═╡ 9c0e46b0-125a-11eb-0a79-1f336e865689
+function evolving_deme_popvar(d::Deme, ngen, rm, Vs, μ; fun=heterozygosities, fit=malthusian_fitness, trait_mean = trait_mean)
+	stats = [fun(d)]
+	pop = [length(d)]
+	tm = [trait_mean(d)]
+	for n=1:ngen
+		d = replicate(d)
+		d = random_mating(d)
+		d = mutate(d,μ)
+		push!(stats, fun(d))
+		push!(pop, length(d))
+		push!(tm, trait_mean(d))
+	end
+	(stats=stats, pop = pop, tm = tm, deme=d, ngen=ngen)
+end
+
+# ╔═╡ d7bbd560-125a-11eb-14e4-8f0f82421b69
+sim_popvar = evolving_deme_popvar(d, t, rm, Vs, μ)
+
+# ╔═╡ e16d6190-12d8-11eb-267b-c55ef9f6b415
+begin
+	Hₒ_popvar = map(mean, sim_popvar.stats)
+	plot(Hₒ_popvar, grid=false, color=:black, label="\$H_o(t)\$")
+	plot!(0:sim_extended.ngen+1, 
+		t->expected_heterozygosity(p*(1-p), t, N),
+		linestyle=:dash, color=:black, 
+		label = "\$(1-1/N)^t H_o(0)\$")
+	xlabel!("\$t\$")
+	ylabel!("\$H(t)\$")
+end
+
+# ╔═╡ 6cae5990-12dd-11eb-0f7d-f3d75a1710f0
+begin
+	popsize = map(mean, sim_popvar.pop)
+	plot(popsize, grid=false, color=:black, label="Simulated population size")
+	xlabel!("\$t\$")
+	ylabel!("Population size")
+end
+
+# ╔═╡ a707c190-12eb-11eb-3caf-5d6c88a0ab92
+begin
+	traitmean_pv = map(mean, sim_popvar.tm)
+	plot(traitmean_pv, grid=false, color=:black, label="Stabilizing selection")
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+end
+
+# ╔═╡ 706bab82-12e4-11eb-270b-ffa33a42e131
+b = mutate(a, 0.5)
+
 # ╔═╡ c78c8290-12e4-11eb-3bba-7780a51e1365
 mutation_rate(a,b)
+
+# ╔═╡ f7d402b0-1655-11eb-1b68-ddfc8f11b202
+d.agents
 
 # ╔═╡ Cell order:
 # ╠═23dab282-10cc-11eb-0ade-c7f191741071
@@ -514,3 +526,5 @@ mutation_rate(a,b)
 # ╠═706bab82-12e4-11eb-270b-ffa33a42e131
 # ╠═9f1bba12-12e4-11eb-2969-e5430d1d5acf
 # ╠═c78c8290-12e4-11eb-3bba-7780a51e1365
+# ╠═894e3f90-1655-11eb-3a5a-ffe9bd36d3cc
+# ╠═f7d402b0-1655-11eb-1b68-ddfc8f11b202
