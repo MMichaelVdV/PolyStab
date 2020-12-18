@@ -144,11 +144,11 @@ d_p1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 45, [1], 50, d=1.))
 
 # ╔═╡ f38bb420-40a6-11eb-2dd0-c94339baeb5f
 #This is a deme with only diploids to check if loss of heterozygosity is still correct
-d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 45, [2], 50, d=1.))
+d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 45, [2], 50, d=2.))
 
 # ╔═╡ 509f24c0-408f-11eb-3992-7d6c02ddf64a
 #This is a mixed ploidy deme with both haploids and diploids
-d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 45, [1,2], 50, d=1.))
+d_p = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 0.5, 45, [1], 45, d=1.),randagent_p(0.5, 0.5, 45, [2], 5, d=2.)))
 
 # ╔═╡ 890ed6e0-3b47-11eb-10bc-871e4cd5a4e6
 expected_heterozygosity(H₀, t, N) = ((1.0-1.0/N)^t)*H₀
@@ -411,12 +411,17 @@ function mating_PnB(d::AbstractDeme{A}) where A
 		B2 = sample(d.agents, weights(fitnesses))
 		#B2 = rand(d.agents)
 		#child = mate(B1,B2)
-		for c in 1:noff 
+		if mate_p(B1,B2) != 0
+			for c in 1:noff 
 				push!(new_agents, mate_p(B1,B2))
+			end
 		end
 	end
 	MixedPloidyDeme(agents=new_agents)
 end 	
+
+# ╔═╡ ea898c72-40c5-11eb-233f-074fe4f50a3c
+mating_PnB(d_p)
 
 # ╔═╡ 88e341b0-3e76-11eb-05d0-9d9b75e16a6a
 function evolving_deme_popvar(d::AbstractDeme, ngen; heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = allelefreqs_p, pf = ploidy_freq)
@@ -703,6 +708,7 @@ end
 # ╠═4e2a4c30-3e76-11eb-0d8f-1b919ab9d04b
 # ╠═59c7ee30-3e76-11eb-07ee-bb3b33a9f6db
 # ╠═7f38e42e-3e76-11eb-26b1-9d54c06c0c34
+# ╠═ea898c72-40c5-11eb-233f-074fe4f50a3c
 # ╠═88e341b0-3e76-11eb-05d0-9d9b75e16a6a
 # ╠═9eee9130-3e76-11eb-21e2-4516ca929e40
 # ╠═a3966e60-3e76-11eb-2e07-3f8537c4a8b4
