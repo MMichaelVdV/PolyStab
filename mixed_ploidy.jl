@@ -83,7 +83,7 @@ mutation).
     θ ::T     = 12.5
     rm::T     = 1.06
     Vs::T     = 1/2
-    u ::T     = 0.
+    u ::T     = 0.01
     μ ::T     = 1e-6
 end
 
@@ -148,7 +148,7 @@ d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 45, [2], 50, d=2.))
 
 # ╔═╡ 509f24c0-408f-11eb-3992-7d6c02ddf64a
 #This is a mixed ploidy deme with both haploids and diploids
-d_p = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 0.5, 45, [1], 45, d=1.),randagent_p(0.5, 0.5, 45, [2], 5, d=2.)))
+d_p = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 0.5, 45, [2], 45, d=2.),randagent_p(0.5, 0.5, 45, [4], 5, d=4.)))
 
 # ╔═╡ 890ed6e0-3b47-11eb-10bc-871e4cd5a4e6
 expected_heterozygosity(H₀, t, N) = ((1.0-1.0/N)^t)*H₀
@@ -248,14 +248,109 @@ function ploidy_freq(d::AbstractDeme)
 	p1 = 0
 	p2 = 0
 	for agent in d.agents
-		if ploidy(agent) == 1
+		if ploidy(agent) == 2
 			p1 += 1
-		elseif ploidy(agent) == 2
+		elseif ploidy(agent) == 4
 			p2 += 1
 		end
 	end
 	p1, p2
 end		
+
+# ╔═╡ 6ca05f30-3e74-11eb-08ac-0faed2e991fa
+Base.sum(a::Agent) = sum(sum(a.loci))
+
+# ╔═╡ 3a45a2b0-3e75-11eb-2fff-2f8e200cb29d
+function trait(a::Agent)
+	sum(a)/a.d
+end
+
+# ╔═╡ 0f52dfb0-3e74-11eb-3f07-094774d83171
+function trait_mean(d::AbstractDeme)
+	z = Float64[]
+	for agent in d.agents
+		push!(z,trait(agent))
+	end
+	sum(z)/length(d)
+end
+
+# ╔═╡ a444e532-4097-11eb-0a27-89e61edc9802
+md"""
+## Including population regulation and stabilizing selection
+"""
+
+# ╔═╡ 4903f02e-3e76-11eb-3d88-d1566b3a3523
+function malthusian_fitness(d::AbstractDeme,a::Agent)
+    N = length(d)
+    z = trait(a)
+    return d.rm*(1-(N/d.K))-((z-d.θ)^2)/(2*d.Vs)
+end 
+
+# ╔═╡ 4e2a4c30-3e76-11eb-0d8f-1b919ab9d04b
+function malthusian_fitness(d::AbstractDeme)
+    N = length(d)
+    fitnesses = Float64[]
+	for agent in d.agents
+		z = trait(agent)
+    	f = d.rm*(1-(N/d.K))-((z-d.θ)^2)/(2*d.Vs)
+		push!(fitnesses, f)
+	end
+	fitnesses
+end 
+
+# ╔═╡ 59c7ee30-3e76-11eb-07ee-bb3b33a9f6db
+number_of_offspring(d::AbstractDeme,a::Agent) = rand(Poisson(exp(malthusian_fitness(d::AbstractDeme,a::Agent))))
+
+# ╔═╡ 7f38e42e-3e76-11eb-26b1-9d54c06c0c34
+function mating_PnB(d::AbstractDeme{A}) where A
+	new_agents =  A[]
+	fitnesses = exp.(malthusian_fitness(d))
+	for i=1:length(d)
+		B1 = d.agents[i]
+		noff = number_of_offspring(d,B1)
+		B2 = sample(d.agents, weights(fitnesses))
+		#B2 = rand(d.agents)
+		#child = mate(B1,B2)
+		if mate_p(B1,B2) != 0
+			for c in 1:noff 
+				push!(new_agents, mate_p(B1,B2))
+			end
+		end
+	end
+	MixedPloidyDeme(agents=new_agents)
+end 	
+
+# ╔═╡ ea898c72-40c5-11eb-233f-074fe4f50a3c
+mating_PnB(d_p)
+
+# ╔═╡ 7d3cfed0-4184-11eb-2b59-29c1afda519d
+[number_of_offspring(d_p,d_p.agents[i]) for i=1:50]
+
+# ╔═╡ 473ff8d0-4186-11eb-25a9-f71f8fdfd1d9
+function unreduced_gamete(d::AbstractDeme, a::Agent)
+	loci = [ Float64[] for x in 1:2*ploidy(a) ]
+	if ploidy(a) == 2
+		if rand() < d.u
+			loci[1] = a.loci[1]
+			loci[2] = a.loci[1]
+			loci[3] = a.loci[2]
+			loci[4] = a.loci[2]
+			return Agent(loci, 4.)
+		end
+	end
+		return a
+end
+		
+
+# ╔═╡ 3637a430-4199-11eb-020d-951aeb617f11
+function unreduced_gamete(d::AbstractDeme{A}) where A
+	new_agents =  A[]
+	for agent in d.agents
+		push!(new_agents, unreduced_gamete(d,agent))
+	end
+	MixedPloidyDeme(agents=new_agents)
+end
+	
 
 # ╔═╡ 4e3640e0-3b46-11eb-3bac-59e50426df3c
 function neutral_evolving_deme(d::AbstractDeme, ngen; heterozygosities_p = heterozygosities_p, allelefreqs_p = allelefreqs_p, trait_mean = trait_mean, pf = ploidy_freq)
@@ -267,6 +362,7 @@ function neutral_evolving_deme(d::AbstractDeme, ngen; heterozygosities_p = heter
 	
 	for n=1:ngen
 		d = random_mating_mixedp(d)
+		d = unreduced_gamete(d)
 		push!(het, heterozygosities_p(d))
 		push!(af, allelefreqs_p(d))
 		push!(tm, trait_mean(d))
@@ -343,27 +439,10 @@ ploidy(sim.deme)
 begin
 	pf1 = sim.p1
 	pf2 = sim.p2
-	plot(pf1, grid=false, color=:blue, label="haploid")
-	plot!(pf2, grid=false, color=:red, label="diploid")
+	plot(pf1, grid=false, color=:blue, label="diploid")
+	plot!(pf2, grid=false, color=:red, label="tetraploid")
 	xlabel!("\$t\$")
 	ylabel!("Number of individuals")
-end
-
-# ╔═╡ 6ca05f30-3e74-11eb-08ac-0faed2e991fa
-Base.sum(a::Agent) = sum(sum(a.loci))
-
-# ╔═╡ 3a45a2b0-3e75-11eb-2fff-2f8e200cb29d
-function trait(a::Agent)
-	sum(a)/a.d
-end
-
-# ╔═╡ 0f52dfb0-3e74-11eb-3f07-094774d83171
-function trait_mean(d::AbstractDeme)
-	z = Float64[]
-	for agent in d.agents
-		push!(z,trait(agent))
-	end
-	sum(z)/length(d)
 end
 
 # ╔═╡ 93dafc30-3e75-11eb-3f02-a7f994da33e3
@@ -373,55 +452,6 @@ begin
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
 end
-
-# ╔═╡ a444e532-4097-11eb-0a27-89e61edc9802
-md"""
-## Including population regulation and stabilizing selection
-"""
-
-# ╔═╡ 4903f02e-3e76-11eb-3d88-d1566b3a3523
-function malthusian_fitness(d::AbstractDeme,a::Agent)
-    N = length(d)
-    z = trait(a)
-    return d.rm*(1-(N/d.K))-((z-d.θ)^2)/(2*d.Vs)
-end 
-
-# ╔═╡ 4e2a4c30-3e76-11eb-0d8f-1b919ab9d04b
-function malthusian_fitness(d::AbstractDeme)
-    N = length(d)
-    fitnesses = Float64[]
-	for agent in d.agents
-		z = sum(agent)
-    	f = d.rm*(1-(N/d.K))-((z-d.θ)^2)/(2*d.Vs)
-		push!(fitnesses, f)
-	end
-	fitnesses
-end 
-
-# ╔═╡ 59c7ee30-3e76-11eb-07ee-bb3b33a9f6db
-number_of_offspring(d::AbstractDeme,a::Agent) = rand(Poisson(exp(malthusian_fitness(d::AbstractDeme,a::Agent))))
-
-# ╔═╡ 7f38e42e-3e76-11eb-26b1-9d54c06c0c34
-function mating_PnB(d::AbstractDeme{A}) where A
-	new_agents =  A[]
-	fitnesses = exp.(malthusian_fitness(d))
-	for i=1:length(d)
-		B1 = d.agents[i]
-		noff = number_of_offspring(d,B1)
-		B2 = sample(d.agents, weights(fitnesses))
-		#B2 = rand(d.agents)
-		#child = mate(B1,B2)
-		if mate_p(B1,B2) != 0
-			for c in 1:noff 
-				push!(new_agents, mate_p(B1,B2))
-			end
-		end
-	end
-	MixedPloidyDeme(agents=new_agents)
-end 	
-
-# ╔═╡ ea898c72-40c5-11eb-233f-074fe4f50a3c
-mating_PnB(d_p)
 
 # ╔═╡ 88e341b0-3e76-11eb-05d0-9d9b75e16a6a
 function evolving_deme_popvar(d::AbstractDeme, ngen; heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = allelefreqs_p, pf = ploidy_freq)
@@ -433,6 +463,7 @@ function evolving_deme_popvar(d::AbstractDeme, ngen; heterozygosities_p=heterozy
 	p2 = [ploidy_freq(d)[2]]
 	for n=1:ngen
 		d = mating_PnB(d)
+		d = unreduced_gamete(d)
 		#d = mutate(d) #is this defined on level of deme or agent ?
 		push!(het, heterozygosities_p(d))
 		push!(pop, length(d))
@@ -446,7 +477,7 @@ function evolving_deme_popvar(d::AbstractDeme, ngen; heterozygosities_p=heterozy
 end
 
 # ╔═╡ 9eee9130-3e76-11eb-21e2-4516ca929e40
-sim_popvar = evolving_deme_popvar(d_p, t)
+sim_popvar = evolving_deme_popvar(d_p,t)
 
 # ╔═╡ a3966e60-3e76-11eb-2e07-3f8537c4a8b4
 begin
@@ -463,7 +494,7 @@ end
 # ╔═╡ a87f4c30-3e76-11eb-3ad3-33bf4d5d9089
 begin
 	af_popvar = sim_popvar.af
-	scatter(sort(af_popvar[50]), grid=false, color=:black, label=false)
+	scatter(sort(af_popvar[1]), grid=false, color=:black, label=false)
 	xlabel!("Locus")
 	ylabel!("Allele frequency after t generations")
 end
@@ -488,11 +519,17 @@ end
 begin
 	pf1_var = sim_popvar.p1
 	pf2_var = sim_popvar.p2
-	plot(pf1_var, grid=false, color=:blue, label="haploid")
-	plot!(pf2_var, grid=false, color=:red, label="diploid")
+	plot(pf1_var, grid=false, color=:blue, label="diploid")
+	plot!(pf2_var, grid=false, color=:red, label="tetraploid")
 	xlabel!("\$t\$")
 	ylabel!("Number of individuals")
 end
+
+# ╔═╡ e8ebc240-4186-11eb-3926-f7b6478d928c
+kk = unreduced_gamete(d_p,d_p.agents[1])
+
+# ╔═╡ 5f5e92c0-4198-11eb-1902-cb300464911a
+kk
 
 # ╔═╡ 3147a3b0-4097-11eb-34be-bf35f43bd3e1
 md""" ## Rubbish below"""
@@ -709,6 +746,7 @@ end
 # ╠═59c7ee30-3e76-11eb-07ee-bb3b33a9f6db
 # ╠═7f38e42e-3e76-11eb-26b1-9d54c06c0c34
 # ╠═ea898c72-40c5-11eb-233f-074fe4f50a3c
+# ╠═7d3cfed0-4184-11eb-2b59-29c1afda519d
 # ╠═88e341b0-3e76-11eb-05d0-9d9b75e16a6a
 # ╠═9eee9130-3e76-11eb-21e2-4516ca929e40
 # ╠═a3966e60-3e76-11eb-2e07-3f8537c4a8b4
@@ -716,6 +754,10 @@ end
 # ╠═aed0bab0-3e76-11eb-338f-efff9f2811e6
 # ╠═b01bb140-3e76-11eb-2716-958dbfc34606
 # ╠═d8a5b240-4093-11eb-1b6e-f1129b1ac5b5
+# ╠═473ff8d0-4186-11eb-25a9-f71f8fdfd1d9
+# ╠═3637a430-4199-11eb-020d-951aeb617f11
+# ╠═e8ebc240-4186-11eb-3926-f7b6478d928c
+# ╠═5f5e92c0-4198-11eb-1902-cb300464911a
 # ╠═3147a3b0-4097-11eb-34be-bf35f43bd3e1
 # ╠═b42552a0-3e76-11eb-3ee2-a5bf1aabcff6
 # ╠═619f8c50-408b-11eb-184a-95d63ec67247
