@@ -28,9 +28,9 @@ begin
 	
 	p = 0.5  # initialization?
 	
-	t = 5000  # simulation 
+	t = 500  # simulation 
 	
-	Vs = 1/2 #2  # deme level
+	Vs = 0.5 #2  # deme level
 	
 	rm = 1.06 #1.025  # deme level
 	
@@ -422,6 +422,15 @@ md"""
 Population size N grows to carrying capacity K and fluctuates around it when z ≈ θ. 
 """
 
+# ╔═╡ b3b22940-75ff-11eb-38ab-9ff7556315f9
+begin
+	xp = 1:t
+	y(xp) = 50/(1+exp(-1.06*xp))
+	plot(y.(xp), grid=false, color=:black, label="Simulated population size")
+	xlabel!("\$t\$")
+	ylabel!("Population size")
+end
+
 # ╔═╡ 1f8abf20-12d6-11eb-381c-5f57e823b01c
 md"""
 
@@ -577,6 +586,26 @@ function Gaussian_dispersal(h::Habitat,σ)
     new_h
 end
 
+# ╔═╡ 515ec8a0-7b92-11eb-1ba6-775b76d2d87b
+function Cauchy_dispersal(h::Habitat,σ)
+    new_h = emptycopy(h)
+	dist = Cauchy(0,σ)
+	dist_trunc = truncated(dist,-2*σ,2*σ)
+	bin_1 = pdf(dist, σ)
+	for (i, deme) in enumerate(h.demes)
+        for agent in deme.agents
+            step = -bin_1 < rand(dist_trunc) < bin_1  ?  0 : rand([-1,1])
+            if step == -1 && i == 1
+                step = 0
+            elseif step == 1  && i == length(h)
+                step = 0
+            end
+            push!(new_h.demes[i+step], agent)
+        end
+    end
+    new_h
+end
+
 # ╔═╡ acdcfc50-2ea4-11eb-18e3-af0321250ebc
 md"""
 ### Initiation of population
@@ -593,7 +622,7 @@ end
 
 # ╔═╡ 88b085a0-2d22-11eb-36b6-4d270f2fd5df
 function quadratic_gradient(Dm)
-	KK = [(1/500)*(i-125)^2+12.5 for i in 0:Dm-1]
+	KK = [(1/250)*(i-125)^2+12.5 for i in 0:Dm-1] #1/500
 	return KK
 end
 
@@ -609,13 +638,16 @@ end
 g_quad = quadratic_gradient(Dm)
 
 # ╔═╡ dde40220-1659-11eb-04e5-bfbde2b81208
-g_lin = linear_gradient(Dm,b)
+g_lin = linear_gradient(Dm,0.5)
 
 # ╔═╡ 04277ec0-2d21-11eb-0a40-c71b3333b788
 begin
 plot(g_quad)
 plot!(g_lin)
 end
+
+# ╔═╡ aea13ce0-7b98-11eb-392d-2139af4e2e9f
+b
 
 # ╔═╡ 73c3eda0-165a-11eb-3356-9b27c2dba452
 function initiate_habitat(gradient,b,nd_s)
@@ -642,7 +674,7 @@ function initiate_habitat(gradient,b,nd_s)
 end
 
 # ╔═╡ f47f5000-2d2b-11eb-2b47-055dcccaf248
-hab = initiate_habitat(g_lin, b, 25)
+hab = initiate_habitat(g_lin, 0.5, 25)
 
 # ╔═╡ d34571b0-2ea4-11eb-1c44-dfef7bc82957
 md"""
@@ -670,7 +702,8 @@ end
 function evolving_habitat(h::Habitat{D}, ngen, rm, Vs, μ, p) where D
 	for n = 1:ngen
 		#h = random_walk(h,p)
-		h = Gaussian_dispersal(h,σ)
+		#h = Gaussian_dispersal(h,σ)
+		h = Cauchy_dispersal(h,σ)
 		new_h = Vector{D}(undef, length(h))
 		for (i, d) in enumerate(h.demes)
 			d = mating_PnB(d,rm,Vs)
@@ -682,8 +715,22 @@ function evolving_habitat(h::Habitat{D}, ngen, rm, Vs, μ, p) where D
 	(h=h, ngen=ngen)
 end
 
+# ╔═╡ 2c3cba9e-756b-11eb-0e8d-b53875bd4768
+#function neutral_evolving_deme(d::Deme, ngen; fun=heterozygosities, trait_mean= #trait_mean, allelefreq = allelefreq)
+#	stats = [fun(d)]
+#	tm = [trait_mean(d)]
+#	af = [allelefreq(d)]
+#	for n=1:ngen
+#		d = random_mating(d)
+#		push!(stats, fun(d))
+#		push!(tm, trait_mean(d))
+#		push!(af,allelefreq(d))
+#	end
+#	(stats=stats, tm = tm, af = af, deme=d, ngen=ngen)
+#end
+
 # ╔═╡ dc134e70-16d5-11eb-2c19-8dc7a5d152b7
-sim_hab = evolving_habitat(hab,500,1.06,0.5,10^-6,0.50)
+sim_hab = evolving_habitat(hab,10000,1.06,0.5,10^-6,0.50)
 
 # ╔═╡ e30d8380-2ea4-11eb-3971-91192814178e
 md"""
@@ -740,6 +787,33 @@ begin
 	plot!(cordst,trait_agents, label="Z agents")
 	xlabel!("Space")
 	ylabel!("Trait Z")
+end
+
+# ╔═╡ 87a3ffe0-7569-11eb-33c3-e597bb7f6e8c
+begin
+	anim = @animate for i ∈ 1:t
+	    scatter(sort(af_popvar[i]), grid=false, color=:black, label=false)
+	end every 1
+	gif(anim, "fizzywop.gif", fps = 30)
+end
+
+# ╔═╡ 88510160-756c-11eb-26d0-f9e2b0f78543
+begin
+	anim_range = @animate for i ∈ 1:1
+		sim_habA = evolving_habitat(hab,i,1.06,0.5,10^-6,0.50)
+		#if i != 1
+		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
+		#end
+		trait_means = [trait_mean(deme) for deme in sim_habA[1].demes]
+	    trait_means_p = map(mean, trait_means)
+		trait_agents, cordst = f_trait_agents(sim_habA)
+		#p2 = plot(trait_means_p, grid=false, color=:black, label="Z_mean deme")
+		plot(g_lin, grid=false, color=:blue, label="Z optimum", linestyle=:dash)
+		plot!(cordst,trait_agents, label="Z agents")
+		xlabel!("Space")
+		ylabel!("Trait Z")
+	end every 1
+	gif(anim_range, "fizzy.gif", fps = 30)
 end
 
 # ╔═╡ fd9e9dc0-17f1-11eb-0537-63d90fb3c203
@@ -1049,6 +1123,7 @@ end
 # ╠═bfe6dbb2-2abf-11eb-0579-31c8a0aa0bf8
 # ╠═0a888190-12de-11eb-0da6-c9e35bccea74
 # ╠═6cae5990-12dd-11eb-0f7d-f3d75a1710f0
+# ╠═b3b22940-75ff-11eb-38ab-9ff7556315f9
 # ╠═a707c190-12eb-11eb-3caf-5d6c88a0ab92
 # ╟─1f8abf20-12d6-11eb-381c-5f57e823b01c
 # ╠═2f6f3290-12d6-11eb-336a-8f3a8d7f1fb9
@@ -1058,6 +1133,7 @@ end
 # ╠═d7f6f030-1658-11eb-315d-5156b938eaba
 # ╠═f1948e30-1658-11eb-28ca-630b90938e3d
 # ╠═f2cfe500-2077-11eb-1103-6f128af0a6ad
+# ╠═515ec8a0-7b92-11eb-1ba6-775b76d2d87b
 # ╠═acdcfc50-2ea4-11eb-18e3-af0321250ebc
 # ╠═dc3037a0-1659-11eb-1810-5382c488bc14
 # ╠═88b085a0-2d22-11eb-36b6-4d270f2fd5df
@@ -1065,11 +1141,13 @@ end
 # ╠═2cd1751e-2d20-11eb-256a-613452c71878
 # ╠═04277ec0-2d21-11eb-0a40-c71b3333b788
 # ╠═dde40220-1659-11eb-04e5-bfbde2b81208
+# ╠═aea13ce0-7b98-11eb-392d-2139af4e2e9f
 # ╠═73c3eda0-165a-11eb-3356-9b27c2dba452
 # ╠═f47f5000-2d2b-11eb-2b47-055dcccaf248
 # ╟─d34571b0-2ea4-11eb-1c44-dfef7bc82957
 # ╠═63ef89e0-16d5-11eb-3b67-914ea2874f00
 # ╠═fe9b85c0-2080-11eb-069e-c730f12ff71c
+# ╠═2c3cba9e-756b-11eb-0e8d-b53875bd4768
 # ╠═dc134e70-16d5-11eb-2c19-8dc7a5d152b7
 # ╠═e30d8380-2ea4-11eb-3971-91192814178e
 # ╠═26f50f4e-17c6-11eb-336f-fdb8ab47ab73
@@ -1080,6 +1158,8 @@ end
 # ╠═8348b390-17c8-11eb-1829-f3fad57d7a02
 # ╠═923ba4e0-2d2e-11eb-17e3-f34323e735e8
 # ╠═5cf39490-17c7-11eb-125a-1549b47468ba
+# ╠═87a3ffe0-7569-11eb-33c3-e597bb7f6e8c
+# ╠═88510160-756c-11eb-26d0-f9e2b0f78543
 # ╠═fd9e9dc0-17f1-11eb-0537-63d90fb3c203
 # ╠═52f3b160-2d2e-11eb-3b4e-f9c40e5b8c4c
 # ╠═5497f602-17fa-11eb-1fae-fbd03f58d6d6

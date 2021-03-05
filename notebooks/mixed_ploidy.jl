@@ -79,7 +79,7 @@ mutation).
 """
 @with_kw struct MixedPloidyDeme{A,T} <: AbstractDeme{A}
     agents::Vector{A}
-    K ::Int64 = 50
+    K ::Int64 = 100
     θ ::T     = 12.5
     rm::T     = 1.06
     Vs::T     = 1/2
@@ -90,7 +90,7 @@ end
 # ╔═╡ 66d75f30-342f-11eb-2e72-fdbed6aa1ffd
 @with_kw struct SimpleDeme{A} <: AbstractDeme{A}
     agents::Vector{A}
-    K ::Int64 = 50
+    K ::Int64 = 15
 end
 
 # ╔═╡ 50310830-342f-11eb-1cf0-ff654c427368
@@ -148,7 +148,7 @@ d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 45, [2], 50, d=2.))
 
 # ╔═╡ 509f24c0-408f-11eb-3992-7d6c02ddf64a
 #This is a mixed ploidy deme with both diploids and tetraploids
-d_p = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 0.5, 45, [2], 50, d=2.),randagent_p(0.5, 0.5, 45, [4], 0, d=4.)))
+d_p = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 0.5, 45, [2], 100, d=2.),randagent_p(0.5, 0.5, 45, [4], 0, d=4.)))
 
 # ╔═╡ 890ed6e0-3b47-11eb-10bc-871e4cd5a4e6
 expected_heterozygosity(H₀, t, N) = ((1.0-1.0/N)^t)*H₀
@@ -189,7 +189,7 @@ function random_mating_mixedp(d::AbstractDeme{A}) where A
 			push!(new_agents, pair)
 		end
 	end
-	MixedPloidyDeme(agents = new_agents)
+	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ)
 end 
 
 end
@@ -283,7 +283,7 @@ function unreduced_gamete(d::AbstractDeme{A}) where A
 	for agent in d.agents
 		push!(new_agents, unreduced_gamete(d,agent))
 	end
-	MixedPloidyDeme(agents=new_agents)
+	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ)
 end	
 
 # ╔═╡ 4903f02e-3e76-11eb-3d88-d1566b3a3523
@@ -309,7 +309,10 @@ end
 number_of_offspring(d::AbstractDeme,a::Agent) = rand(Poisson(exp(malthusian_fitness(d::AbstractDeme,a::Agent))))
 
 # ╔═╡ 7d3cfed0-4184-11eb-2b59-29c1afda519d
-[number_of_offspring(d_p,d_p.agents[i]) for i=1:50]
+[number_of_offspring(d_p,d_p.agents[i]) for i=1:length(d_p.agents)]
+
+# ╔═╡ 55d3df82-729e-11eb-23b0-03eeb621d7b2
+
 
 # ╔═╡ b5f6d590-717f-11eb-01dc-fb779d0a2410
 md"""
@@ -330,22 +333,19 @@ end
 
 # ╔═╡ a4b40320-7099-11eb-27cb-1f27ef2645ee
 #Allocates some random probabalities for unreduced gamete formation for 2n, 3n, 4n individuals respectively, for example [0.9,0.1,0.,0.] -> 2n ind has probability of 0.9 to produce 1n gametes, 0.1 for 2n (unreduced) gamete,...this doesn't take into account aneuploid gametes yet.
-UG = UnreducedGamete([[0.9,0.1,0.,0.],[0.45,0.45,0.1,0.],[0.05,0.8,0.05,0.1]])
+UG = UnreducedGamete([[0.9,0.1,0.,0.],[0.,0.,0.,0.],[0.0,1.,0.0,0.]])
 
 # ╔═╡ 940db692-70aa-11eb-1276-9d757f1ed1ba
 #On the rows/columns (symmetric matrix) are the ploidy levels of the gametes to be combined (1n to 4n).The upper bound is now at 4n, all ploidy levels above are not viable (ie. combination of 2n and 3n gamete has 0 viability).
-OV = OffspringViability([[1.,0.1,0.1,0.],[0.1,1.,0.,0.],[0.1,0.,0.,0.],[0.,0.,0.,0.]])
+OV = OffspringViability([[1.,0.,0.1,0.],[0.,1.,0.,0.],[0.1,0.,0.,0.],[0.,0.,0.,0.]])
 
-# ╔═╡ 93812e02-70aa-11eb-1fe0-2188f57d79ac
-t1, t2, t3, t4 = d_p.agents[1], d_p.agents[2], d_p.agents[49], d_p.agents[50]
+# ╔═╡ fdd49290-7ba1-11eb-3316-45fa9dc62000
+ploidy.(d_p.agents)
 
 # ╔═╡ 2260a980-70af-11eb-2688-4d1b7d6f2f8b
 function viability(a::Agent, b::Agent, OV::OffspringViability)
 	return OV.viability[ploidy(a)][ploidy(b)]
 end
-
-# ╔═╡ 57f95512-7181-11eb-1dfe-c70932ae7544
-viability(t1,t2,OV)
 
 # ╔═╡ 23b9e2ce-70ad-11eb-1e5d-1f8ad0c849bb
 function unreduced_gamete(a::Agent, UG::UnreducedGamete)
@@ -364,13 +364,67 @@ function unreduced_gamete(a::Agent, UG::UnreducedGamete)
 	return Agent(loci, num)
 end	
 
+# ╔═╡ 14e8d250-7bbd-11eb-0da7-afeb3fc81d83
+function recombine_poly(a::Agent)
+	num = ploidy(a)
+	loci = [ Float64[] for x in 1:num ]
+	al = a.loci
+	newlocus = similar(al[1])
+		
+	for l in 1:num
+		for j in 1:length(al[1]) #this loops over the different loci for each chrosome
+			i = rand([x for x in 1:num])
+			@inbounds newlocus[j] = al[i][j]
+		end
+		loci[l] = newlocus
+	end
+	Agent(loci=loci)
+end	
+
+# ╔═╡ 321bbf50-7bad-11eb-0b6d-6f83a6916170
+function recombine_poly(d::AbstractDeme{A}) where A
+	new_agents =  A[]
+	for agent in d.agents
+		num = ploidy(agent)
+		loci = [ Float64[] for x in 1:num ]
+		a = agent.loci
+		newlocus = similar(a[1])
+		
+		for l in 1:num
+			for j in 1:length(a[1]) #this loops over the different loci for each chrosome
+				i = rand([x for x in 1:num])
+				@inbounds newlocus[j] = a[i][j]
+			end
+			loci[l] = newlocus
+		end
+		
+		push!(new_agents, Agent(loci=loci))
+	end
+	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ)
+end		
+
+# ╔═╡ 737a7620-7bb3-11eb-14c2-83beec620ea1
+recombine_poly(d_p)
+
+# ╔═╡ ad2350a0-7bb2-11eb-2517-1f70162a1a54
+rand([x for x in 1:3])
+
+# ╔═╡ eabf2cb0-7bb0-11eb-3e49-db4d6b9a21e2
+a = [[1,2,3],[4,5,6],[7,8,9]]
+
+# ╔═╡ 44dbde9e-7bb1-11eb-0d1b-4b44d5879262
+a[2][1]
+
+# ╔═╡ 73b40ea0-7bb1-11eb-264e-f7120f56fba4
+shuffle([1,2,3])
+
 # ╔═╡ 1d6cff90-715a-11eb-2648-c9e1455933bd
 function unreduced_gamete(d::AbstractDeme{A}, UG::UnreducedGamete) where A
 	new_agents =  A[]
 	for agent in d.agents
 		push!(new_agents, unreduced_gamete(agent,UG))
 	end
-	MixedPloidyDeme(agents=new_agents)
+	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ)
 end	
 
 # ╔═╡ 4e3640e0-3b46-11eb-3bac-59e50426df3c
@@ -423,7 +477,7 @@ end
 begin
 	Hₒ_hap = map(mean, sim_haploid.het)
 	plot(Hₒ_hap, grid=false, color=:black, label="\$H_o(t)\$ ", title = "LOH haploid")
-	plot!(0:sim.ngen+1, 
+	plot!(0:sim_haploid.ngen+1, 
 		t->expected_heterozygosity(p*(1-p), t, N),
 		linestyle=:dash, color=:black, 
 		label = "\$(1-1/N)^t H_o(0)\$")
@@ -484,8 +538,8 @@ begin
 
 function mate_p(a::Agent, b::Agent, UG::UnreducedGamete, OV::OffspringViability)
 	#gamete formation
-	ag = unreduced_gamete(a,UG)
-	bg = unreduced_gamete(b,UG)
+	ag = recombine_poly(unreduced_gamete(a,UG))
+	bg = recombine_poly(unreduced_gamete(b,UG))
 	gam_a = ag.loci	
 	gam_b = bg.loci
 	#combine gametes and assign viability
@@ -557,7 +611,7 @@ function random_mating_p(d::AbstractDeme)
     for i=1:length(d)
 		@inbounds newdeme[i] = mate_p(rand(d, 2)...)
 	end
-	d(newdeme)
+	d(agents=newdeme,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ)
 end
 
 end
@@ -578,7 +632,7 @@ function mating_PnB(d::AbstractDeme{A}) where A
 			end
 		end
 	end
-	MixedPloidyDeme(agents=new_agents)
+	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ)
 end 	
 
 # ╔═╡ b0ef24ee-715a-11eb-0dd3-a9be75572bdb
@@ -598,7 +652,7 @@ function mating_PnB(d::AbstractDeme{A}, UG::UnreducedGamete, OV::OffspringViabil
 			end
 		end
 	end
-	MixedPloidyDeme(agents=new_agents)
+	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ)
 end 
 
 # ╔═╡ ea898c72-40c5-11eb-233f-074fe4f50a3c
@@ -652,6 +706,17 @@ begin
 	xlabel!("Locus")
 	ylabel!("Allele frequency after t generations")
 end
+
+# ╔═╡ 90693580-72a0-11eb-2127-e1ca7c4c1cbc
+begin
+	anim = @animate for i ∈ 1:t
+	    scatter(sort(af_popvar[i]), grid=false, color=:black, label=false)
+	end every 1
+	gif(anim, "fizzywop.gif", fps = 30)
+end
+
+# ╔═╡ 5666a9a0-729e-11eb-22ee-cfd529fe980b
+af_popvar
 
 # ╔═╡ aed0bab0-3e76-11eb-338f-efff9f2811e6
 begin
@@ -738,6 +803,18 @@ begin
 	ylabel!("Trait mean")
 end
 
+# ╔═╡ fa764302-71f6-11eb-15c6-cfcb5734010b
+begin
+	Hₒ_ploidyvar = map(mean, sim_ploidyvar.het)
+	plot(Hₒ_ploidyvar, grid=false, color=:black, label="\$H_o(t)\$", title = "LOH mixed ploidy with selection")
+	plot!(0:sim_ploidyvar.ngen+1, 
+		t->expected_heterozygosity(p*(1-p), t, N),
+		linestyle=:dash, color=:black, 
+		label = "\$(1-1/N)^t H_o(0)\$")
+	xlabel!("\$t\$")
+	ylabel!("\$H(t)\$")
+end
+
 # ╔═╡ 3147a3b0-4097-11eb-34be-bf35f43bd3e1
 md""" ## To be continued"""
 
@@ -769,6 +846,9 @@ function mutate(d::AbstractDeme{A}) where A
 	Deme(newdeme, d.K, d.θ)
 end 
 
+# ╔═╡ 926a0e2e-7c1a-11eb-3c33-cdaa406618c4
+md""" ## Multiple demes"""
+
 # ╔═╡ 9b9bac30-342f-11eb-120b-9d2e7354f241
 """
     Habitat{D}
@@ -777,17 +857,25 @@ the migration aspects of the population genetic environment.
 """
 @with_kw struct Habitat{D,T}
     demes::Vector{D}
-    σ ::T = 1/2
-    b ::T = 0.1
-    #Dm::T 
+    σ ::T = 1/2 #variance of dispersal
+    b ::T = 0.1 #steepness of linear gradient
+	θ ::T = 12.5 #phenotypic optimim in the center
+    Dm::T = 250. #number of demes to initialize
 end
 
-# ╔═╡ a36e3110-4093-11eb-026a-d3ddc3217805
-emptycopy(h::Habitat) = Habitat(emptycopy.(h.demes))
+# ╔═╡ dc976fe0-7c1d-11eb-2224-33418463cae8
+d_p
+
+# ╔═╡ a1bee470-7c1d-11eb-019e-09dcff0c5c73
+habi = Habitat(demes=[d_p])
+
+# ╔═╡ 20f9a2ae-7c24-11eb-2a8a-493c2e8b3dd5
+(h::Habitat)(demes) = Habitat(h.demes, h.σ, h.θ, h.b, h.dm)
 
 # ╔═╡ ce14f100-4012-11eb-0daf-19617768225e
 function random_walk(h::Habitat, p)
-    new_h = emptycopy(h)
+	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 45, [2], 0, d=2.)), θ=i.θ) for i in h.demes])
+    newdemes = similar(h.demes)
     for (i, deme) in enumerate(h.demes)
         for agent in deme.agents
             step = rand() < p ? rand([-1,1]) : 0 
@@ -796,72 +884,132 @@ function random_walk(h::Habitat, p)
             elseif step == 1  && i == length(h)
                 step = 0
             end
-            push!(new_h.demes[i+step], agent)
+            push!(hab.demes[i+step], agent)
         end
     end
-    new_h
-end
-
-# ╔═╡ d124a200-4012-11eb-3644-2be0a62eab74
-function linear_gradient(Dm,b)
-    #KK = [i*b for i in 0:Dm-1]
-	#KK = [θ for i in 0:Dm-1]
-	a = -(Dm/2)*b + θ 
-	KK = [(i*b)+a for i in 0:Dm-1]
-    return KK
-end
-
-# ╔═╡ bcd073c0-4093-11eb-0484-b73fb9772521
-linear_gradient(100,0.1)
-
-# ╔═╡ d98408f0-4012-11eb-3515-bfd13ab42f56
-g_lin = linear_gradient(d_p,b)
-
-# ╔═╡ f9474a80-4012-11eb-1b5c-afa826771136
-function initiate_habitat(gradient,b,nd_s)
-	"""The aim should be to initiate a population for nd_s demes for a linear gradient (with slope b) and with "optimal genetic variance" and "one half of the genes are adapted, meaning their clines take the form and spacing as assumed for the deterministic model under linkage equilibrium"""
-	hab = Habitat([Deme(randagent(DiscreteNonParametric([0,α],[p,1-p]), 0, 0),K,i) for i in gradient])
-	
-	for j in 1:nd_s
-		#x = round(Int64,Dm/2)+round(Int64,nd_s/2)-j
-		#L_adapted = round(Int64,(b*x)/(2*α)) 
-		
-		
-		for i in 1:(N)
-			push!(hab.demes[round(Int64,Dm/2)+round(Int64,nd_s/2)-j].agents,randagent(DiscreteNonParametric([0,α], [p,1-p]), round(Int64,L/2)-nd_s-78)) 
-			for k in 1:(round(Int64,L/2)-j-nd_s+24)
-				push!(hab.demes[round(Int64,Dm/2)+12-j].agents[i], α)
-			end
-			while length(hab.demes[round(Int64,Dm/2)+12-j].agents[i]) < L
-				push!(hab.demes[round(Int64,Dm/2)+12-j].agents[i], α-α)
-			
-			end
-		end
-	end
+    #Habitat(demes=newdemes, h.σ, h.b, h.θ, h.Dm)
 	hab
 end
 
+# ╔═╡ d124a200-4012-11eb-3644-2be0a62eab74
+function linear_gradient(h::Habitat) 
+	#KK = [i*b for i in 0:Dm-1]
+	#KK = [θ for i in 0:Dm-1]
+	a = -(h.Dm/2)*h.b + h.θ #where Dm is number of demes and b is gradient
+	KK = [(i*h.b)+a for i in 0:h.Dm-1]
+    return KK
+end
+
+# ╔═╡ d98408f0-4012-11eb-3515-bfd13ab42f56
+g_lin = linear_gradient(habi)
+
+# ╔═╡ f9474a80-4012-11eb-1b5c-afa826771136
+function initiate_habitat(gradient)
+	"""The aim should be to initiate a population for nd_s demes on a linear gradient (with slope b) and with "optimal genetic variance" where one half of the genes are adapted, meaning their clines take the form and spacing as assumed for the deterministic model under linkage equilibrium"""
+	
+	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 45, [2], 0, d=2.)), θ=i) for i in gradient])
+	for a in randagent_p(0.5, 0.5, 45, [2], 100, d=2.)
+	push!(hab.demes[Int(hab.Dm/2)].agents, a)
+	end
+
+	return hab
+end
+
 # ╔═╡ ff24c180-4012-11eb-3edb-09d780162b72
-hab = initiate_habitat(g_lin, b, 25)
+hab = initiate_habitat(g_lin)
+
+# ╔═╡ eb36ad90-7c27-11eb-0ab3-33969b64dc36
+newdemes = similar(hab.demes)
+
+# ╔═╡ 39a60612-7c28-11eb-324a-238466b5c0aa
+hab.demes[1]
 
 # ╔═╡ 00f20770-4013-11eb-172e-7d4cfede7a85
-function evolving_habitat(h::Habitat{D}, ngen) where D
+function evolving_habitat(h::Habitat{D}, ngen, UG, OV) where D
 	for n = 1:ngen
-		h = random_walk(h)
+		h = random_walk(h,0.5)
 		#h = Gaussian_dispersal(h,σ)
 		new_h = Vector{D}(undef, length(h))
 		for (i, d) in enumerate(h.demes)
-			d = mating_PnB(d)
-			d = mutate(d)
+			d = mating_PnB(d,UG,OV)
+			#d = mutate(d)
 			new_h[i] = d
 		end
-		h = Habitat(new_h)
+		h = Habitat(demes=new_h)
 	end
 	(h=h, ngen=ngen)
 end
 
+# ╔═╡ 08ce7910-7c27-11eb-1674-f97c8db9a82d
+Base.length(h::Habitat) = length(h.demes)
+
 # ╔═╡ 0832b7f0-4013-11eb-0d7e-d3f77e87aa9b
-sim_hab = evolving_habitat(hab,1,1.06,0.5,10^-6,0.50)
+sim_hab = evolving_habitat(hab, 100, UG, OV)
+
+# ╔═╡ f39e2370-7c2a-11eb-0cd6-3775f3c203ed
+pop_sizes = [length(deme) for deme  in sim_hab[1].demes]
+
+# ╔═╡ 6c282e70-7c2c-11eb-2a89-8971cf1b19f0
+begin 
+ppf1 = [ploidy_freq(deme)[1] for deme  in sim_hab[1].demes]
+ppf2 = [ploidy_freq(deme)[2] for deme  in sim_hab[1].demes]
+ppf3 = [ploidy_freq(deme)[3] for deme  in sim_hab[1].demes]
+end
+
+# ╔═╡ ce005ba0-7c2b-11eb-0037-655fb8d4d398
+begin
+	K = 100
+	σ = 0.5
+	b = 0.1
+	Vs = 0.5
+	rm = 1.06
+	Dm = 250
+	s = 1
+end
+
+# ╔═╡ 3238bff0-7c2b-11eb-1e9e-07866c41d6f4
+margin = (sqrt(2)*b*σ)/((2*rm*sqrt(Vs))-b*σ) .>= 0.15.*pop_sizes.*σ*sqrt(s)
+
+# ╔═╡ 0f7d5380-4013-11eb-2a3b-614df9653550
+begin
+	pop_sizes_p = map(mean, pop_sizes)
+	p1 = plot(pop_sizes_p, grid=false, color=:black, label=false, legendfontsize=5)
+	hline!([K], label = "K")
+	hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
+	vline!([Dm/2], label = "Starting deme")
+	plot!([margin]*10, label = "Deterministic range margin")
+	plot!(ppf1, grid=false, color=:blue, label="Diploid")
+	plot!(ppf2, grid=false, color=:green, label="Triploid")
+	plot!(ppf3, grid=false, color=:red, label="Tetraploid")
+	xlabel!("Space")
+	ylabel!("Population size N")
+end
+
+# ╔═╡ 0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
+begin
+	anim_range = @animate for i ∈ 1:100
+		sim_habA = evolving_habitat(hab,i,UG,OV)
+		#if i != 1
+		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
+		#end
+		pop_sizes = [length(deme) for deme  in sim_habA[1].demes]
+		pop_sizes_p = map(mean, pop_sizes)
+		ppf1 = [ploidy_freq(deme)[1] for deme  in sim_habA[1].demes]
+		ppf2 = [ploidy_freq(deme)[2] for deme  in sim_habA[1].demes]
+		ppf3 = [ploidy_freq(deme)[3] for deme  in sim_habA[1].demes]
+		p1 = plot(pop_sizes_p, grid=false, color=:black, label=false, legendfontsize=5)
+		hline!([K], label = "K")
+		hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
+		vline!([Dm/2], label = "Starting deme")
+		#plot!([margin]*10, label = "Deterministic range margin")
+		plot!(ppf1, grid=false, color=:blue, label="Diploid")
+		plot!(ppf2, grid=false, color=:green, label="Triploid")
+		plot!(ppf3, grid=false, color=:red, label="Tetraploid")
+		xlabel!("Space")
+		ylabel!("Population size N")
+	end every 1
+	gif(anim_range, "fizzypoly.gif", fps = 3)
+end
 
 # ╔═╡ 375696f0-4013-11eb-1779-677909ec6e11
 function f_trait_agents(sim_hab)
@@ -876,21 +1024,6 @@ function f_trait_agents(sim_hab)
 		end
 	end
 	trait_agents, cordst
-end
-
-# ╔═╡ 2e97f900-4013-11eb-316c-650ea3a40752
-margin = (sqrt(2)*b*σ)/((2*rm*sqrt(Vs))-b*σ) .>= 0.15.*pop_sizes.*σ*sqrt(s)
-
-# ╔═╡ 0f7d5380-4013-11eb-2a3b-614df9653550
-begin
-	pop_sizes_p = map(mean, pop_sizes)
-	p1 = plot(pop_sizes_p, grid=false, color=:black, label=false)
-	hline!([K], label = "K")
-	hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
-	vline!([Dm/2], label = "Starting deme")
-	plot!([margin]*10, label = "Deterministic range margin")
-	xlabel!("Space")
-	ylabel!("Population size N")
 end
 
 # ╔═╡ 472b52f0-4013-11eb-1e90-4775755333ef
@@ -960,6 +1093,9 @@ end
 # ╠═9eee9130-3e76-11eb-21e2-4516ca929e40
 # ╠═a3966e60-3e76-11eb-2e07-3f8537c4a8b4
 # ╠═a87f4c30-3e76-11eb-3ad3-33bf4d5d9089
+# ╠═90693580-72a0-11eb-2127-e1ca7c4c1cbc
+# ╠═5666a9a0-729e-11eb-22ee-cfd529fe980b
+# ╠═55d3df82-729e-11eb-23b0-03eeb621d7b2
 # ╠═aed0bab0-3e76-11eb-338f-efff9f2811e6
 # ╠═b01bb140-3e76-11eb-2716-958dbfc34606
 # ╠═d8a5b240-4093-11eb-1b6e-f1129b1ac5b5
@@ -968,10 +1104,16 @@ end
 # ╠═b4e7f620-7099-11eb-0954-f3d8ab8d5103
 # ╠═a4b40320-7099-11eb-27cb-1f27ef2645ee
 # ╠═940db692-70aa-11eb-1276-9d757f1ed1ba
-# ╠═93812e02-70aa-11eb-1fe0-2188f57d79ac
+# ╠═fdd49290-7ba1-11eb-3316-45fa9dc62000
 # ╠═2260a980-70af-11eb-2688-4d1b7d6f2f8b
-# ╠═57f95512-7181-11eb-1dfe-c70932ae7544
 # ╠═23b9e2ce-70ad-11eb-1e5d-1f8ad0c849bb
+# ╠═14e8d250-7bbd-11eb-0da7-afeb3fc81d83
+# ╠═321bbf50-7bad-11eb-0b6d-6f83a6916170
+# ╠═737a7620-7bb3-11eb-14c2-83beec620ea1
+# ╠═ad2350a0-7bb2-11eb-2517-1f70162a1a54
+# ╠═eabf2cb0-7bb0-11eb-3e49-db4d6b9a21e2
+# ╠═44dbde9e-7bb1-11eb-0d1b-4b44d5879262
+# ╠═73b40ea0-7bb1-11eb-264e-f7120f56fba4
 # ╠═1d6cff90-715a-11eb-2648-c9e1455933bd
 # ╠═01be8d80-715b-11eb-3b9d-17a328be8383
 # ╠═b0ef24ee-715a-11eb-0dd3-a9be75572bdb
@@ -981,23 +1123,33 @@ end
 # ╠═3394adb0-717b-11eb-1adc-8bdeb0dde24b
 # ╠═fc62edb0-717b-11eb-2a0c-35af2be1d06c
 # ╠═d53330b0-717b-11eb-09dd-c97c372c04f0
-# ╠═3147a3b0-4097-11eb-34be-bf35f43bd3e1
+# ╠═fa764302-71f6-11eb-15c6-cfcb5734010b
+# ╟─3147a3b0-4097-11eb-34be-bf35f43bd3e1
 # ╠═b42552a0-3e76-11eb-3ee2-a5bf1aabcff6
 # ╠═619f8c50-408b-11eb-184a-95d63ec67247
 # ╠═bdd862b0-3e76-11eb-09fa-6fa07f6d6573
+# ╟─926a0e2e-7c1a-11eb-3c33-cdaa406618c4
 # ╠═9b9bac30-342f-11eb-120b-9d2e7354f241
-# ╠═a36e3110-4093-11eb-026a-d3ddc3217805
+# ╠═dc976fe0-7c1d-11eb-2224-33418463cae8
+# ╠═a1bee470-7c1d-11eb-019e-09dcff0c5c73
+# ╠═20f9a2ae-7c24-11eb-2a8a-493c2e8b3dd5
 # ╠═ce14f100-4012-11eb-0daf-19617768225e
+# ╠═eb36ad90-7c27-11eb-0ab3-33969b64dc36
+# ╠═39a60612-7c28-11eb-324a-238466b5c0aa
 # ╠═d124a200-4012-11eb-3644-2be0a62eab74
-# ╠═bcd073c0-4093-11eb-0484-b73fb9772521
 # ╠═d98408f0-4012-11eb-3515-bfd13ab42f56
 # ╠═f9474a80-4012-11eb-1b5c-afa826771136
 # ╠═ff24c180-4012-11eb-3edb-09d780162b72
 # ╠═00f20770-4013-11eb-172e-7d4cfede7a85
+# ╠═08ce7910-7c27-11eb-1674-f97c8db9a82d
 # ╠═0832b7f0-4013-11eb-0d7e-d3f77e87aa9b
+# ╠═f39e2370-7c2a-11eb-0cd6-3775f3c203ed
+# ╠═6c282e70-7c2c-11eb-2a89-8971cf1b19f0
+# ╟─ce005ba0-7c2b-11eb-0037-655fb8d4d398
+# ╟─3238bff0-7c2b-11eb-1e9e-07866c41d6f4
 # ╠═0f7d5380-4013-11eb-2a3b-614df9653550
+# ╠═0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
 # ╠═375696f0-4013-11eb-1779-677909ec6e11
-# ╠═2e97f900-4013-11eb-316c-650ea3a40752
 # ╠═472b52f0-4013-11eb-1e90-4775755333ef
 # ╠═3ddde280-4013-11eb-39a3-130d6ec349ff
 # ╠═51427c00-4013-11eb-2be7-511a95abdf44
