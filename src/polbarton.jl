@@ -119,7 +119,12 @@ function random_mating_p(d::AbstractDeme)
 end
 
 """
-#This mating function assumes that different cytotypes are incompatible (i.e. when #individuals with different ploidy hybridize, they generate no offspring). This is in #accordance with the model from Levy (1975). Selfing is allowed without cost. The #dynamics might be different when you implement mating alowing for sterile hybrid #offspring that can compete for space (and affects the malthusian fitness).
+	mate_p(a::Agent, b::Agent)
+This mating function assumes that different cytotypes are incompatible 
+(i.e. when individuals with different ploidy hybridize, they generate no offspring).
+This is in accordance with the model from Levy (1975). Selfing is allowed without cost. 
+The dynamics might be different when you implement mating alowing for sterile hybrid 
+offspring that can compete for space (and affects the malthusian fitness).
 """	
 function mate_p(a::Agent, b::Agent)
 	if ploidy(a) == ploidy(b) 
@@ -141,7 +146,12 @@ function mate_p(a::Agent, b::Agent)
 end 
 
 """
-#This mating function assumes that different cytotypes can be compatible with a decrease in viability (cfr. OffspringViability matrix) (i.e. when #individuals with different ploidy hybridize, they generate have a probability p to generate no viable offspring). Selfing is allowed without cost. This influences the dynamics by including hybrid offspring that can compete for space (and affects the malthusian fitness/density dependence of selection). Still need to incorporate a decent recombination method. 
+	mate_p(a::Agent, b::Agent, UG::UnreducedGamete, OV::OffspringViability)
+This mating function assumes that different cytotypes can be compatible with a 
+decrease in viability (cfr. OffspringViability matrix) (i.e. when #individuals with 
+different ploidy hybridize, they generate have a probability p to generate no viable offspring). 
+Selfing is allowed without cost. This influences the dynamics by including hybrid offspring that can 
+compete for space (and affects the malthusian fitness/density dependence of selection).
 """	
 function mate_p(a::Agent, b::Agent, UG::UnreducedGamete, OV::OffspringViability)
 	#gamete formation
