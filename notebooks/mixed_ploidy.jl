@@ -944,7 +944,7 @@ end
 Base.length(h::Habitat) = length(h.demes)
 
 # ╔═╡ 0832b7f0-4013-11eb-0d7e-d3f77e87aa9b
-sim_hab = evolving_habitat(hab, 500, UG, OV)
+sim_hab = evolving_habitat(hab, 5000, UG, OV)
 
 # ╔═╡ f39e2370-7c2a-11eb-0cd6-3775f3c203ed
 pop_sizes = [length(deme) for deme  in sim_hab[1].demes]
@@ -987,7 +987,7 @@ end
 
 # ╔═╡ 0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
 begin
-	anim_range = @animate for i ∈ 1:10
+	anim_range = @animate for i ∈ 1:100
 		sim_habA = evolving_habitat(hab,i,UG,OV)
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -1176,7 +1176,7 @@ end
 # ╟─ce005ba0-7c2b-11eb-0037-655fb8d4d398
 # ╟─3238bff0-7c2b-11eb-1e9e-07866c41d6f4
 # ╟─0f7d5380-4013-11eb-2a3b-614df9653550
-# ╟─0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
+# ╠═0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
 # ╟─375696f0-4013-11eb-1779-677909ec6e11
 # ╟─472b52f0-4013-11eb-1e90-4775755333ef
 # ╟─3ddde280-4013-11eb-39a3-130d6ec349ff

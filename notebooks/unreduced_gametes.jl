@@ -575,6 +575,7 @@ function grid_search(t)
 	OV = OffspringViability([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]])
 	ploidy = []
 	param = []
+	pop_size = []
 	for u in range(0, stop=0.5, length=t)
 		UG = UnreducedGamete([[1-u,u,0.,0.],[0.,0.,0.,0.],[0.0,1.,0.0,0.]])
 		sim_ploidyvar = evolving_deme_ploidyvar(d_p,50,UG,OV)
@@ -584,8 +585,10 @@ function grid_search(t)
 			push!(ploidy,4)
 		end
 		push!(param, u)
+		pop = (sim_ploidyvar.p2[end] + sim_ploidyvar.p4[end])
+		push!(pop_size, pop)
 	end
-	ploidy, param
+	ploidy, param, pop_size
 end
 
 # ╔═╡ 39c92860-7c7e-11eb-1efe-13bf99e99d1e
@@ -621,12 +624,19 @@ begin
 	ylabel!("Count")
 end
 
+# ╔═╡ ff0cb820-7ff9-11eb-00e7-cf90fe869537
+begin
+p7 = plot(stats_2[2], stats_2[3], grid=false, color=:black, label="Pop size after t generations")
+xlabel!("\$u\$")
+ylabel!("Number of individuals")
+end
+
 # ╔═╡ 7f182630-7cc6-11eb-071d-0d22322e64e2
-plot(p1,p2,p3)
+plot(p1,p2,p3,p7)
 
 # ╔═╡ f0073e40-7c70-11eb-028a-978df2476189
 #Allocates some random probabalities for unreduced gamete formation for 2n, 3n, 4n individuals respectively, for example [0.9,0.1,0.,0.] -> 2n ind has probability of 0.9 to produce 1n gametes, 0.1 for 2n (unreduced) gamete,...this doesn't take into account aneuploid gametes yet.
-UG_2 = UnreducedGamete([[0.9,0.1,0.,0.],[0.,0.,0.,0.],[0.,.1,0.0,0.9]])
+UG_2 = UnreducedGamete([[0.6,0.4,0.,0.],[0.,0.,0.,0.],[0.,.4,0.0,0.6]])
 
 # ╔═╡ 90771400-7c6b-11eb-33da-4f1bf08039e4
 #On the rows/columns (symmetric matrix) are the ploidy levels of the gametes to be combined (1n to 4n).The upper bound is now at 4n, all ploidy levels above are not viable (ie. combination of 2n and 3n gamete has 0 viability).
@@ -652,6 +662,7 @@ function grid_search_2(t)
 	OV = OffspringViability([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]])
 	ploidy = []
 	param = []
+	pop_size = []
 	for u in range(0, stop=0.5, length=t)
 		UG = UnreducedGamete([[1-u,u,0.,0.],[0.,0.,0.,0.],[0.0,1-u,0.0,u]])
 		sim_ploidyvar = evolving_deme_ploidyvar(d_p,50,UG,OV)
@@ -660,16 +671,18 @@ function grid_search_2(t)
 		else
 			push!(ploidy,4)
 		end
+		pop = (sim_ploidyvar.p2[end] + sim_ploidyvar.p4[end])
+		push!(pop_size,pop)
 		push!(param, u)
 	end
-	ploidy, param
+	ploidy, param, pop_size
 end
 
 # ╔═╡ 52fc8ae0-7cd6-11eb-1731-f3c71b08b7a9
-stats_3 = grid_search_2(200)
+stats_3 = grid_search_2(500)
 
 # ╔═╡ 99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
-dp_3 = [(stats_3[2][i],stats_3[1][i]) for i in 1:200]
+dp_3 = [(stats_3[2][i],stats_3[1][i]) for i in 1:500]
 
 # ╔═╡ c0370950-7cd6-11eb-1113-9b2c9104da16
 begin
@@ -698,8 +711,15 @@ begin
 	ylabel!("Count")
 end
 
+# ╔═╡ 55373330-7ff8-11eb-351c-9df644942e4d
+begin
+p8 = plot(stats_3[2], stats_3[3], grid=false, color=:black, label="Pop size after t generations")
+xlabel!("\$u\$")
+ylabel!("Number of individuals")
+end
+
 # ╔═╡ c5025790-7cd7-11eb-24f8-51d85dc4b968
-plot(p5,p6,p4)
+plot(p5,p6,p4,p8)
 
 # ╔═╡ Cell order:
 # ╟─bd2ab750-7c60-11eb-3cc5-6d57dd448dfd
@@ -709,36 +729,38 @@ plot(p5,p6,p4)
 # ╟─c8734230-7c65-11eb-30bd-4314f44ee3ba
 # ╠═8f919600-7c6b-11eb-33b7-bd5a762fb3eb
 # ╟─e0789de0-7c6e-11eb-0900-3387c904ea0b
-# ╠═e5916552-7c6e-11eb-1868-a7b856e0ad1f
+# ╟─e5916552-7c6e-11eb-1868-a7b856e0ad1f
 # ╠═1d6f4e60-7c6f-11eb-0be9-9341661ea1d2
 # ╠═20380b50-7c6f-11eb-14c9-fb3fc36e318b
-# ╠═8caaa5de-7c6f-11eb-387a-05cc2add5483
-# ╠═13d994e0-7c70-11eb-1617-c37054ccc63b
+# ╟─8caaa5de-7c6f-11eb-387a-05cc2add5483
+# ╟─13d994e0-7c70-11eb-1617-c37054ccc63b
 # ╟─4cde5ba0-7c79-11eb-23e1-d1ac938c0e6b
 # ╟─1f6a4e72-7d48-11eb-0933-eb25e7a5b568
 # ╟─e315b920-7c7d-11eb-0f34-5782accf7286
-# ╠═39c92860-7c7e-11eb-1efe-13bf99e99d1e
+# ╟─39c92860-7c7e-11eb-1efe-13bf99e99d1e
 # ╠═c88e13d0-7c7e-11eb-0119-731f7ddc65ce
 # ╟─37231930-7c7f-11eb-2524-9115fc85d926
 # ╟─d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
 # ╟─41392210-7c85-11eb-19bf-675f7a929063
 # ╟─b7e83d6e-7c84-11eb-0e72-7b4c25184221
 # ╟─616389e0-7c85-11eb-13c9-fbf0587d3ccc
+# ╟─ff0cb820-7ff9-11eb-00e7-cf90fe869537
 # ╟─7f182630-7cc6-11eb-071d-0d22322e64e2
 # ╟─a478224e-7c70-11eb-133b-03e027bf81c8
 # ╟─57d84bf0-7c6b-11eb-0e68-f99c717f46e4
 # ╠═f0073e40-7c70-11eb-028a-978df2476189
 # ╠═90771400-7c6b-11eb-33da-4f1bf08039e4
 # ╠═f89b70d0-7c70-11eb-2d9c-d9abf241dd17
-# ╠═28e30f50-7c71-11eb-072c-dffe12b4b437
+# ╟─28e30f50-7c71-11eb-072c-dffe12b4b437
 # ╠═ed0024e0-7cd5-11eb-1548-f70db6fdda06
 # ╠═52fc8ae0-7cd6-11eb-1731-f3c71b08b7a9
 # ╠═99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
 # ╠═c0370950-7cd6-11eb-1113-9b2c9104da16
+# ╟─55373330-7ff8-11eb-351c-9df644942e4d
 # ╠═fb49b790-7cd6-11eb-3043-3563217174e9
 # ╟─08b7378e-7cd7-11eb-0120-edc0d8f9dbb8
 # ╟─38ef6cc0-7cd7-11eb-26e6-1767c49d50de
 # ╟─c5025790-7cd7-11eb-24f8-51d85dc4b968
 # ╟─302363ee-7c6c-11eb-0d7b-effeadcdeb60
 # ╠═cc1dcf70-7c6c-11eb-3664-b7e70e49723a
-# ╠═41a5cff0-7c6c-11eb-2b03-d7337d430df4
+# ╟─41a5cff0-7c6c-11eb-2b03-d7337d430df4
