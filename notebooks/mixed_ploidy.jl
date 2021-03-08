@@ -333,7 +333,7 @@ end
 
 # ╔═╡ a4b40320-7099-11eb-27cb-1f27ef2645ee
 #Allocates some random probabalities for unreduced gamete formation for 2n, 3n, 4n individuals respectively, for example [0.9,0.1,0.,0.] -> 2n ind has probability of 0.9 to produce 1n gametes, 0.1 for 2n (unreduced) gamete,...this doesn't take into account aneuploid gametes yet.
-UG = UnreducedGamete([[0.9,0.1,0.,0.],[0.,0.,0.,0.],[0.0,1.,0.0,0.]])
+UG = UnreducedGamete([[0.95,0.05,0.,0.],[0.,0.,0.,0.],[0.0,1.,0.0,0.]])
 
 # ╔═╡ 940db692-70aa-11eb-1276-9d757f1ed1ba
 #On the rows/columns (symmetric matrix) are the ploidy levels of the gametes to be combined (1n to 4n).The upper bound is now at 4n, all ploidy levels above are not viable (ie. combination of 2n and 3n gamete has 0 viability).
@@ -816,7 +816,7 @@ begin
 end
 
 # ╔═╡ 3147a3b0-4097-11eb-34be-bf35f43bd3e1
-md""" ## To be continued"""
+md""" ## Mutation To be continued"""
 
 # ╔═╡ b42552a0-3e76-11eb-3ee2-a5bf1aabcff6
 function mutate(d::AbstractDeme, a::Agent) 
@@ -859,7 +859,7 @@ the migration aspects of the population genetic environment.
     demes::Vector{D}
     σ ::T = 1/2 #variance of dispersal
     b ::T = 0.1 #steepness of linear gradient
-	θ ::T = 12.5 #phenotypic optimim in the center
+	θ ::T = 12.5 #phenotypic optimum in the center
     Dm::T = 250. #number of demes to initialize
 end
 
@@ -874,7 +874,7 @@ habi = Habitat(demes=[d_p])
 
 # ╔═╡ ce14f100-4012-11eb-0daf-19617768225e
 function random_walk(h::Habitat, p)
-	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 45, [2], 0, d=2.)), θ=i.θ) for i in h.demes])
+	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 50, [2], 0, d=2.)), θ=i.θ) for i in h.demes])
     newdemes = similar(h.demes)
     for (i, deme) in enumerate(h.demes)
         for agent in deme.agents
@@ -907,8 +907,8 @@ g_lin = linear_gradient(habi)
 function initiate_habitat(gradient)
 	"""The aim should be to initiate a population for nd_s demes on a linear gradient (with slope b) and with "optimal genetic variance" where one half of the genes are adapted, meaning their clines take the form and spacing as assumed for the deterministic model under linkage equilibrium"""
 	
-	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 45, [2], 0, d=2.)), θ=i) for i in gradient])
-	for a in randagent_p(0.5, 0.5, 45, [2], 100, d=2.)
+	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 50, [2], 0, d=2.)), θ=i) for i in gradient])
+	for a in randagent_p(0.5, 0.5, 50, [2], 100, d=2.)
 	push!(hab.demes[Int(hab.Dm/2)].agents, a)
 	end
 
@@ -944,7 +944,7 @@ end
 Base.length(h::Habitat) = length(h.demes)
 
 # ╔═╡ 0832b7f0-4013-11eb-0d7e-d3f77e87aa9b
-sim_hab = evolving_habitat(hab, 100, UG, OV)
+sim_hab = evolving_habitat(hab, 500, UG, OV)
 
 # ╔═╡ f39e2370-7c2a-11eb-0cd6-3775f3c203ed
 pop_sizes = [length(deme) for deme  in sim_hab[1].demes]
@@ -987,7 +987,7 @@ end
 
 # ╔═╡ 0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
 begin
-	anim_range = @animate for i ∈ 1:100
+	anim_range = @animate for i ∈ 1:10
 		sim_habA = evolving_habitat(hab,i,UG,OV)
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -1017,7 +1017,7 @@ function f_trait_agents(sim_hab)
 	cordst = []
 	for (i, deme) in enumerate(sim_hab[1].demes)
 		for agent in deme.agents
-			t = sum(agent)
+			t = trait(agent)
 			p = (i,t)
 			push!(cordst,i)
 			push!(trait_agents,t)
@@ -1040,6 +1040,34 @@ begin
 	plot!(cordst,trait_agents, label="Z agents")
 	xlabel!("Space")
 	ylabel!("Trait Z")
+end
+
+# ╔═╡ a7efee70-7fa6-11eb-3811-55a84a7697b7
+function f_het_demes(sim_hab)
+	het_demes = []
+	cordsh = []
+	for (i, deme) in enumerate(sim_hab[1].demes)
+	if length(deme) != 0
+		het = 0.5^2*sum(heterozygosities_p(deme))
+		push!(cordsh,i)
+		push!(het_demes,het)
+	else
+		push!(cordsh,i)
+		push!(het_demes,0)
+		end
+	end
+	het_demes, cordsh
+end
+
+# ╔═╡ a1fc5762-7fa6-11eb-2b9f-799f43e01b8a
+begin
+	#het_means_p = map(mean, het_demes)
+	het_demes, cordsh = f_het_demes(sim_hab)
+
+	p3 = plot(cordsh, het_demes, grid=false, color=:black, label="Vg_mean deme")
+	hline!([0.1*0.5*sqrt(0.5)], label = "E(V_G)") #b*σ*sqrt(Vs)
+	xlabel!("Space")
+	ylabel!("\$V_G\$")
 end
 
 # ╔═╡ Cell order:
@@ -1143,13 +1171,15 @@ end
 # ╠═00f20770-4013-11eb-172e-7d4cfede7a85
 # ╠═08ce7910-7c27-11eb-1674-f97c8db9a82d
 # ╠═0832b7f0-4013-11eb-0d7e-d3f77e87aa9b
-# ╠═f39e2370-7c2a-11eb-0cd6-3775f3c203ed
-# ╠═6c282e70-7c2c-11eb-2a89-8971cf1b19f0
+# ╟─f39e2370-7c2a-11eb-0cd6-3775f3c203ed
+# ╟─6c282e70-7c2c-11eb-2a89-8971cf1b19f0
 # ╟─ce005ba0-7c2b-11eb-0037-655fb8d4d398
 # ╟─3238bff0-7c2b-11eb-1e9e-07866c41d6f4
-# ╠═0f7d5380-4013-11eb-2a3b-614df9653550
-# ╠═0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
-# ╠═375696f0-4013-11eb-1779-677909ec6e11
-# ╠═472b52f0-4013-11eb-1e90-4775755333ef
-# ╠═3ddde280-4013-11eb-39a3-130d6ec349ff
-# ╠═51427c00-4013-11eb-2be7-511a95abdf44
+# ╟─0f7d5380-4013-11eb-2a3b-614df9653550
+# ╟─0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
+# ╟─375696f0-4013-11eb-1779-677909ec6e11
+# ╟─472b52f0-4013-11eb-1e90-4775755333ef
+# ╟─3ddde280-4013-11eb-39a3-130d6ec349ff
+# ╟─51427c00-4013-11eb-2be7-511a95abdf44
+# ╟─a7efee70-7fa6-11eb-3811-55a84a7697b7
+# ╟─a1fc5762-7fa6-11eb-2b9f-799f43e01b8a

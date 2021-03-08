@@ -674,7 +674,7 @@ function initiate_habitat(gradient,b,nd_s)
 end
 
 # ╔═╡ f47f5000-2d2b-11eb-2b47-055dcccaf248
-hab = initiate_habitat(g_lin, 0.5, 25)
+hab = initiate_habitat(g_lin, 0.1, 25)
 
 # ╔═╡ d34571b0-2ea4-11eb-1c44-dfef7bc82957
 md"""
@@ -730,7 +730,7 @@ end
 #end
 
 # ╔═╡ dc134e70-16d5-11eb-2c19-8dc7a5d152b7
-sim_hab = evolving_habitat(hab,10000,1.06,0.5,10^-6,0.50)
+sim_hab = evolving_habitat(hab,100,1.06,0.5,10^-6,0.50)
 
 # ╔═╡ e30d8380-2ea4-11eb-3971-91192814178e
 md"""
@@ -840,7 +840,7 @@ het_demes, cordsh = f_het_demes(sim_hab)
 # ╔═╡ 5497f602-17fa-11eb-1fae-fbd03f58d6d6
 begin
 	#het_means_p = map(mean, het_demes)
-	p3 = plot(cordsh, het_demes, grid=false, color=:black, label="Z_mean deme")
+	p3 = plot(cordsh, het_demes, grid=false, color=:black, label="Vg_mean deme")
 	hline!([b*σ*sqrt(Vs)], label = "E(V_G)")
 	xlabel!("Space")
 	ylabel!("\$V_G\$")
