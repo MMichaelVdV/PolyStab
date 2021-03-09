@@ -40,11 +40,13 @@ function bin(data)
 	up2 = []
 	up4 = []
 	for i in data
+		
 		if i[2] == 2
 			push!(up2,i[1])
 		else
 			push!(up4,i[1])
 		end
+		
 	end
 	up2,up4
 end
@@ -594,45 +596,12 @@ end
 # ╔═╡ 39c92860-7c7e-11eb-1efe-13bf99e99d1e
 stats_2 = grid_search(200)
 
-# ╔═╡ c88e13d0-7c7e-11eb-0119-731f7ddc65ce
-dp_2 = [(stats_2[2][i],stats_2[1][i]) for i in 1:200]
-
-# ╔═╡ 37231930-7c7f-11eb-2524-9115fc85d926
-begin
-p3 = scatter(dp_2, label=false, title="UG for 2n only")
-vline!([0.17], label="u=0.17",linewidth=5)
-xlabel!("u (unreduced gamete formation 2n)")
-ylabel!("Ploidy")
-end
-
-# ╔═╡ 41392210-7c85-11eb-19bf-675f7a929063
-binz = bin(dp_2)
-
-# ╔═╡ b7e83d6e-7c84-11eb-0e72-7b4c25184221
-begin
-	p1 = histogram(binz[1], bins=50, label=false, title="Diploid > Tetraploid")
-	vline!([0.17], label="u=0.17",linewidth=5)
-	xlabel!("u (unreduced gamete formation 2n)")
-	ylabel!("Count")
-end
-
-# ╔═╡ 616389e0-7c85-11eb-13c9-fbf0587d3ccc
-begin
-	p2 = histogram(binz[2], bins=50, label=false, title="Tetraploid > Diploid")
-	vline!([0.17], label="u=0.17",linewidth=5)
-	xlabel!("u (unreduced gamete formation 2n)")
-	ylabel!("Count")
-end
-
 # ╔═╡ ff0cb820-7ff9-11eb-00e7-cf90fe869537
 begin
 p7 = plot(stats_2[2], stats_2[3], grid=false, color=:black, label="Pop size after t generations")
 xlabel!("\$u\$")
 ylabel!("Number of individuals")
 end
-
-# ╔═╡ 7f182630-7cc6-11eb-071d-0d22322e64e2
-plot(p1,p2,p3,p7)
 
 # ╔═╡ f0073e40-7c70-11eb-028a-978df2476189
 #Allocates some random probabalities for unreduced gamete formation for 2n, 3n, 4n individuals respectively, for example [0.9,0.1,0.,0.] -> 2n ind has probability of 0.9 to produce 1n gametes, 0.1 for 2n (unreduced) gamete,...this doesn't take into account aneuploid gametes yet.
@@ -681,8 +650,41 @@ end
 # ╔═╡ 52fc8ae0-7cd6-11eb-1731-f3c71b08b7a9
 stats_3 = grid_search_2(500)
 
+# ╔═╡ c88e13d0-7c7e-11eb-0119-731f7ddc65ce
+dp_2 = [(stats_2[2][i],stats_2[1][i],stats_3[3][i]) for i in 1:200]
+
+# ╔═╡ 37231930-7c7f-11eb-2524-9115fc85d926
+begin
+p3 = scatter(dp_2, label=false, title="UG for 2n only")
+vline!([0.17], label="u=0.17",linewidth=5)
+xlabel!("u (unreduced gamete formation 2n)")
+ylabel!("Ploidy")
+end
+
+# ╔═╡ 41392210-7c85-11eb-19bf-675f7a929063
+binz = bin(dp_2)
+
+# ╔═╡ b7e83d6e-7c84-11eb-0e72-7b4c25184221
+begin
+	p1 = histogram(binz[1], bins=50, label=false, title="Diploid > Tetraploid")
+	vline!([0.17], label="u=0.17",linewidth=5)
+	xlabel!("u (unreduced gamete formation 2n)")
+	ylabel!("Count")
+end
+
+# ╔═╡ 616389e0-7c85-11eb-13c9-fbf0587d3ccc
+begin
+	p2 = histogram(binz[2], bins=50, label=false, title="Tetraploid > Diploid")
+	vline!([0.17], label="u=0.17",linewidth=5)
+	xlabel!("u (unreduced gamete formation 2n)")
+	ylabel!("Count")
+end
+
+# ╔═╡ 7f182630-7cc6-11eb-071d-0d22322e64e2
+plot(p1,p2,p3,p7)
+
 # ╔═╡ 99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
-dp_3 = [(stats_3[2][i],stats_3[1][i]) for i in 1:500]
+dp_3 = [(stats_3[2][i],stats_3[1][i],stats_3[3][i]) for i in 1:500]
 
 # ╔═╡ c0370950-7cd6-11eb-1113-9b2c9104da16
 begin
@@ -739,8 +741,8 @@ plot(p5,p6,p4,p8)
 # ╟─e315b920-7c7d-11eb-0f34-5782accf7286
 # ╟─39c92860-7c7e-11eb-1efe-13bf99e99d1e
 # ╠═c88e13d0-7c7e-11eb-0119-731f7ddc65ce
-# ╟─37231930-7c7f-11eb-2524-9115fc85d926
-# ╟─d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
+# ╠═37231930-7c7f-11eb-2524-9115fc85d926
+# ╠═d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
 # ╟─41392210-7c85-11eb-19bf-675f7a929063
 # ╟─b7e83d6e-7c84-11eb-0e72-7b4c25184221
 # ╟─616389e0-7c85-11eb-13c9-fbf0587d3ccc
@@ -754,7 +756,7 @@ plot(p5,p6,p4,p8)
 # ╟─28e30f50-7c71-11eb-072c-dffe12b4b437
 # ╠═ed0024e0-7cd5-11eb-1548-f70db6fdda06
 # ╠═52fc8ae0-7cd6-11eb-1731-f3c71b08b7a9
-# ╠═99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
+# ╟─99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
 # ╠═c0370950-7cd6-11eb-1113-9b2c9104da16
 # ╟─55373330-7ff8-11eb-351c-9df644942e4d
 # ╠═fb49b790-7cd6-11eb-3043-3563217174e9

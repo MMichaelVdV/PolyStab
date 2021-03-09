@@ -1,6 +1,6 @@
 """
     Agent{T}
-Should be an agent of arbitrary (allowed) ploidy level.
+Agent of arbitrary ploidy level.
 """
 @with_kw struct Agent{T,N}
     loci::Array{Array{T,1},N}
@@ -15,12 +15,12 @@ end
 
 """
     SimpleDeme{A}
-    A single random-mating, single ploidy level deme. 
+A single random-mating, single ploidy level deme. 
 - `K` : Carrying capacity
 """
 @with_kw struct SimpleDeme{A} <: AbstractDeme{A}
     agents::Vector{A}
-    K ::Int64 = 15
+    K ::Int64 = 15 
 end
 	
 """

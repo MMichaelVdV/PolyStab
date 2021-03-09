@@ -944,7 +944,7 @@ end
 Base.length(h::Habitat) = length(h.demes)
 
 # ╔═╡ 0832b7f0-4013-11eb-0d7e-d3f77e87aa9b
-sim_hab = evolving_habitat(hab, 5000, UG, OV)
+sim_hab = evolving_habitat(hab, 2000, UG, OV)
 
 # ╔═╡ f39e2370-7c2a-11eb-0cd6-3775f3c203ed
 pop_sizes = [length(deme) for deme  in sim_hab[1].demes]
