@@ -873,6 +873,7 @@ habi = Habitat(demes=[d_p])
 (h::Habitat)(demes) = Habitat(h.demes, h.σ, h.θ, h.b, h.dm)
 
 # ╔═╡ ce14f100-4012-11eb-0daf-19617768225e
+ms"""
 function random_walk(h::Habitat, p)
 	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 50, [2], 0, d=2.)), θ=i.θ) for i in h.demes])
     newdemes = similar(h.demes)
@@ -889,6 +890,76 @@ function random_walk(h::Habitat, p)
     end
     #Habitat(demes=newdemes, h.σ, h.b, h.θ, h.Dm)
 	hab
+end
+"""
+
+# ╔═╡ e915ce50-8196-11eb-1829-432c796fdc53
+begin
+	emptycopy(d::MixedPloidyDeme{A,T}) where A where T = MixedPloidyDeme(A[], d.K, d.θ, d.rm, d.Vs, d.u, d.μ)
+	emptycopy(h::Habitat) = Habitat(emptycopy.(h.demes), h.σ, h.b, h.θ, h.Dm)
+end
+
+# ╔═╡ 91560d40-8198-11eb-002a-b5acad3c46b1
+function random_walk(h::Habitat, p)
+    new_h = emptycopy(h)
+    for (i, deme) in enumerate(h.demes)
+        for agent in deme.agents
+            step = rand() < p ? rand([-1,1]) : 0 
+            if step == -1 && i == 1
+                step = 0
+            elseif step == 1  && i == length(h)
+                step = 0
+            end
+            push!(new_h.demes[i+step], agent)
+        end
+    end
+    new_h
+end
+
+# ╔═╡ 43dab1b0-8198-11eb-1e6d-096172f2c4dd
+d_p
+
+# ╔═╡ 48776b50-8198-11eb-1417-dfd30174a3cd
+emptycopy(d_p)
+
+# ╔═╡ 8125f230-8195-11eb-2542-df4f24aa9a52
+function Gaussian_dispersal(h::Habitat,σ)
+    new_h = emptycopy(h)
+	dist = Normal(0,σ)
+	dist_trunc = truncated(dist,-2*σ,2*σ)
+	bin_1 = pdf(dist, σ)
+	for (i, deme) in enumerate(h.demes)
+        for agent in deme.agents
+            step = -bin_1 < rand(dist_trunc) < bin_1  ?  0 : rand([-1,1])
+            if step == -1 && i == 1
+                step = 0
+            elseif step == 1  && i == length(h)
+                step = 0
+            end
+            push!(new_h.demes[i+step].agents, agent)
+        end
+    end
+    new_h
+end
+
+# ╔═╡ 832f7dce-8195-11eb-30e6-8fb1533073ae
+function Cauchy_dispersal(h::Habitat,σ)
+    new_h = emptycopy(h)
+	dist = Cauchy(0,σ)
+	dist_trunc = truncated(dist,-2*σ,2*σ)
+	bin_1 = pdf(dist, σ)
+	for (i, deme) in enumerate(h.demes)
+        for agent in deme.agents
+            step = -bin_1 < rand(dist_trunc) < bin_1  ?  0 : rand([-1,1])
+            if step == -1 && i == 1
+                step = 0
+            elseif step == 1  && i == length(h)
+                step = 0
+            end
+            push!(new_h.demes[i+step], agent)
+        end
+    end
+    new_h
 end
 
 # ╔═╡ d124a200-4012-11eb-3644-2be0a62eab74
@@ -928,7 +999,7 @@ hab.demes[1]
 function evolving_habitat(h::Habitat{D}, ngen, UG, OV) where D
 	for n = 1:ngen
 		h = random_walk(h,0.5)
-		#h = Gaussian_dispersal(h,σ)
+		#ih = Gaussian_dispersal(h,σ)
 		new_h = Vector{D}(undef, length(h))
 		for (i, d) in enumerate(h.demes)
 			d = mating_PnB(d,UG,OV)
@@ -944,7 +1015,7 @@ end
 Base.length(h::Habitat) = length(h.demes)
 
 # ╔═╡ 0832b7f0-4013-11eb-0d7e-d3f77e87aa9b
-sim_hab = evolving_habitat(hab, 2000, UG, OV)
+sim_hab = evolving_habitat(hab, 3000, UG, OV)
 
 # ╔═╡ f39e2370-7c2a-11eb-0cd6-3775f3c203ed
 pop_sizes = [length(deme) for deme  in sim_hab[1].demes]
@@ -987,7 +1058,7 @@ end
 
 # ╔═╡ 0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
 begin
-	anim_range = @animate for i ∈ 1:100
+	anim_range = @animate for i ∈ 1:1
 		sim_habA = evolving_habitat(hab,i,UG,OV)
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -1162,6 +1233,12 @@ end
 # ╠═a1bee470-7c1d-11eb-019e-09dcff0c5c73
 # ╠═20f9a2ae-7c24-11eb-2a8a-493c2e8b3dd5
 # ╠═ce14f100-4012-11eb-0daf-19617768225e
+# ╠═91560d40-8198-11eb-002a-b5acad3c46b1
+# ╠═e915ce50-8196-11eb-1829-432c796fdc53
+# ╠═43dab1b0-8198-11eb-1e6d-096172f2c4dd
+# ╠═48776b50-8198-11eb-1417-dfd30174a3cd
+# ╠═8125f230-8195-11eb-2542-df4f24aa9a52
+# ╠═832f7dce-8195-11eb-30e6-8fb1533073ae
 # ╠═eb36ad90-7c27-11eb-0ab3-33969b64dc36
 # ╠═39a60612-7c28-11eb-324a-238466b5c0aa
 # ╠═d124a200-4012-11eb-3644-2be0a62eab74
