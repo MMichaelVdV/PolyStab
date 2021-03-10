@@ -1,1 +1,7 @@
 # PolyStab
+
+Notebooks:
+- singledeme.jl: implementation of PnB on single deme level
+- model_with_migration.jl: implementation of PnB for a linear habitat
+- mixed_ploidy.jl: implementation of PnB for a linear habitat with mixed ploidy 
+- unreduced_gametes.jl: some testcases for unreduced gamete formation
