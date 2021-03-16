@@ -12,7 +12,7 @@ Random.seed!(123)
 
 # ╔═╡ b93e3ee0-10c8-11eb-3db9-0f2cfebf6f7a
 md"""
-# Migration over a linear habitat
+# Migration in a linear habitat
 
 This notebook contains an extension of single deme population genetics to a linear habitat with migration.
 

@@ -5,7 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ cc1dcf70-7c6c-11eb-3664-b7e70e49723a
-using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI
+using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
 
 # ╔═╡ bd2ab750-7c60-11eb-3cc5-6d57dd448dfd
 md"""##### Minority Cytotype Exclusion in Local Plant Populations (Levin, 1995)"""
@@ -15,6 +15,9 @@ md"""##### Minority Cytotype Exclusion in Local Plant Populations (Levin, 1995)"
 
 # ╔═╡ 2dadbbf0-7c5f-11eb-3d09-1fcf2b82ead9
 md"""##### Establishment of a tetraploid cytotype in a diploid population: Effect of relative fitness of the cytotypes (Felber, 1991)"""
+
+# ╔═╡ 472102d2-84a8-11eb-2d6d-eb101b7a707b
+
 
 # ╔═╡ 7df71be0-7c70-11eb-3b92-91457ecf38fd
 md"""###### Case 1 (Felber, 1991)"""
@@ -61,6 +64,104 @@ See case 1 but now the parameter in this model is u(=v): unreduced gamete format
 Starting from a population of only diploid individuals, according to this model, tetraploids will exclude diploids if unreduced gamete formation for is higher than 0.2.
 
 """
+
+# ╔═╡ 86be28f0-84ad-11eb-2ccf-6f60ad079d75
+begin
+#credits to arzwa
+#This is the simple Felber model, expressed in terms of marginal/relative fitnesses
+w = [0., 1., 0., 1.]
+# wij = proportion of offspring of ploidy j for a given individual of ploidy i
+# marginal/relative fitness of ploidy i (proportion of offspring in the next generation coming from a parent of ploidy i, regardless of offspring ploidy level) is
+# wi* = ∑ⱼwij. The mean fitness is then ∑ᵢwi* pᵢ. The proportion of offspring
+# of ploidy level j in the next generation is (∑ᵢwij pᵢ) / w̄. This seems like a
+# mathematically quite elegant formulation of the model, and one that may
+# generalize relatively easily.
+w22(w, u, p) = w[2] * (1-u)^2 * p
+w24(w, u, p) = w[4] * (u^2 * p + u*(1-u) * (1-p))
+w44(w, u, p) = w[4] * ((1-u)^2 * (1-p))+ u*(1-u) * p #u*(1-u) * p: where does this come from ?
+w̄(w, u, p) = w22(w, u, p) * p  + w44(w, u, p) * (1-p) + w24(w, u, p) * p     
+function w̄_(w, u, p) 
+    w2 = w22(w, u, p) * p  
+    w4 = w44(w, u, p) * (1-p) + w24(w, u, p) * p 
+    return w2, w4
+end
+function evolve(w, u, p, n)
+    map(1:n) do x
+        w2, w4 = w̄_(w, u, p)
+        p = w2 / (w2 + w4)
+        p, w2 + w4
+    end
+end
+# In this model (no triploids, tetraploids and diploids equally fit a priori,
+# shared unreduced gamete formation rate, no higher polyploids) tetraploids
+# take over irrespective of the initial frequencies as soon as u > 0.2. Note
+# though that values of u > 0.2 lead to a very serious load in the population,
+# as at least a fraction (1-0.8^2) of inviable offspring will be generated
+# each generation!
+
+p = plot(grid=false, legend=false, xlabel="\$t\$", ylabel="\$\\bar{w}\$")
+cols = cgrad(:magma, 0.05:0.01:0.45)
+for u=0.05:0.01:0.45
+    mw = last.(evolve(w, u, 1., 30))
+    plot!(p, mw, color=cols[u], linewidth=2, alpha=0.5)
+end
+plot(p, size=(750,750))
+#savefig("felber-wbar.pdf")
+# Interestingly, mean fitness decreases in this system. Of course it is well
+# known that in systems with frequency dependence mean fitness does not
+# necessarily increase, but somehow I never checked this for the Felber model.
+end
+
+# ╔═╡ 7f32ce70-85ab-11eb-1c30-1ffd857a2545
+evolve([0., 1., 0., 1.], 0.2, 1., 20)
+
+# ╔═╡ f641bd10-85aa-11eb-03fc-0de54af93d35
+begin
+pf = plot(grid=false, legend=false, xlabel="\$t\$", ylabel="\$\\bar{w}\$")
+#cols = cgrad(:magma, 0.05:0.01:0.45)
+#for u=0.05:0.01:0.45
+	u = 0.25
+	s = (evolve(w, u, 1., 30))
+    mw = last.(s)
+	pfs = first.(s)
+	#f = 
+    plot!(pf, mw, color=cols[u], linewidth=2, alpha=0.5)
+	plot!(pf, pfs, color="blue", linewidth=2, alpha=0.5)
+	plot!(pf, 1 .-pfs, color="red", linewidth=2, alpha=0.5)
+#end
+plot(pf, size=(750,750))
+#savefig("felber-fubar.pdf")
+# Interestingly, mean fitness decreases in this system. Of course it is well
+# known that in systems with frequency dependence mean fitness does not
+# necessarily increase, but somehow I never checked this for the Felber model.
+end
+
+# ╔═╡ 8a935580-85ad-11eb-1c01-fbfe6528c0e2
+(evolve(w, u, 1., 30))
+
+# ╔═╡ 495309e0-85ac-11eb-3231-b3dce7ae61c5
+first.(evolve([0., 1., 0., 1.], 0.5, 1., 30))
+
+# ╔═╡ aab09870-84b1-11eb-11c6-ffa1224114d8
+begin
+#Here I try to plot the cytogenic load for different levels of u to check if there is indeed a maximimum for a mixed population
+cytoload_2n(u) = 2*(1-u)*u
+cytoload_4n(u) = 2*(1-u)*u+u^2
+#cytoload_total(u,f) = (2*(1-u)*u)*(1-f) + (2*(1-u)*u+u^2)*(f)
+#as total frequency of unviable gametes
+cytoload_total(u,f) = (1-u)*f*(1-u)*(1-f)+(1-u)*f*u*(1-f)+(1-u)*f*u*f+(1-u)*(1-f)*u*(1-f)+(u*(1-f))^2+u*f*u*(1-f)
+	
+f=[i for i in 0.0:0.01:1.]
+
+pl = plot(grid=false, legend=false, xlabel="\$f(4N)\$", ylabel="\$cytoload\$")
+#cols = cgrad(:magma, 0.05:0.01:0.45)
+for u=0.05:0.01:0.45
+	load = cytoload_total.(u,f)
+    plot!(f, load, color=cols[u], linewidth=2, alpha=0.5)
+end
+plot(pl, size=(750,750))
+	
+end
 
 # ╔═╡ 302363ee-7c6c-11eb-0d7b-effeadcdeb60
 md"""#### Functions"""
@@ -727,6 +828,7 @@ plot(p5,p6,p4,p8)
 # ╟─bd2ab750-7c60-11eb-3cc5-6d57dd448dfd
 # ╠═98180cf0-7c6b-11eb-0da9-c55b3cf2a066
 # ╟─2dadbbf0-7c5f-11eb-3d09-1fcf2b82ead9
+# ╠═472102d2-84a8-11eb-2d6d-eb101b7a707b
 # ╟─7df71be0-7c70-11eb-3b92-91457ecf38fd
 # ╟─c8734230-7c65-11eb-30bd-4314f44ee3ba
 # ╠═8f919600-7c6b-11eb-33b7-bd5a762fb3eb
@@ -734,8 +836,8 @@ plot(p5,p6,p4,p8)
 # ╟─e5916552-7c6e-11eb-1868-a7b856e0ad1f
 # ╠═1d6f4e60-7c6f-11eb-0be9-9341661ea1d2
 # ╠═20380b50-7c6f-11eb-14c9-fb3fc36e318b
-# ╟─8caaa5de-7c6f-11eb-387a-05cc2add5483
-# ╟─13d994e0-7c70-11eb-1617-c37054ccc63b
+# ╠═8caaa5de-7c6f-11eb-387a-05cc2add5483
+# ╠═13d994e0-7c70-11eb-1617-c37054ccc63b
 # ╟─4cde5ba0-7c79-11eb-23e1-d1ac938c0e6b
 # ╟─1f6a4e72-7d48-11eb-0933-eb25e7a5b568
 # ╟─e315b920-7c7d-11eb-0f34-5782accf7286
@@ -763,6 +865,12 @@ plot(p5,p6,p4,p8)
 # ╟─08b7378e-7cd7-11eb-0120-edc0d8f9dbb8
 # ╟─38ef6cc0-7cd7-11eb-26e6-1767c49d50de
 # ╟─c5025790-7cd7-11eb-24f8-51d85dc4b968
+# ╠═86be28f0-84ad-11eb-2ccf-6f60ad079d75
+# ╠═7f32ce70-85ab-11eb-1c30-1ffd857a2545
+# ╠═f641bd10-85aa-11eb-03fc-0de54af93d35
+# ╠═8a935580-85ad-11eb-1c01-fbfe6528c0e2
+# ╠═495309e0-85ac-11eb-3231-b3dce7ae61c5
+# ╠═aab09870-84b1-11eb-11c6-ffa1224114d8
 # ╟─302363ee-7c6c-11eb-0d7b-effeadcdeb60
 # ╠═cc1dcf70-7c6c-11eb-3664-b7e70e49723a
 # ╟─41a5cff0-7c6c-11eb-2b03-d7337d430df4

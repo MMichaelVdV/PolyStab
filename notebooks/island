@@ -1,3 +1,37 @@
+### A Pluto.jl notebook ###
+# v0.12.17
+
+using Markdown
+using InteractiveUtils
+
+# ╔═╡ 58c46a2e-85ee-11eb-28ed-f927eac6cd9b
+using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
+
+# ╔═╡ ff9c1d30-8657-11eb-1249-852b045e1158
+md""" ### Island model
+"""
+
+# ╔═╡ 4d51f440-8659-11eb-010c-ab5401fcc485
+md""" ###### cfr. Establishment in a new habitat by polygenic adaptation (Barton and Etheridge, 2017)"""
+
+# ╔═╡ 14002550-8658-11eb-0690-3f178c25e622
+md""" Representation: large abstract mainland population (assumes: infinite population size in HWE), migration from mainland to different smaller islands with finite population size (respresented as demes).
+
+Some quick thoughts:
+- mainland -> island: establishment of polyploid in a diploid island population
+- migration between islands (demes) or only from mainland to island?
+- starting population mainland (Gv), island
+- colonization event (selfing versus non-selfing, i.e. with nonselfing you need at least two individuals to succesfully colonize an island). 
+- stochasticity < dispersal (phenotype - island match), i.e. do all islands have the same optimum as mainland (agents will already be adapted) or is there variation in island optima (different islands with different parameters versus all islands same parameters and different simulation runs)
+"""
+
+# ╔═╡ dac9ff40-8657-11eb-380c-23337b4e14a2
+md""" ### Functions
+"""
+
+# ╔═╡ a6e75fb0-8657-11eb-19c0-73a0c663c362
+begin
+
 #Basic building blocks (structures):
 
 """
@@ -48,7 +82,7 @@ mutation).
     u ::T     = 0.01
     μ ::T     = 1e-6
 	OV::Array{Array{T,1},N} = [[1.,0.,0.1,0.],[0.,1.,0.,0.],[0.1,0.,0.,0.],[0.,0.,0.,0.]]
-	UG::Array{Array{T,1},N} = [[0.9,0.1,0.,0.],[0.,0.,0.,0.],[0.0,1.,0.0,0.]]
+	UG::Array{Array{T,1},N} = [[1.,0.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]]
 end
 
 """
@@ -124,103 +158,6 @@ emptycopy(h::Habitat) = Habitat(emptycopy.(h.demes), h.σ, h.b, h.θ, h.Dm)
 
 #Functions for mating:
 
-"""
-	mate(a::Agent, b::Agent)
-Mating in a haploid populations.
-"""
-function mate(a::Agent, b::Agent)
-    newloci = similar(a.loci)
-    for i in 1:length(a)
-		@inbounds newloci[i] = rand() < 0.5 ? a[i] : b[i]
-    end
-	Agent(newloci, a.d)
-end	
-
-"""
-	random_mating(d::AbstractDeme)
-Random mating in a haploid deme.
-"""
-function random_mating(d::AbstractDeme)
-    newdeme = similar(d.agents)
-    for i=1:length(d)
-		@inbounds newdeme[i] = mate(rand(d, 2)...)
-	end
-	d(newdeme)
-end 
-
-"""
-	random_mating_p(d::AbstractDeme)
-Random mating in a deme of a single ploidy level.
-"""
-function random_mating_p(d::AbstractDeme)
-    newdeme = similar(d.agents)
-    for i=1:length(d)
-		@inbounds newdeme[i] = mate_p(rand(d, 2)...)
-	end
-	d(agents=newdeme,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
-end
-
-"""
-	mate_p(a::Agent, b::Agent)
-Mating in a mixed ploidy deme. Assumes that different cytotypes are incompatible 
-(i.e. when individuals with different ploidy hybridize, they generate no offspring).
-This is in accordance with the model from Levy (1975). Selfing is allowed without cost. 
-The dynamics might be different when you implement mating alowing for sterile hybrid 
-offspring that can compete for space (and affects the malthusian fitness).
-"""	
-function mate_p(a::Agent, b::Agent)
-	if ploidy(a) == ploidy(b) 
-		newgenome = similar(a.loci)
-    	for i in 1:ploidy(a) #this loops over the different chromosomes
-			#rp_a = rand([1,ploidy(a)])
-			#rp_b = rand([1,ploidy(b)])
-			newloci = similar(a.loci[1])
-				for j in 1:length(a) #this loops over the different loci for each chrosome
-					@inbounds newloci[j] = rand() < 0.5 ? a[i][j] : b[i][j]
-					#still need to randomize chromosome pairing I think
-					#have to add the right unreduced gamete formation dynamics
-				end
-			newgenome[i] = newloci
-    	end
-		return Agent(newgenome, a.d)
-	else
-		return 0
-	end
-end 
-
-"""
-	mate_p(a::Agent, b::Agent, UG::UnreducedGamete, OV::OffspringViability)
-Mating in a mixed ploidy deme. Assumes that different cytotypes can be compatible with a 
-decrease in viability (cfr. OffspringViability matrix) (i.e. when #individuals with 
-different ploidy hybridize, they generate have a probability p to generate no viable offspring). 
-Selfing is allowed without cost. This influences the dynamics by including hybrid offspring that can 
-compete for space (and affects the malthusian fitness/density dependence of selection).
-"""	
-function mate_p(a::Agent, b::Agent, UG::UnreducedGamete, OV::OffspringViability)
-	#gamete formation
-	ag = recombine_poly(unreduced_gamete(a,UG))
-	bg = recombine_poly(unreduced_gamete(b,UG))
-	gam_a = ag.loci	
-	gam_b = bg.loci
-	#combine gametes and assign viability
-	via = viability(ag, bg, OV)
-	if rand() < via
-		num = ploidy(ag) + ploidy(bg)
-		loci = [ Float64[] for x in 1:num ]
-	
-		c = 1
-		while c <= ploidy(ag)
-			loci[c] = gam_a[c]
-			c+=1
-		end
-		while c <= num
-			loci[c] = gam_b[c-ploidy(ag)]
-			c+=1
-		end
-		return Agent(loci, 1. *num)
-		end
-	return 0
-end
 
 """
 	mate_p(a::Agent, b::Agent)
@@ -232,12 +169,12 @@ compete for space (and affects the malthusian fitness/density dependence of sele
 """	
 function mate_p(a::Agent, b::Agent, d::AbstractDeme)
 	#gamete formation
-	ag = recombine_poly(unreduced_gamete(a,d.UG))
-	bg = recombine_poly(unreduced_gamete(b,d.UG))
+	ag = recombine_poly(unreduced_gamete(a,d))
+	bg = recombine_poly(unreduced_gamete(b,d))
 	gam_a = ag.loci	
 	gam_b = bg.loci
 	#combine gametes and assign viability
-	via = viability(ag,bg,d.OV)
+	via = viability(ag,bg,d)
 	if rand() < via
 		num = ploidy(ag) + ploidy(bg)
 		loci = [ Float64[] for x in 1:num ]
@@ -255,29 +192,6 @@ function mate_p(a::Agent, b::Agent, d::AbstractDeme)
 		end
 	return 0
 end
-
-"""
-	mating_PnB(d::AbstractDeme{A}; UG::UnreducedGamete, OV::OffspringViability)
-Mating in a mixed ploidy deme with unreduced gamete formation and partner choice weighted by fitness (cfr. PnB).
-"""
-function mating_PnB(d::AbstractDeme{A}, UG::UnreducedGamete, OV::OffspringViability) where A
-	new_agents =  A[]
-	fitnesses = exp.(malthusian_fitness(d))
-	for i=1:length(d)
-		B1 = d.agents[i]
-		noff = number_of_offspring(d,B1)
-		B2 = sample(d.agents, weights(fitnesses))
-		#B2 = rand(d.agents)
-		#child = mate(B1,B2)
-		m = mate_p(B1,B2,UG,OV)
-		if m != 0
-			for c in 1:noff 
-				push!(new_agents, m)
-			end
-		end
-	end
-	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
-end 
 
 """
 	mating_PnB(d::AbstractDeme{A})
@@ -292,37 +206,15 @@ function mating_PnB(d::AbstractDeme{A}) where A
 		B2 = sample(d.agents, weights(fitnesses))
 		#B2 = rand(d.agents)
 		#child = mate(B1,B2)
-		m = mate_p(B1,B2,d.UG,d.OV)
+		m = mate_p(B1,B2,d)
 		if m != 0
 			for c in 1:noff 
 				push!(new_agents, m)
 			end
 		end
 	end
-	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
+MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
 end 
-
-"""
-	mating_PnB(d::AbstractDeme{A}; UG::UnreducedGamete, OV::OffspringViability)
-Mating in a mixed ploidy deme without unreduced gamete formation and partner choice weighted by fitness (cfr. PnB).
-"""
-function mating_PnB(d::AbstractDeme{A}) where A
-	new_agents =  A[]
-	fitnesses = exp.(malthusian_fitness(d))
-	for i=1:length(d)
-		B1 = d.agents[i]
-		noff = number_of_offspring(d,B1)
-		B2 = sample(d.agents, weights(fitnesses))
-		#B2 = rand(d.agents)
-		#child = mate(B1,B2)
-		if mate_p(B1,B2) != 0
-			for c in 1:noff 
-				push!(new_agents, mate_p(B1,B2))
-			end
-		end
-	end
-	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
-end
 
 """
 	random_mating_mixedp(d::AbstractDeme{A}) where A
@@ -336,7 +228,7 @@ function random_mating_mixedp(d::AbstractDeme{A}) where A
 			push!(new_agents, pair)
 		end
 	end
-	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
+MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
 end 
 	
 """
@@ -353,56 +245,6 @@ function trait_mean(d::AbstractDeme)
 	end
 	sum(z)/length(d)
 end
-
-"""
-	unreduced_gamete(d::AbstractDeme, a::Agent)
-Initial naive function that I wrote that assumes only 2n and 4n; only unreduced gamete formation for 2n with probability 1-u.
-"""
-function unreduced_gamete(d::AbstractDeme, a::Agent)
-	loci = [ Float64[] for x in 1:2*ploidy(a) ]
-	if ploidy(a) == 2
-		if rand() < d.u
-			loci[1] = a.loci[1]
-			loci[2] = a.loci[1]
-			loci[3] = a.loci[2]
-			loci[4] = a.loci[2]
-			return Agent(loci, 4.)
-		end
-	end
-		return a
-end
-
-"""
-	unreduced_gamete(d::AbstractDeme{A})
-Initial naive function that I wrote that assumes only 2n and 4n; only unreduced gamete formation for 2n with probability 1-u.
-"""
-function unreduced_gamete(d::AbstractDeme{A}) where A
-	new_agents =  A[]
-	for agent in d.agents
-		push!(new_agents, unreduced_gamete(d,agent))
-	end
-	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
-end	
-
-"""
-	unreduced_gamete(a::Agent, UG::UnreducedGamete)
-Unreduced gamete formation in a mixed ploidy population of 2n,3n,4n as it is implemented at the moment.
-"""
-function unreduced_gamete(a::Agent, UG::UnreducedGamete)
-	#this samples the ploidy level (1 to 4, potentially) of gametes 
-	num = sample([1.,2.,3.,4.],weights(UG.prob[ploidy(a)-1]))
-	loci = [ Float64[] for x in 1:num ]
-	b = deepcopy(a.loci)
-	shuffle!(b)
-	c = 1
-	while c <= num
-		i = b[1]
-		popfirst!(b)
-		loci[c] = i
-		c += 1
-	end
-	return Agent(loci, num)
-end	
 
 """
 	unreduced_gamete(a::Agent, d::AbstractDeme)
@@ -425,27 +267,15 @@ function unreduced_gamete(a::Agent, d::AbstractDeme)
 end	
 
 """
-	unreduced_gamete(d::AbstractDeme{A}, UG::UnreducedGamete)
-Unreduced gamete formation in a mixed ploidy population of 2n,3n,4n as it is implemented at the moment.
-"""
-function unreduced_gamete(d::AbstractDeme{A}, UG::UnreducedGamete) where A
-	new_agents =  A[]
-	for agent in d.agents
-		push!(new_agents, unreduced_gamete(agent,UG))
-	end
-	MixedPloidyDeme(agents=new_agents,k=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
-end		
-
-"""
 	unreduced_gamete(d::AbstractDeme{A})
 Unreduced gamete formation in a mixed ploidy population of 2n,3n,4n as it is implemented at the moment.
 """
-function unreduced_gamete(d::AbstractDeme{A}) where A
+function unreduced_gamete(d::MixedPloidyDeme{A}) where A
 	new_agents =  A[]
 	for agent in d.agents
-		push!(new_agents, unreduced_gamete(agent,d.UG))
+		push!(new_agents, unreduced_gamete(agent,d))
 	end
-	MixedPloidyDeme(agents=new_agents,k=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
+MixedPloidyDeme(agents=new_agents,k=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
 end	
 
 
@@ -474,13 +304,6 @@ end
 
 
 number_of_offspring(d::AbstractDeme,a::Agent) = rand(Poisson(exp(malthusian_fitness(d::AbstractDeme,a::Agent))))
-
-"""
-	viability(a::Agent, b::Agent, OV::OffspringViability)
-"""
-function viability(a::Agent, b::Agent, OV::OffspringViability)
-	return OV.viability[ploidy(a)][ploidy(b)]
-end
 
 """
 	viability(a::Agent, b::Agent, d::deme)
@@ -716,7 +539,7 @@ end
 	evolving_deme_ploidyvar(d::AbstractDeme, ngen)
 Simulate a single deme with mixed ploidy, malthusian fitness and unreduced gamete formation.
 """
-function evolving_deme_ploidyvar(d::AbstractDeme, ngen; heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = allelefreqs_p, pf = ploidy_freq)
+function evolving_deme_ploidyvar(d::MixedPloidyDeme, ngen; heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = allelefreqs_p, pf = ploidy_freq)
 	#het = [heterozygosities_p(d)]
 	pop = [length(d)]
 	#tm = [trait_mean(d)]
@@ -764,6 +587,7 @@ end
 Simulate a habitat with mixed ploidy, malthusian fitness and unreduced gamete formation.
 """
 function evolving_habitat(h::Habitat{D}, ngen) where D
+	data = []
 	for n = 1:ngen
 		h = random_walk(h,0.5)
 		#ih = Gaussian_dispersal(h,σ)
@@ -774,8 +598,9 @@ function evolving_habitat(h::Habitat{D}, ngen) where D
 			new_h[i] = d
 		end
 		h = Habitat(demes=new_h)
+		push!(data, h)
 	end
-	(h=h, ngen=ngen)
+	(h=h, ngen=ngen, data=data)
 end
 
 #Utility
@@ -790,9 +615,9 @@ function allelefreqs(d::AbstractDeme)
 end
 
 """
-	allelefreqs_pk(d::AbstractDeme)
+	allelefreqs_p(d::AbstractDeme)
 """
-function allelefreqs_(d::AbstractDeme)
+function allelefreqs_p(d::AbstractDeme)
 	freq = Vector{Float64}(undef,length(d.agents[1]))
 	for loc in 1:length(freq)
 		s = 0
@@ -820,8 +645,8 @@ end
 """
 	heterozygosities_p(d::AbstractDeme)
 """
-function heterozygosities_(d::AbstractDeme)
-	freqs=allelefreqs_(d)
+function heterozygosities_p(d::AbstractDeme)
+	freqs=allelefreqs_p(d)
     map(p->p*(1-p), freqs)
 end
 
@@ -847,3 +672,222 @@ function ploidy_freq(d::AbstractDeme)
 	p2, p3, p4
 end	
 
+
+end
+
+# ╔═╡ 2664cbb0-85ef-11eb-253a-d9f02c63f5f9
+d_p = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 0.5, 50, [2], 100, d=2.),randagent_p(0.5, 0.5, 50, [4], 0, d=4.)), OV = [[1.,0.,0.1,0.],[0.,1.,0.,0.],[0.1,0.,0.,0.],[0.,0.,0.,0.]], UG = [[1.,0.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]] )
+
+# ╔═╡ 9e9e62c0-865e-11eb-134c-ef481e41ab27
+d_p
+
+# ╔═╡ 9e2fdbc0-8659-11eb-1d53-450c776a5ad0
+sim_ploidyvar1 = evolving_deme_ploidyvar(d_p,20)
+
+# ╔═╡ c4e53bce-865d-11eb-304b-25da21c3de6f
+begin
+	pf2_p1 = sim_ploidyvar1.p2
+	pf3_p1 = sim_ploidyvar1.p3
+	pf4_p1 = sim_ploidyvar1.p4
+	plot(pf2_p1, grid=false, color=:blue, label="diploid")
+	plot!(pf3_p1, grid=false, color=:green, label="triploid")
+	plot!(pf4_p1, grid=false, color=:red, label="tetraploid")
+	xlabel!("\$t\$")
+	ylabel!("Number of individuals")
+end
+
+
+# ╔═╡ e162ef50-865d-11eb-1a6d-27208c981720
+habi = Habitat(demes=[d_p])
+
+# ╔═╡ c3df6060-8664-11eb-2912-917d88e0a358
+g_lin = linear_gradient(habi)
+
+# ╔═╡ d0625950-8664-11eb-0ef8-696f5caffc41
+hab = initiate_habitat(g_lin)
+
+# ╔═╡ 0c3b64d0-8665-11eb-2599-c175731347d3
+begin
+	K = d_p.K
+	σ = hab.σ
+	b = hab.b
+	Vs = d_p.Vs
+	rm = d_p.rm
+	Dm = hab.Dm
+	s = 1
+end
+
+# ╔═╡ e2f8cd60-8664-11eb-02c0-772862e46f2b
+sim_hab = evolving_habitat(hab, 100)
+
+# ╔═╡ 962bb660-8668-11eb-0b06-13560951b56b
+sim_hab.data
+
+# ╔═╡ f31ba960-8664-11eb-1ea6-f70cc3b57243
+pop_sizes = [length(deme) for deme  in sim_hab[1].demes]
+
+# ╔═╡ 111ffce0-8665-11eb-2dcd-75143b7d3432
+margin = (sqrt(2)*b*σ)/((2*rm*sqrt(Vs))-b*σ) .>= 0.15.*pop_sizes.*σ*sqrt(s)
+
+# ╔═╡ e7d6d8f0-8668-11eb-32a7-1ffb7fb68ab0
+sim_hab.data[1]
+
+# ╔═╡ 07e21cd0-8665-11eb-20a7-9f425dbe0c96
+begin 
+ppf1 = [ploidy_freq(deme)[1] for deme  in sim_hab[1].demes]
+ppf2 = [ploidy_freq(deme)[2] for deme  in sim_hab[1].demes]
+ppf3 = [ploidy_freq(deme)[3] for deme  in sim_hab[1].demes]
+end
+
+# ╔═╡ 196aca60-8665-11eb-3f6e-63cb1fc323b5
+begin
+	pop_sizes_p = map(mean, pop_sizes)
+	p1 = plot(pop_sizes_p, grid=false, color=:black, label=false, legendfontsize=5)
+	hline!([K], label = "K")
+	hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
+	vline!([Dm/2], label = "Starting deme")
+	plot!([margin]*10, label = "Deterministic range margin")
+	plot!(ppf1, grid=false, color=:blue, label="Diploid")
+	plot!(ppf2, grid=false, color=:green, label="Triploid")
+	plot!(ppf3, grid=false, color=:red, label="Tetraploid")
+	xlabel!("Space")
+	ylabel!("Population size N")
+end
+
+# ╔═╡ 2ab891d0-8665-11eb-197e-9b8e15dfe3a2
+function f_trait_agents(h::Habitat)
+	trait_agents = []
+	cordst = []
+	for (i, deme) in enumerate(h.demes)
+		for agent in deme.agents
+			t = trait(agent)
+			p = (i,t)
+			push!(cordst,i)
+			push!(trait_agents,t)
+		end
+	end
+	trait_agents, cordst
+end
+
+# ╔═╡ 2c457360-8665-11eb-1dc4-cfe4eec3e5d5
+trait_means = [trait_mean(deme) for deme in sim_hab[1].demes]
+
+# ╔═╡ 5bf91c00-8675-11eb-1ad3-9ffa80479b47
+function f_het_demes(h::Habitat)
+	het_demes = []
+	cordsh = []
+	for (i, deme) in enumerate(h.demes)
+	if length(deme) != 0
+		het = 0.5^2*sum(heterozygosities_p(deme))
+		push!(cordsh,i)
+		push!(het_demes,het)
+	else
+		push!(cordsh,i)
+		push!(het_demes,0)
+		end
+	end
+	het_demes, cordsh
+end
+
+# ╔═╡ 21b0dcf0-8665-11eb-07d5-e9aadd5445cb
+begin
+	anim_range = @animate for i ∈ 1:150
+		sim_habA = sim_hab.data[i]
+		#if i != 1
+		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
+		#end
+		pop_sizes = [length(deme) for deme  in sim_habA.demes]
+		pop_sizes_p = map(mean, pop_sizes)
+		ppf1 = [ploidy_freq(deme)[1] for deme  in sim_habA.demes]
+		ppf2 = [ploidy_freq(deme)[2] for deme  in sim_habA.demes]
+		ppf3 = [ploidy_freq(deme)[3] for deme  in sim_habA.demes]
+		p1 = plot(pop_sizes_p, grid=false, color=:black, label=false, legendfontsize=5)
+		hline!([K], label = "K")
+		hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
+		vline!([Dm/2], label = "Starting deme")
+		plot!([margin]*10, label = "Deterministic range margin")
+		plot!(ppf1, grid=false, color=:blue, label="Diploid")
+		plot!(ppf2, grid=false, color=:green, label="Triploid")
+		plot!(ppf3, grid=false, color=:red, label="Tetraploid")
+		het_demes, cordsh = f_het_demes(sim_hab)
+		plot!(cordsh, het_demes, grid=false, color=:black, label="Vg_mean deme")
+		xlabel!("Space")
+		ylabel!("Population size N")
+	end every 1
+	gif(anim_range, "fizzypoly2.gif", fps = 6)
+end
+
+# ╔═╡ 737a56be-8682-11eb-3ecb-7d1fc90b66c2
+begin
+	anim_range_Vg = @animate for i ∈ 1:150
+		sim_habA = sim_hab.data[i]
+		#if i != 1
+		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
+		#end
+		pop_sizes = [length(deme) for deme  in sim_habA.demes]
+		pop_sizes_p = map(mean, pop_sizes)
+		
+		#./pop_sizes
+		
+		ppf1 = [ploidy_freq(deme)[1] for deme  in sim_habA.demes]/100
+		#ppf2 = [ploidy_freq(deme)[2] for deme  in sim_habA.demes]
+		ppf3 = [ploidy_freq(deme)[3] for deme  in sim_habA.demes]/100
+		het_demes, cordsh = f_het_demes(sim_habA)
+		
+		p1 = plot(cordsh, het_demes, grid=false, color=:black, label="Vg_mean deme")
+		vline!([Dm/2], label = "Starting deme")
+		#plot!([margin]*1, label = "Deterministic range margin")
+		plot!(ppf1, grid=false, color=:blue, label="Diploid")
+		plot!(ppf3, grid=false, color=:red, label="Tetraploid")
+		
+		
+		xlabel!("Space")
+		ylabel!("Population size N")
+	end every 1
+	gif(anim_range_Vg, "fizzyVg.gif", fps = 3)
+end
+
+# ╔═╡ 409372f0-869b-11eb-3f87-ff7038edde33
+begin
+	anim_range_trait = @animate for i ∈ 1:150
+		sim_habA = sim_hab.data[i]
+		trait_means = [trait_mean(deme) for deme in sim_habA.demes]
+	    trait_means_p = map(mean, trait_means)
+		trait_agents, cordst = f_trait_agents(sim_habA)
+		#p2 = plot(trait_means_p, grid=false, color=:black, label="Z_mean deme")
+		plot(g_lin, grid=false, color=:blue, label="Z optimum", linestyle=:dash)
+		plot!(cordst,trait_agents, label="Z agents")
+		xlabel!("Space")
+		ylabel!("Trait Z")
+	end every 1
+	gif(anim_range_trait, "fizzy.gif", fps = 30)
+end
+
+# ╔═╡ Cell order:
+# ╟─ff9c1d30-8657-11eb-1249-852b045e1158
+# ╟─4d51f440-8659-11eb-010c-ab5401fcc485
+# ╟─14002550-8658-11eb-0690-3f178c25e622
+# ╠═2664cbb0-85ef-11eb-253a-d9f02c63f5f9
+# ╠═9e9e62c0-865e-11eb-134c-ef481e41ab27
+# ╠═9e2fdbc0-8659-11eb-1d53-450c776a5ad0
+# ╠═c4e53bce-865d-11eb-304b-25da21c3de6f
+# ╠═e162ef50-865d-11eb-1a6d-27208c981720
+# ╠═c3df6060-8664-11eb-2912-917d88e0a358
+# ╠═d0625950-8664-11eb-0ef8-696f5caffc41
+# ╠═e2f8cd60-8664-11eb-02c0-772862e46f2b
+# ╠═962bb660-8668-11eb-0b06-13560951b56b
+# ╠═0c3b64d0-8665-11eb-2599-c175731347d3
+# ╠═f31ba960-8664-11eb-1ea6-f70cc3b57243
+# ╠═07e21cd0-8665-11eb-20a7-9f425dbe0c96
+# ╠═111ffce0-8665-11eb-2dcd-75143b7d3432
+# ╠═2ab891d0-8665-11eb-197e-9b8e15dfe3a2
+# ╠═2c457360-8665-11eb-1dc4-cfe4eec3e5d5
+# ╠═196aca60-8665-11eb-3f6e-63cb1fc323b5
+# ╠═e7d6d8f0-8668-11eb-32a7-1ffb7fb68ab0
+# ╠═21b0dcf0-8665-11eb-07d5-e9aadd5445cb
+# ╠═5bf91c00-8675-11eb-1ad3-9ffa80479b47
+# ╠═737a56be-8682-11eb-3ecb-7d1fc90b66c2
+# ╠═409372f0-869b-11eb-3f87-ff7038edde33
+# ╟─dac9ff40-8657-11eb-380c-23337b4e14a2
+# ╠═58c46a2e-85ee-11eb-28ed-f927eac6cd9b
+# ╠═a6e75fb0-8657-11eb-19c0-73a0c663c362
