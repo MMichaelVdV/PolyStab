@@ -81,7 +81,7 @@ mutation).
     Vs::T     = 1/2
     u ::T     = 0.01
     μ ::T     = 1e-6
-	OV::Array{Array{T,1},N} = [[1.,0.,0.1,0.],[0.,1.,0.,0.],[0.1,0.,0.,0.],[0.,0.,0.,0.]]
+	OV::Array{Array{T,1},N} = [[1.,0.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]]
 	UG::Array{Array{T,1},N} = [[1.,0.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]]
 end
 
@@ -275,7 +275,7 @@ function unreduced_gamete(d::MixedPloidyDeme{A}) where A
 	for agent in d.agents
 		push!(new_agents, unreduced_gamete(agent,d))
 	end
-MixedPloidyDeme(agents=new_agents,k=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
+MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
 end	
 
 
@@ -354,7 +354,7 @@ function recombine_poly(d::AbstractDeme{A}) where A
 		
 		push!(new_agents, Agent(loci=loci))
 	end
-	MixedPloidyDeme(agents=new_agents,k=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
+	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
 end	
 
 #Functions on habitat level
@@ -377,8 +377,8 @@ Aim should be to initiate a population for nd_s demes on a linear gradient (with
 optimal genetic variance where one half of the genes are adapted, meaning their clines take the 
 form and spacing as assumed for the deterministic model under linkage equilibrium.
 """
-function initiate_habitat(gradient)
-	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 50, [2], 0, d=2.)), θ=i) for i in gradient])
+function initiate_habitat(gradient,d::MixedPloidyDeme)
+	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 50, [2], 0, d=2.)),θ=i,K=d.K,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG) for i in gradient])
 	for a in randagent_p(0.5, 0.5, 50, [2], 100, d=2.)
 	push!(hab.demes[Int(hab.Dm/2)].agents, a)
 	end
@@ -676,7 +676,7 @@ end
 end
 
 # ╔═╡ 2664cbb0-85ef-11eb-253a-d9f02c63f5f9
-d_p = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 0.5, 50, [2], 100, d=2.),randagent_p(0.5, 0.5, 50, [4], 0, d=4.)), OV = [[1.,0.,0.1,0.],[0.,1.,0.,0.],[0.1,0.,0.,0.],[0.,0.,0.,0.]], UG = [[1.,0.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]] )
+d_p = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 0.5, 50, [2], 100, d=2.),randagent_p(0.5, 0.5, 50, [4], 0, d=4.)), OV = [[1.,0.1,0.,0.],[0.1,1.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]], UG = [[0.9,0.1,0.,0.],[0.,0.,0.,0.],[0.,0.9,0.,0.1]] )
 
 # ╔═╡ 9e9e62c0-865e-11eb-134c-ef481e41ab27
 d_p
@@ -704,7 +704,10 @@ habi = Habitat(demes=[d_p])
 g_lin = linear_gradient(habi)
 
 # ╔═╡ d0625950-8664-11eb-0ef8-696f5caffc41
-hab = initiate_habitat(g_lin)
+hab = initiate_habitat(g_lin, d_p)
+
+# ╔═╡ afa35910-8819-11eb-1aa9-9f350178f789
+hab.demes[1].UG
 
 # ╔═╡ 0c3b64d0-8665-11eb-2599-c175731347d3
 begin
@@ -789,37 +792,40 @@ function f_het_demes(h::Habitat)
 	het_demes, cordsh
 end
 
-# ╔═╡ 21b0dcf0-8665-11eb-07d5-e9aadd5445cb
+# ╔═╡ 47434ea0-881b-11eb-337a-411a3d601eb3
 begin
-	anim_range = @animate for i ∈ 1:150
+	anim_range = @animate for i ∈ 1:100
 		sim_habA = sim_hab.data[i]
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
 		#end
 		pop_sizes = [length(deme) for deme  in sim_habA.demes]
 		pop_sizes_p = map(mean, pop_sizes)
+		
 		ppf1 = [ploidy_freq(deme)[1] for deme  in sim_habA.demes]
 		ppf2 = [ploidy_freq(deme)[2] for deme  in sim_habA.demes]
 		ppf3 = [ploidy_freq(deme)[3] for deme  in sim_habA.demes]
-		p1 = plot(pop_sizes_p, grid=false, color=:black, label=false, legendfontsize=5)
-		hline!([K], label = "K")
+		het_demes, cordsh = f_het_demes(sim_habA)
+		
+		plot(pop_sizes_p, grid=false, color=:black, label="Tetraploid")
+		#hline!([K], label = "K")
 		hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
-		vline!([Dm/2], label = "Starting deme")
-		plot!([margin]*10, label = "Deterministic range margin")
+		#vline!([Dm/2], label = "Starting deme")
+		plot!([margin]*5, color=:yellow, label = "Deterministic range margin")
 		plot!(ppf1, grid=false, color=:blue, label="Diploid")
 		plot!(ppf2, grid=false, color=:green, label="Triploid")
 		plot!(ppf3, grid=false, color=:red, label="Tetraploid")
-		het_demes, cordsh = f_het_demes(sim_hab)
-		plot!(cordsh, het_demes, grid=false, color=:black, label="Vg_mean deme")
+		
+		
 		xlabel!("Space")
 		ylabel!("Population size N")
 	end every 1
-	gif(anim_range, "fizzypoly2.gif", fps = 6)
+	gif(anim_range, "fizzypop.gif", fps = 3)
 end
 
 # ╔═╡ 737a56be-8682-11eb-3ecb-7d1fc90b66c2
 begin
-	anim_range_Vg = @animate for i ∈ 1:150
+	anim_range_Vg = @animate for i ∈ 1:100
 		sim_habA = sim_hab.data[i]
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -830,7 +836,7 @@ begin
 		#./pop_sizes
 		
 		ppf1 = [ploidy_freq(deme)[1] for deme  in sim_habA.demes]/100
-		#ppf2 = [ploidy_freq(deme)[2] for deme  in sim_habA.demes]
+		ppf2 = [ploidy_freq(deme)[2] for deme  in sim_habA.demes]/100
 		ppf3 = [ploidy_freq(deme)[3] for deme  in sim_habA.demes]/100
 		het_demes, cordsh = f_het_demes(sim_habA)
 		
@@ -838,6 +844,7 @@ begin
 		vline!([Dm/2], label = "Starting deme")
 		#plot!([margin]*1, label = "Deterministic range margin")
 		plot!(ppf1, grid=false, color=:blue, label="Diploid")
+		plot!(ppf2, grid=false, color=:green, label="Triploid")
 		plot!(ppf3, grid=false, color=:red, label="Tetraploid")
 		
 		
@@ -849,7 +856,7 @@ end
 
 # ╔═╡ 409372f0-869b-11eb-3f87-ff7038edde33
 begin
-	anim_range_trait = @animate for i ∈ 1:150
+	anim_range_trait = @animate for i ∈ 1:100
 		sim_habA = sim_hab.data[i]
 		trait_means = [trait_mean(deme) for deme in sim_habA.demes]
 	    trait_means_p = map(mean, trait_means)
@@ -860,7 +867,7 @@ begin
 		xlabel!("Space")
 		ylabel!("Trait Z")
 	end every 1
-	gif(anim_range_trait, "fizzy.gif", fps = 30)
+	gif(anim_range_trait, "fizzy.gif", fps = 3)
 end
 
 # ╔═╡ Cell order:
@@ -874,6 +881,7 @@ end
 # ╠═e162ef50-865d-11eb-1a6d-27208c981720
 # ╠═c3df6060-8664-11eb-2912-917d88e0a358
 # ╠═d0625950-8664-11eb-0ef8-696f5caffc41
+# ╠═afa35910-8819-11eb-1aa9-9f350178f789
 # ╠═e2f8cd60-8664-11eb-02c0-772862e46f2b
 # ╠═962bb660-8668-11eb-0b06-13560951b56b
 # ╠═0c3b64d0-8665-11eb-2599-c175731347d3
@@ -884,8 +892,8 @@ end
 # ╠═2c457360-8665-11eb-1dc4-cfe4eec3e5d5
 # ╠═196aca60-8665-11eb-3f6e-63cb1fc323b5
 # ╠═e7d6d8f0-8668-11eb-32a7-1ffb7fb68ab0
-# ╠═21b0dcf0-8665-11eb-07d5-e9aadd5445cb
 # ╠═5bf91c00-8675-11eb-1ad3-9ffa80479b47
+# ╠═47434ea0-881b-11eb-337a-411a3d601eb3
 # ╠═737a56be-8682-11eb-3ecb-7d1fc90b66c2
 # ╠═409372f0-869b-11eb-3f87-ff7038edde33
 # ╟─dac9ff40-8657-11eb-380c-23337b4e14a2

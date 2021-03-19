@@ -7,6 +7,12 @@ using InteractiveUtils
 # ╔═╡ cc1dcf70-7c6c-11eb-3664-b7e70e49723a
 using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
 
+# ╔═╡ e419ec50-87fa-11eb-230a-8f6396f0e459
+using Turing, MCMCChains, StatsPlots, DataFrames
+
+# ╔═╡ 0144f6d0-87fb-11eb-0fa7-7149bfb316db
+using StatsFuns: logistic
+
 # ╔═╡ bd2ab750-7c60-11eb-3cc5-6d57dd448dfd
 md"""##### Minority Cytotype Exclusion in Local Plant Populations (Levin, 1995)"""
 
@@ -20,7 +26,7 @@ md"""##### Establishment of a tetraploid cytotype in a diploid population: Effec
 
 
 # ╔═╡ 7df71be0-7c70-11eb-3b92-91457ecf38fd
-md"""###### Case 1 (Felber, 1991)"""
+md"""### Case 1 (Felber, 1991)"""
 
 # ╔═╡ c8734230-7c65-11eb-30bd-4314f44ee3ba
 md"""  
@@ -55,7 +61,7 @@ function bin(data)
 end
 
 # ╔═╡ a478224e-7c70-11eb-133b-03e027bf81c8
-md""" ###### Case 2 (Felber, 1991)"""
+md""" ### Case 2 (Felber, 1991)"""
 
 # ╔═╡ 57d84bf0-7c6b-11eb-0e68-f99c717f46e4
 md"""  
@@ -64,6 +70,9 @@ See case 1 but now the parameter in this model is u(=v): unreduced gamete format
 Starting from a population of only diploid individuals, according to this model, tetraploids will exclude diploids if unreduced gamete formation for is higher than 0.2.
 
 """
+
+# ╔═╡ 1abbabe0-87fb-11eb-271e-53e02f1ec547
+md""" ### Cytogenic load"""
 
 # ╔═╡ 86be28f0-84ad-11eb-2ccf-6f60ad079d75
 begin
@@ -117,7 +126,7 @@ evolve([0., 1., 0., 1.], 0.2, 1., 20)
 
 # ╔═╡ f641bd10-85aa-11eb-03fc-0de54af93d35
 begin
-pf = plot(grid=false, legend=false, xlabel="\$t\$", ylabel="\$\\bar{w}\$")
+pf = plot(grid=false, legend=true, xlabel="\$t\$", ylabel="\$\\bar{w}\$")
 #cols = cgrad(:magma, 0.05:0.01:0.45)
 #for u=0.05:0.01:0.45
 	u = 0.25
@@ -125,9 +134,9 @@ pf = plot(grid=false, legend=false, xlabel="\$t\$", ylabel="\$\\bar{w}\$")
     mw = last.(s)
 	pfs = first.(s)
 	#f = 
-    plot!(pf, mw, color=cols[u], linewidth=2, alpha=0.5)
-	plot!(pf, pfs, color="blue", linewidth=2, alpha=0.5)
-	plot!(pf, 1 .-pfs, color="red", linewidth=2, alpha=0.5)
+    plot!(pf, mw, color=cols[u], linewidth=2, alpha=0.5, label="mean fitness")
+	plot!(pf, pfs, color="blue", linewidth=2, alpha=0.5, label="diploid freq")
+	plot!(pf, 1 .-pfs, color="red", linewidth=2, alpha=0.5, label="tetrploid freq")
 #end
 plot(pf, size=(750,750))
 #savefig("felber-fubar.pdf")
@@ -697,6 +706,44 @@ end
 # ╔═╡ 39c92860-7c7e-11eb-1efe-13bf99e99d1e
 stats_2 = grid_search(200)
 
+# ╔═╡ 5c9c61c0-87f2-11eb-107c-eb6817ebc523
+begin
+	M = [stats_2[1] stats_2[2]];
+	data = DataFrame(M, ["Ploidy","u"]);
+end
+
+# ╔═╡ ec061ade-8801-11eb-2449-f3788b4ffa9b
+begin
+using CSV
+CSV.write("./model_1.csv", data)
+end
+
+# ╔═╡ 2f62d450-87f7-11eb-144b-b7e2644c1d0e
+begin
+Y = Int.((stats_2[1]./2).-1) 
+X = stats_2[2]
+@model logreg(data, X) = begin
+    n = 200
+	m = 1
+    σ ~ truncated(Cauchy(0, 1), 0., Inf)
+	#intercept ~ Normal(0, σ)
+    β ~ MvNormal(zeros(m), σ)
+    Z = logistic.(X.*β) #intercept .+ 
+    for i=1:n
+        data[i] ~ Bernoulli(Z[i])
+    end 
+end
+chain = sample(logreg(Y, X), NUTS(), 500) 	
+plot(chain)
+β = hcat(get(chain, :β).β...)
+βmean = vec(mean(β, dims=1))
+end
+
+# ╔═╡ ea4c2620-8812-11eb-347b-79612e707769
+begin
+logistic.(X.*βmean)
+end
+
 # ╔═╡ ff0cb820-7ff9-11eb-00e7-cf90fe869537
 begin
 p7 = plot(stats_2[2], stats_2[3], grid=false, color=:black, label="Pop size after t generations")
@@ -842,6 +889,10 @@ plot(p5,p6,p4,p8)
 # ╟─1f6a4e72-7d48-11eb-0933-eb25e7a5b568
 # ╟─e315b920-7c7d-11eb-0f34-5782accf7286
 # ╟─39c92860-7c7e-11eb-1efe-13bf99e99d1e
+# ╠═5c9c61c0-87f2-11eb-107c-eb6817ebc523
+# ╠═ec061ade-8801-11eb-2449-f3788b4ffa9b
+# ╠═2f62d450-87f7-11eb-144b-b7e2644c1d0e
+# ╠═ea4c2620-8812-11eb-347b-79612e707769
 # ╠═c88e13d0-7c7e-11eb-0119-731f7ddc65ce
 # ╠═37231930-7c7f-11eb-2524-9115fc85d926
 # ╠═d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
@@ -865,12 +916,15 @@ plot(p5,p6,p4,p8)
 # ╟─08b7378e-7cd7-11eb-0120-edc0d8f9dbb8
 # ╟─38ef6cc0-7cd7-11eb-26e6-1767c49d50de
 # ╟─c5025790-7cd7-11eb-24f8-51d85dc4b968
-# ╠═86be28f0-84ad-11eb-2ccf-6f60ad079d75
-# ╠═7f32ce70-85ab-11eb-1c30-1ffd857a2545
-# ╠═f641bd10-85aa-11eb-03fc-0de54af93d35
-# ╠═8a935580-85ad-11eb-1c01-fbfe6528c0e2
-# ╠═495309e0-85ac-11eb-3231-b3dce7ae61c5
-# ╠═aab09870-84b1-11eb-11c6-ffa1224114d8
+# ╟─1abbabe0-87fb-11eb-271e-53e02f1ec547
+# ╟─86be28f0-84ad-11eb-2ccf-6f60ad079d75
+# ╟─7f32ce70-85ab-11eb-1c30-1ffd857a2545
+# ╟─f641bd10-85aa-11eb-03fc-0de54af93d35
+# ╟─8a935580-85ad-11eb-1c01-fbfe6528c0e2
+# ╟─495309e0-85ac-11eb-3231-b3dce7ae61c5
+# ╟─aab09870-84b1-11eb-11c6-ffa1224114d8
 # ╟─302363ee-7c6c-11eb-0d7b-effeadcdeb60
 # ╠═cc1dcf70-7c6c-11eb-3664-b7e70e49723a
+# ╠═e419ec50-87fa-11eb-230a-8f6396f0e459
+# ╠═0144f6d0-87fb-11eb-0fa7-7149bfb316db
 # ╟─41a5cff0-7c6c-11eb-2b03-d7337d430df4
