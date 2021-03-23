@@ -431,7 +431,7 @@ function allelefreqs_p(d::AbstractDeme)
 	for loc in 1:length(freq)
 		s = 0
     	for ag in d.agents
-			for chr in ploidy(ag)
+			for chr in 1:ploidy(ag)
         		if ag.loci[chr, loc] != 0
             		s += 1
 				end
@@ -512,7 +512,7 @@ viability(a1, a2, d_p)
 trait(a)
 
 # ╔═╡ 0e650dc0-8835-11eb-122e-f1b02f2471a0
-sim_ploidyvar1 = evolving_deme_ploidyvar(d_p,500)
+sim_ploidyvar1 = evolving_deme_ploidyvar(d_p,50)
 
 # ╔═╡ 09055fc0-88d9-11eb-27ea-032e5733ac17
 begin
@@ -555,10 +555,10 @@ function grid_search(t)
 end
 
 # ╔═╡ bd382b40-8a4a-11eb-2069-51fd29792863
-stats_2 = grid_search(200)
+stats_2 = grid_search(50)
 
 # ╔═╡ dc085a40-8a4a-11eb-3c18-8fb23db823fd
-dp_2 = [(stats_2[2][i],stats_2[1][i],stats_2[3][i]) for i in 1:200]
+dp_2 = [(stats_2[2][i],stats_2[1][i],stats_2[3][i]) for i in 1:50]
 
 # ╔═╡ de14f320-8a4a-11eb-3fa1-df9b2d93a4b5
 begin
@@ -700,7 +700,7 @@ begin
 habi = Habitat(demes=[d_p])	
 g_lin = linear_gradient(habi)	
 hab = initiate_habitat(g_lin, d_p, 0.5, 0.1, 250, 50)	
-sim_hab = evolving_habitat(hab, 100)	
+sim_hab = evolving_habitat(hab, 50)	
 
 	
 end
@@ -771,7 +771,7 @@ end
 
 # ╔═╡ a4b18680-89d1-11eb-38e5-333f4851ea3f
 begin
-	anim_range = @animate for i ∈ 1:100
+	anim_range = @animate for i ∈ 1:50
 		sim_habA = sim_hab.data[i]
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -802,7 +802,7 @@ end
 
 # ╔═╡ e496a460-89d1-11eb-11a4-a9d35cf68963
 begin
-	anim_range_Vg = @animate for i ∈ 1:100
+	anim_range_Vg = @animate for i ∈ 1:50
 		sim_habA = sim_hab.data[i]
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -834,7 +834,7 @@ end
 
 # ╔═╡ ee7928e0-89d1-11eb-38b2-df6427fb0853
 begin
-	anim_range_trait = @animate for i ∈ 1:100
+	anim_range_trait = @animate for i ∈ 1:50
 		sim_habA = sim_hab.data[i]
 		trait_means = [trait_mean(deme) for deme in sim_habA.demes]
 	    trait_means_p = map(mean, trait_means)

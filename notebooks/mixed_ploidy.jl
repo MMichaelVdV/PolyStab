@@ -134,8 +134,8 @@ end
 
 # ╔═╡ 94add6a0-342f-11eb-0142-79bf9e0f5a88
 # assumes haploid
-function heterozygosities(d::AbstractDeme, freqs=allelefreq(d)) 
-    map(p->p*(1-p), freqs)
+function heterozygosities(d::AbstractDeme) 
+    map(p->p*(1-p), freqs=allelefreq(d))
 end
 
 # ╔═╡ d42d81f0-3b40-11eb-01ed-6fb3dda13484
@@ -200,9 +200,9 @@ function allelefreqs_p(d::AbstractDeme)
 	for loc in 1:length(freq)
 		s = 0
     	for ag in d.agents
-			for chr in ploidy(ag)
+			for chr in 1:ploidy(ag)
         		if ag.loci[chr][loc] != 0
-            		s += 1
+            		s += 1/ploidy(ag)
 				end
 			end
         end
@@ -213,8 +213,9 @@ function allelefreqs_p(d::AbstractDeme)
 end	
 
 # ╔═╡ 66262ee0-3b46-11eb-0f77-4f65686d8a8b
-function heterozygosities_p(d::AbstractDeme, freqs=allelefreqs_p(d)) 
-    map(p->p*(1-p), freqs)
+function heterozygosities_p(d::AbstractDeme) 
+	freq = allelefreqs_p(d)
+    map(p->p*(1-p), freq)
 end
 
 # ╔═╡ db9c5d80-3ce4-11eb-33c8-01744ab5889f

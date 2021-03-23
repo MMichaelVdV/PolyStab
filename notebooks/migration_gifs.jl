@@ -846,9 +846,10 @@ begin
 		trait_means = [trait_mean(deme) for deme in sim_habA.demes]
 	    trait_means_p = map(mean, trait_means)
 		trait_agents, cordst = f_trait_agents(sim_habA)
-		#p2 = plot(trait_means_p, grid=false, color=:black, label="Z_mean deme")
+		
 		plot(g_lin, grid=false, color=:blue, label="Z optimum", linestyle=:dash)
 		plot!(cordst,trait_agents, label="Z agents")
+		plot!(trait_means_p, grid=false, color=:black, label="Z_mean deme")
 		xlabel!("Space")
 		ylabel!("Trait Z")
 	end every 1

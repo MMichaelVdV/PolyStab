@@ -177,10 +177,10 @@ end
 
 # ╔═╡ b1aa2488-0adc-11eb-2da0-4d33dc9becff
 md"""
-- N $(@bind N Slider(1:100, default=50, show_value=true))
-- L $(@bind L Slider(1:1000, default=100, show_value=true))
-- p $(@bind p Slider(0.05:0.05:0.95, default=0.5, show_value=true))
-- t $(@bind t Slider(1:1000, default=500, show_value=true))
+-N $(@bind N Slider(1:100, default=50, show_value=true))
+-L $(@bind L Slider(1:1000, default=100, show_value=true))
+-p $(@bind p Slider(0.05:0.05:0.95, default=0.5, show_value=true))
+-t $(@bind t Slider(1:1000, default=500, show_value=true))
 """
 
 # ╔═╡ 6139af9a-0add-11eb-2baa-b1ca76a911e9

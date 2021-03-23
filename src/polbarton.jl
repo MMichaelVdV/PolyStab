@@ -142,15 +142,15 @@ end
 	recombine_poly(d::AbstractDeme{A})
 Free recombination between loci in a mixed ploidy population.
 """
-function recombine_poly(d::AbstractDeme{A}) where A
+function recombine_poly(d::MixedPloidyDeme{A}) where A
 	new_agents =  A[]
 	for agent in d.agents
 		num = ploidy(agent)
-		loci = zeros(num, length(a))
+		loci = zeros(num, length(agent))
 		newlocus = similar(agent.loci[1,:])
 		
 		for l in 1:num
-			for j in 1:length(a) #this loops over the different loci for each chrosome
+			for j in 1:length(agent) #this loops over the different loci for each chrosome
 				i = rand([x for x in 1:num])
 				@inbounds newlocus[j] = agent.loci[i,j]
 			end
@@ -211,6 +211,23 @@ function mate_p(a::Agent, b::Agent, d::MixedPloidyDeme)
     return rand() < via ? Agent([ag.loci ; bg.loci], 1. *(ploidy(ag) + ploidy(bg))) : 0
 end
 
+"""
+	random_mating_mixedp(d::AbstractDeme{A}) where A
+Random mating in a mixed ploidy deme.
+"""
+function random_mating_mixedp(d::AbstractDeme{A}) where A
+    new_agents =  A[]
+    for i=1:length(d)
+		pair = mate_p(rand(d, 2)...,d)
+		if pair != 0
+			push!(new_agents, pair)
+		end
+	end
+	MixedPloidyDeme(agents=new_agents,K=d.K,θ=d.θ,rm=d.rm,Vs=d.Vs,u=d.u,μ=d.μ,OV=d.OV,UG=d.UG)
+end 
+
+"""
+"""
 number_of_offspring(d::AbstractDeme,a::Agent) = rand(Poisson(exp(malthusian_fitness(d::AbstractDeme,a::Agent))))
 
 """
@@ -341,10 +358,37 @@ end
 #Simulations:
 
 """
+	neutral_evolving_deme(d::AbstractDeme, ngen)
+Simulate a single random mating deme with mixed ploidy.
+"""
+function neutral_evolving_deme(d::MixedPloidyDeme, ngen; heterozygosities_p = heterozygosities_p, allelefreqs_p = allelefreqs_p, trait_mean = trait_mean, pf = ploidy_freq)
+	het = [heterozygosities_p(d)]
+	af = [allelefreqs_p(d)]
+	tm = [trait_mean(d)]
+	p2 = [ploidy_freq(d)[1]]
+	p3 = [ploidy_freq(d)[2]]
+	p4 = [ploidy_freq(d)[3]]
+	
+	for n=1:ngen
+		d = random_mating_mixedp(d)
+		#d = unreduced_gamete(d)
+		push!(het, heterozygosities_p(d))
+		push!(af, allelefreqs_p(d))
+		push!(tm, trait_mean(d))
+		push!(p2, ploidy_freq(d)[1])
+		push!(p3, ploidy_freq(d)[2])
+		push!(p4, ploidy_freq(d)[3])
+	end
+	(het=het, af=af, tm=tm, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen)
+end
+
+"""
 	evolving_deme_ploidyvar(d::AbstractDeme, ngen)
 Simulate a single deme with mixed ploidy, malthusian fitness and unreduced gamete formation.
 """
-function evolving_deme_ploidyvar(d::MixedPloidyDeme, ngen; heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = allelefreqs_p, pf = ploidy_freq)
+function evolving_deme_ploidyvar(d::MixedPloidyDeme, ngen; 
+	heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = 
+	allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
 	het = [heterozygosities_p(d)]
 	pop = [length(d)]
 	tm = [trait_mean(d)]
@@ -352,6 +396,7 @@ function evolving_deme_ploidyvar(d::MixedPloidyDeme, ngen; heterozygosities_p=he
 	p2 = [ploidy_freq(d)[1]]
 	p3 = [ploidy_freq(d)[2]]
 	p4 = [ploidy_freq(d)[3]]
+	fta = [f_trait_agents(d)]
 	
 	for n=1:ngen
 		d = mating_PnB(d)
@@ -363,9 +408,10 @@ function evolving_deme_ploidyvar(d::MixedPloidyDeme, ngen; heterozygosities_p=he
 		push!(p2, ploidy_freq(d)[1])
 		push!(p3, ploidy_freq(d)[2])
 		push!(p4, ploidy_freq(d)[3])
+		push!(fta, f_trait_agents(d))
 		
 	end
-	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af) 
+	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
 end
 	
 """
@@ -403,7 +449,7 @@ function evolving_habitat(h::Habitat{D}, ngen) where D
 		new_h = Vector{D}(undef, length(h))
 		for (i, d) in enumerate(h.demes)
 			d = mating_PnB(d)
-			#d = mutate(d)
+			d = mutate(d)
 			new_h[i] = d
 		end
 		h = Habitat(demes=new_h)
@@ -418,18 +464,38 @@ end
 	allelefreqs_p(d::AbstractDeme)
 """
 function allelefreqs_p(d::AbstractDeme)
+	if length(d.agents) > 0
 	freq = Vector{Float64}(undef,length(d.agents[1]))
 	for loc in 1:length(freq)
 		s = 0
     	for ag in d.agents
-			for chr in ploidy(ag)
+			for chr in 1:ploidy(ag)
         		if ag.loci[chr, loc] != 0
-            		s += 1
+            		s += 1/ploidy(ag)
 				end
 			end
         end
-		f = s/length(d)
+		f = s
 		freq[loc] = f
+	end
+	freq./length(d.agents)
+	else [0.]
+	end
+end	
+
+"""
+	allelefreqs_p(a::Agent)
+"""
+function allelefreqs_p(a::Agent)
+	freq = Vector{Float64}(undef,length(a))
+	for loc in 1:length(freq)
+		s = 0.
+    	for chr in 1:ploidy(a)
+        	if a.loci[chr, loc] != 0.
+            	s += 1. /ploidy(a)
+			end
+		end
+		freq[loc] = s
 	end
 	freq
 end	
@@ -438,8 +504,11 @@ end
 	heterozygosities_p(d::AbstractDeme)
 """
 function heterozygosities_p(d::AbstractDeme)
+	if length(d.agents) > 0
 	freqs=allelefreqs_p(d)
-	map(p->2*p*(1-p), freqs)
+	map(p->p*(1-p), freqs)
+	else [0.]
+	end
 end
 
 """
@@ -462,6 +531,8 @@ function ploidy_freq(d::AbstractDeme)
 	p2, p3, p4
 end	
 
+var_add(a::Agent,α) = ploidy(a)*α^2*sum(heterozygosities_p(a))
+
 #Genotype -> phenotype maps
 
 """
@@ -472,9 +543,24 @@ trait(a::Agent) = sum(a)/a.d
 	trait_mean(d::AbstractDeme)
 """
 function trait_mean(d::AbstractDeme)
+	if length(d.agents) > 0
 	z = Float64[]
 	for agent in d.agents
 		push!(z,trait(agent))
 	end
 	sum(z)/length(d)
+	else 0.
+	end
+end
+
+"""
+	f_trait_agents(d::MixedPloidyDeme)
+"""
+function f_trait_agents(d::MixedPloidyDeme)
+	trait_agents = Float64[]
+	for agent in d.agents
+		t = trait(agent)
+		push!(trait_agents,t)
+	end
+	trait_agents
 end
