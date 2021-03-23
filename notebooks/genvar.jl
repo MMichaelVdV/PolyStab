@@ -13,9 +13,6 @@ using PolyStab: SimpleDeme, randagent, random_mating, allelefreqs
 # ╔═╡ b79eb4e0-8696-11eb-0949-555c0c3c411f
 md"""### Genetic variance in a mixed ploidy population"""
 
-# ╔═╡ ded98e10-8699-11eb-0ce3-d5dfb22aeadf
-
-
 # ╔═╡ ded34c80-8699-11eb-33ce-214cb4f59699
 
 
@@ -24,7 +21,6 @@ d = SimpleDeme(agents=randagent(0.2, 0.1, 100, 100))
 
 # ╔═╡ Cell order:
 # ╟─b79eb4e0-8696-11eb-0949-555c0c3c411f
-# ╠═ded98e10-8699-11eb-0ce3-d5dfb22aeadf
 # ╠═2b840c70-8697-11eb-36e2-27dc0929a48b
 # ╠═a74705e0-8699-11eb-1e70-77407cfbbcfb
 # ╠═ded34c80-8699-11eb-33ce-214cb4f59699

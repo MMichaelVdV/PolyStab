@@ -7,23 +7,8 @@ using InteractiveUtils
 # ╔═╡ 58c46a2e-85ee-11eb-28ed-f927eac6cd9b
 using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
 
-# ╔═╡ ff9c1d30-8657-11eb-1249-852b045e1158
-md""" ### Island model
-"""
-
 # ╔═╡ 4d51f440-8659-11eb-010c-ab5401fcc485
-md""" ###### cfr. Establishment in a new habitat by polygenic adaptation (Barton and Etheridge, 2017)"""
-
-# ╔═╡ 14002550-8658-11eb-0690-3f178c25e622
-md""" Representation: large abstract mainland population (assumes: infinite population size in HWE), migration from mainland to different smaller islands with finite population size (respresented as demes).
-
-Some quick thoughts:
-- mainland -> island: establishment of polyploid in a diploid island population
-- migration between islands (demes) or only from mainland to island?
-- starting population mainland (Gv), island
-- colonization event (selfing versus non-selfing, i.e. with nonselfing you need at least two individuals to succesfully colonize an island). 
-- stochasticity < dispersal (phenotype - island match), i.e. do all islands have the same optimum as mainland (agents will already be adapted) or is there variation in island optima (different islands with different parameters versus all islands same parameters and different simulation runs)
-"""
+md""" ###### This notebook contains the code for generating GIFs for mixed ploidy migration along a 1D habitat."""
 
 # ╔═╡ dac9ff40-8657-11eb-380c-23337b4e14a2
 md""" ### Functions
@@ -871,9 +856,7 @@ begin
 end
 
 # ╔═╡ Cell order:
-# ╟─ff9c1d30-8657-11eb-1249-852b045e1158
 # ╟─4d51f440-8659-11eb-010c-ab5401fcc485
-# ╟─14002550-8658-11eb-0690-3f178c25e622
 # ╠═2664cbb0-85ef-11eb-253a-d9f02c63f5f9
 # ╠═9e9e62c0-865e-11eb-134c-ef481e41ab27
 # ╠═9e2fdbc0-8659-11eb-1d53-450c776a5ad0
