@@ -188,18 +188,8 @@ function unreduced_gamete(a::Agent, d::AbstractDeme)
     # why not include an all-zero row for haploid individuals in `d.UG`?
     # (that way you can index by ploidy directly)
 	num = sample(1:4, weights(d.UG[ploidy(a)-1,:]))
-	loci = zeros(Int(num), length(a))
-	b = deepcopy(a.loci)
-	#shuffle!(b)
-	c = 1
-	while c <= num
-		i = b[1,:]
-		b = b[1:end .!= c,:]
-		loci[c,:] += i
-		c += 1
-	end
-    # This seems incorrect, I don't really get what your are doing actually?
-	return Agent(loci, a.d)  #? we should propagate `d` right?
+    idx = sample(1:ploidy(a), num, replace=false)
+    return Agent(a.loci[idx, :], a.d)
 end	
 
 # XXX: There seems to be some confusion on gamete formation. We should have
@@ -252,8 +242,8 @@ selection).
 function mate_p(a::Agent, b::Agent, d::MixedPloidyDeme)
     #gamete formation
     # XXX we should have recombinatoin *before* gamete formation ?!
-    ag = recombine_poly(unreduced_gamete(a,d))
-    bg = recombine_poly(unreduced_gamete(b,d))
+    ag = unreduced_gamete(recombine_poly(a), d)
+    bg = unreduced_gamete(recombine_poly(b), d)
     #combine gametes and assign viability
     via = viability(ag, bg, d) 
     # not sure if returning 0 is the best idea in terms of type stability
