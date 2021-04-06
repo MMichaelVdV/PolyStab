@@ -11,6 +11,14 @@ Agent of arbitrary ploidy level.
 end
 
 """
+	GametePool{T}
+Gamete container.
+"""
+@with_kw struct GametePool{T}
+	gametes::Matrix{T}
+end
+
+"""
     AbstractDeme{A}
 """
 abstract type AbstractDeme{A} 
@@ -39,12 +47,12 @@ for each level of ploidy in the population.
 
 - `K` : Carrying capacity
 - `θ` : Environmental optimum
-- `rm`: Mean Malthusian fitness
+- `rm`: Growth rate per capita
 - `Vs`: Variance of stabilizing selection
-- `u` : Unreduced gamete formation rate
+- `α` : Allelic effect size
 - `μ` : Mutation rate
 - `OV` : Offspring viability
-- `UG` : Unreduced gamete formation
+- `UG` : Unreduced gamete probabilities
 """
 @with_kw struct MixedPloidyDeme{A,T} <: AbstractDeme{A}
     agents::Vector{A}
@@ -52,11 +60,41 @@ for each level of ploidy in the population.
     θ ::T     = 12.5
     rm::T     = 1.06
     Vs::T     = 1/2
-    u ::T     = 0.01
     α ::T     = 0.25
     μ ::T     = 1e-6
 	OV::Matrix{T} = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.]
-	UG::Matrix{T} = [1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.]
+	UG::Matrix{T} = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.]
+end
+
+"""
+    IslandDeme{A,T}
+
+A single random-mating, mixed-ploidy level deme, most of the 'population
+genetic' environment should be implemented at this level (drift, selection,
+mutation). OV: Viability matrix, a symmetric matrix that contains the viability
+of offspring for each possible combination of gametes. Ug: Unreduced gamete
+formation matrix, a matrix that contains the probability of unreduced gametes
+for each level of ploidy in the population.
+
+- `K` : Carrying capacity
+- `θ` : Environmental optimum
+- `β` : Selection gradient
+- `m` : migration rate
+- `α` : allelic effect size
+- `μ` : Mutation rate
+- `OV` : Offspring viability
+- `UG` : Unreduced gamete probabilities
+"""
+@with_kw struct IslandDeme{A,T} <: AbstractDeme{A}
+    agents::Vector{A}
+    K ::Int64 = 200
+    θ ::T     = 12.5
+    β ::T     = 0.1
+	m ::T     = 0.1
+    α ::T     = 0.25
+    μ ::T     = 1e-6
+	OV::Matrix{T} = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.]
+	UG::Matrix{T} = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.]
 end
 
 """
@@ -74,8 +112,11 @@ the migration aspects of the population genetic environment.
 end
 
 #Some useful short functions:
+(a::Agent)(loci)=Agent(loci, a.d)
 (d::MixedPloidyDeme)(agents) = 
-    MixedPloidyDeme(agents, d.K, d.θ, d.rm, d.Vs, d.u, d.α, d.μ, d.OV, d.UG)
+    MixedPloidyDeme(agents, d.K, d.θ, d.rm, d.Vs, d.α, d.μ, d.OV, d.UG)
+(d::IslandDeme)(agents) = 
+    IslandDeme(agents, d.K, d.θ, d.β, d.m, d.α, d.μ, d.OV, d.UG)
 (d::SimpleDeme)(agents) = SimpleDeme(agents, d.K)
 (h::Habitat)(demes) = Habitat(h.demes, h.σ, h.θ, h.b, h.dm)
 
@@ -106,7 +147,7 @@ end
 # Example:
 # A mixed ploidy deme with ~25 diploids and ~25 tetraploids, where α is 0.5 and
 # number of loci is 50.  
-# d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0.5, 0., 0.5]))
+# d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0.5, 0., 0.5],50))
 
 Base.rand(rng::AbstractRNG, d::AbstractDeme, n) = rand(rng, d.agents, n)
 Base.rand(d::AbstractDeme, n::Int) = rand(d.agents, n)
@@ -115,7 +156,7 @@ Base.length(a::Agent) = size(a.loci)[2]	#assumes all chromosomes are same length
 Base.length(d::AbstractDeme) = length(d.agents)
 Base.length(h::Habitat) = length(h.demes)
 
-# I think using `nloci` instead of length leads to more readable
+# I think using `nloci` instead of length leads to more readable code
 nloci(a::Agent) = size(a.loci)[2]
 
 Base.push!(d::AbstractDeme, a::Agent) = push!(d.agents, a)
@@ -125,7 +166,7 @@ Base.sum(a::Agent) = sum(a.loci)
 ploidy(a::Agent) = size(a.loci)[1]
 
 emptycopy(d::MixedPloidyDeme{A,T}) where A where T = 
-    MixedPloidyDeme(A[], d.K, d.θ, d.rm, d.Vs, d.u, d.μ, d.OV, d.UG)
+    MixedPloidyDeme(A[], d.K, d.θ, d.rm, d.Vs, d.α, d.μ, d.OV, d.UG)
 emptycopy(h::Habitat) = Habitat(emptycopy.(h.demes), h.σ, h.b, h.θ, h.Dm)
 
 expected_heterozygosity(H₀, t, N) = ((1.0-1.0/N)^t)*H₀
@@ -142,11 +183,11 @@ function viability(a::Agent, b::Agent, d::AbstractDeme)
 end
 
 """
-	recombine_poly(a::Agent)
+	recombination(a::Agent)
 
 Free recombination between loci in a mixed ploidy population. 
 """
-function recombine_poly(a::Agent)
+function recombination(a::Agent)
     genome = similar(a.loci)
     # this was incorrect, you actually resample (with replacement) homologs 
     # from the parental genome, and this will not generally be valid. I.e.
@@ -158,42 +199,73 @@ function recombine_poly(a::Agent)
         genome[:,i] = shuffle(a.loci[:,i])
 	end
     Agent(loci=genome, d=a.d) 
-    # This was 1. * ploidy(a) but I don't get that? 
-    # shouldn't it just be the actual `d`?
 end
 
 """
-	recombine_poly(d::AbstractDeme{A})
+	recombination(a::Agent,c)
+
+Recombination between loci with recombination rate `c`  in a mixed ploidy population. 
+"""
+function recombination(a::Agent,c)
+    genome = similar(a.loci)
+    for i in 1:nloci(a)
+		genome[:,i] = rand() < c ? shuffle(a.loci[:,i]) : a.loci[:,i]
+    end
+    Agent(loci=genome, d=a.d) 
+end
+
+"""
+	recombination(d::AbstractDeme{A})
 
 Free recombination between loci in a mixed ploidy population.
 """
-function recombine_poly(d::MixedPloidyDeme{A}) where A
+function recombination(d::AbstractDeme{A}) where A
 	new_agents = A[]
 	for agent in d.agents
-        push!(new_agents, recombine_poly(agent))
+        push!(new_agents, recombination(agent))
 	end
     d(new_agents)
 end	
 	
-# why is this function named unreducaed gamete? It's confusing as it also
-# is used for producing reduced gametes...
 """
-	unreduced_gamete(a::Agent, d::AbstractDeme)
+	gametogenesis(a::Agent, d::AbstractDeme)
 
-Unreduced gamete formation in a mixed ploidy population of 2n,3n,4n as it is
-implemented at the moment.
+Gamete formation in a mixed ploidy population (1n to 4n).
 """
-function unreduced_gamete(a::Agent, d::AbstractDeme)
-	# this samples the ploidy level (1 to 4, potentially) of gametes 
-    # why not include an all-zero row for haploid individuals in `d.UG`?
-    # (that way you can index by ploidy directly)
-	num = sample(1:4, weights(d.UG[ploidy(a)-1,:]))
+function gametogenesis(a::Agent, d::AbstractDeme)
+	num = sample(1:4, weights(d.UG[ploidy(a),:]))
     idx = sample(1:ploidy(a), num, replace=false)
     return Agent(a.loci[idx, :], a.d)
 end	
 
+"""
+	meiosis(a::Agent,c)
+
+Meiosis in a diploid.
+- `c` : Recombination rate
+"""
+function meiosis(a::Agent,c)
+	# 1. replicate the genome e.g. for a single diploid locus (Aa) -> (AA|aa)
+	gametes = [a.loci  a.loci]
+	a = a(gametes)
+	#2. recombination: (AA|aa) -> (AA|aa) w.p. 1-c
+	#                           -> (Aa|Aa) w.p. c
+	a = recombination(a,c)
+	# 3. meiosis 1:   (AA|aa) -> (AA) and (aa) 
+	#                 (Aa|Aa) -> (Aa) and (Aa)
+	idx_1 = rand(1:ploidy(a))
+	m1 = a.loci[idx_1, :]
+	# 4. meiosis 2:   (Aa) -> (A) (a), (aa) -> (a) (a), (AA) -> (A) (A)
+	l = length(a)
+	g1 = m1[1:Int(l/2)]
+	g2 = m1[Int(l/2)+1:Int(l)]
+	g = [g1,g2]
+	idx_2 = rand(1:ploidy(a))
+	m2 = g[idx_2]
+    return m2
+end
 # XXX: There seems to be some confusion on gamete formation. We should have
-# recombination before gamate formation, and random segregation of homologs
+# recombination before gamete formation, and random segregation of homologs
 # into gametes. I don't think the current code does this properly. Maybe it
 # would be instructive to really implement a full meiosis, we might code 
 # some shortcuts later for efficiency, but it might be helpful. What I mean
@@ -215,21 +287,29 @@ end
 # is no double reduction.
 
 """
-	unreduced_gamete(d::AbstractDeme{A})
+	gametogenesis(d::AbstractDeme{A})
 
-Unreduced gamete formation in a mixed ploidy population of 2n,3n,4n as it is
-implemented at the moment.
+Gamete formation in a mixed ploidy population (1n to 4n).
 """
-function unreduced_gamete(d::MixedPloidyDeme{A}) where A
+function gametogenesis(d::AbstractDeme{A}) where A
 	new_agents = A[]
 	for agent in d.agents
-		push!(new_agents, unreduced_gamete(agent,d))
+		push!(new_agents, gametogenesis(agent,d))
 	end
     d(new_agents)
 end
-	
+
 """
 	mate_p(a::Agent, b::Agent)
+"""
+function mate_p(a, b)
+    ar = recombination(a)
+    br = recombination(b)                                                                                                    
+    Agent(loci=[ar.loci[1:1,:]; br.loci[1:1,:]], d=a.d)
+end
+	
+"""
+	mate_p(a::Agent, b::Agent, d::AbstractDeme)
 
 Mating in a mixed ploidy deme. Assumes that different cytotypes can be
 compatible with a decrease in viability (cfr. OffspringViability matrix) (i.e.
@@ -239,28 +319,29 @@ cost. This influences the dynamics by including hybrid offspring that can
 compete for space (and affects the malthusian fitness/density dependence of
 selection).
 """	
-function mate_p(a::Agent, b::Agent, d::MixedPloidyDeme)
+function mate_p(a::Agent, b::Agent, d::AbstractDeme)
     #gamete formation
     # XXX we should have recombinatoin *before* gamete formation ?!
-    ag = unreduced_gamete(recombine_poly(a), d)
-    bg = unreduced_gamete(recombine_poly(b), d)
+    ag = gametogenesis(recombination(a), d)
+    bg = gametogenesis(recombination(b), d)
     #combine gametes and assign viability
     via = viability(ag, bg, d) 
     # not sure if returning 0 is the best idea in terms of type stability
     # perhaps you should return a mock-agent (for instance an agent with length
     # zero genome) when there is no viable offspring
-    return rand() < via ? Agent([ag.loci ; bg.loci], 1. *(ploidy(ag) + ploidy(bg))) : 0
+	# if d is defined at agent level, how do we cope with it here? 
+    return rand() < via ? Agent(loci=[ag.loci ; bg.loci], d=a.d) : 0
 end
 
 """
-	random_mating_mixedp(d::AbstractDeme{A}) where A
+	random_mating(d::AbstractDeme{A}) where A
 
 Random mating in a mixed ploidy deme.
 """
-function random_mating_mixedp(d::AbstractDeme{A}) where A
+function random_mating(d::AbstractDeme{A}) where A
     new_agents =  A[]
     for i=1:length(d)
-		pair = mate_p(rand(d, 2)...,d)
+		pair = mate_p(rand(d, 2)...)
 		if pair != 0
 			push!(new_agents, pair)
 		end
@@ -269,19 +350,30 @@ function random_mating_mixedp(d::AbstractDeme{A}) where A
 end 
 
 """
+	number_of_offspring(d::AbstractDeme, a::Agent)
 """
-function number_of_offspring(d::AbstractDeme, a::Agent)
+function number_of_offspring(d::MixedPloidyDeme, a::Agent)
     logw = malthusian_fitness(d, a)
     rand(Poisson(exp(logw)))
 end
 
 """
-	mating_PnB(d::AbstractDeme{A})
+	number_of_offspring(d::IslandDeme, a::Agent)
+"""
+function number_of_offspring(d::IslandDeme, a::Agent)
+    logw = directional_selection(d, a)
+    rand(Poisson(exp(logw))) #does this kind of demographic stochasticity make sense with directional selection? 
+	#with a poisson distributed number of offspring the variance increases with increasing fitness (exp(logw))
+	#rand(Normal(logw,1))
+end
+
+"""
+	mating_PnB(d::MixedPloidyDeme{A})
 
 Mating in a mixed ploidy deme with unreduced gamete formation and partner
 choice weighted by fitness (cfr. PnB).
 """
-function mating_PnB(d::AbstractDeme{A}) where A
+function mating_PnB_x(d::MixedPloidyDeme{A}) where A
 	new_agents =  A[]
 	fitnesses = exp.(malthusian_fitness(d))
 	for i=1:length(d)
@@ -311,7 +403,13 @@ end
 
 ismock(x) = x == 0
 
-function suggested(d::AbstractDeme{A}) where A
+"""
+	mating_PnB(d::MixedPloidyDeme{A})
+
+Mating in a mixed ploidy deme with unreduced gamete formation and partner
+choice weighted by fitness (cfr. PnB).
+"""
+function mating_PnB(d::AbstractDeme{A}) where A
 	new_agents = A[]
 	fitnesses = exp.(malthusian_fitness(d))
 	for i=1:length(d)
@@ -326,8 +424,9 @@ end
 
 """
 	malthusian_fitness(d::AbstractDeme,a::Agent)
+Return the Malthusian fitness (density dependence and stabilizing selection) of a single agent in a deme.
 """
-function malthusian_fitness(d::AbstractDeme,a::Agent)
+function malthusian_fitness(d::MixedPloidyDeme,a::Agent)
     N = length(d)
     z = trait(a)
     return d.rm*(1-(N/d.K))-((z-d.θ)^2)/(2*d.Vs)
@@ -335,8 +434,9 @@ end
 
 """
 	malthusian_fitness(d::AbstractDeme)
+Return the Malthusian fitness (density dependence and stabilizing selection) of each agent in a deme.
 """
-function malthusian_fitness(d::AbstractDeme)
+function malthusian_fitness(d::MixedPloidyDeme)
     N = length(d)
     fitnesses = Float64[]
 	for agent in d.agents
@@ -346,6 +446,62 @@ function malthusian_fitness(d::AbstractDeme)
 	end
 	fitnesses
 end
+
+"""
+	directional_selection(d::AbstractDeme,a::Agent)
+"""
+function directional_selection(d::IslandDeme,a::Agent)
+    N = length(d)
+    z = trait(a)
+    return d.β*(z-d.θ)
+end 
+
+"""
+	directional_selection(d::IslandDeme)
+"""
+function directional_selection(d::IslandDeme)
+    N = length(d)
+    fitnesses = Float64[]
+	for agent in d.agents
+		z = trait(agent)
+    	f = d.β*(z-d.θ)
+		push!(fitnesses, f)
+	end
+	return fitnesses
+end
+
+"""
+	mating_PnB(d::IslandDeme{A})
+
+Mating in a mixed ploidy islanddeme with unreduced gamete formation directional selection.
+"""
+function mating_PnB(d::IslandDeme{A}) where A
+	new_agents =  A[]
+	fitnesses = exp.(directional_selection(d))
+	for i=1:length(d)
+        # so here an individual has all it's offspring with the same partner?
+        # perhaps it would be more reasonable to have `noff` parental pairs
+        # for B1? (would make more sense for plants at least?). In that case 
+        # we'd have something like
+        # Bs = sample(d.agents, weights(fitnesses), noff)
+        # new_agents = vcat(new_agents, filter(!ismock, map(B2->mate_p(B1, B2), Bs)))
+        # where `ismock` checks whether an offspring is a mock agent (for a failed
+        # agent, cfr. remark above, or if you keep the `0`, ismock would be x->x==0)
+        # see function `suggested` below
+		B1 = d.agents[i]
+		noff = number_of_offspring(d,B1)
+		B2 = sample(d.agents, weights(fitnesses))
+		#B2 = rand(d.agents)
+		#child = mate(B1,B2)
+		m = mate_p(B1,B2,d)
+		if m != 0
+			for c in 1:noff 
+				push!(new_agents, m)
+			end
+		end
+	end
+    d(new_agents)
+end 
 
 #Habitat level
 
@@ -371,10 +527,13 @@ Aim should be to initiate a population for nd_s demes on a linear gradient
 are adapted, meaning their clines take the form and spacing as assumed for the
 deterministic model under linkage equilibrium.
 """
-function initiate_habitat(gradient, d::MixedPloidyDeme, p, α, L, N)
-    agents = randagent_p(p, α, L, [0., 1., 0., 0.], 0, d = 2.)
-    hab = Habitat(demes=[d(agents) for i in gradient])
-	for a in randagent_p(p, α, L, [2], N, d = 2.)
+function initiate_habitat(d::MixedPloidyDeme, gradient, p, α, L, N)
+    #ag = randagent_p(p, α, L, [0., 1., 0., 0.], 0)
+	#had to change some things back here:
+	#it wasn't giving the expeted output somehow but filling all the demes with agents instead of just the middle one
+	#also has to initialize every deme with different θ so not sure if it works with the object syntax
+    hab = Habitat(demes=[MixedPloidyDeme(agents=randagent_p(p, α, L, [0., 1., 0., 0.], 0),K=d.K,θ=i,rm=d.rm,Vs=d.Vs,α=d.α,μ=d.μ,OV=d.OV,UG=d.UG) for i in gradient])
+	for a in randagent_p(p, α, L, [0., 1., 0., 0.], N)
         push!(hab.demes[Int(hab.Dm/2)].agents, a)
 	end
 	return hab
@@ -403,28 +562,6 @@ end
 
 #Mutation:
 
-# α = 0.25 #need to incorporate this somewhere
-# just put in deme for now?
-
-# XXX this is very inefficient! in most cases there will be no mutations
-# so you are loopingfor nothing!
-function _mutate(d::AbstractDeme, a::Agent)
-	num = ploidy(a)
-	loci = zeros(num, length(a))
-    newloci = similar(a.loci)
-	for i in 1:ploidy(a)
-    	for j in 1:length(a)
-    		if rand() > d.μ
-            	newloci[i,j] = a.loci[i,j]
-        	else
-            	a.loci[i,j] == 0.0 ? x = d.α : x = 0.0
-            	newloci[i,j] = x
-        	end
-		end
-    end
-    Agent(newloci, 1. *num)  # here again, what happens with `d` parameter?
-end
-
 function mutate(d::AbstractDeme, a::Agent)
     Nsites = nloci(a) * ploidy(a)
     nmutations = rand(Poisson(Nsites * d.μ))
@@ -448,47 +585,47 @@ end
 #Simulations:
 
 """
-	neutral_evolving_deme(d::AbstractDeme, ngen)
+	evolving_neutraldeme(d::AbstractDeme, ngen)
 
 Simulate a single random mating deme with mixed ploidy.
 """
-function neutral_evolving_deme(d::MixedPloidyDeme, ngen; heterozygosities_p = heterozygosities_p, allelefreqs_p = allelefreqs_p, trait_mean = trait_mean, pf = ploidy_freq)
+function evolving_neutraldeme(d::AbstractDeme, ngen; heterozygosities_p = heterozygosities_p, allelefreqs_p = allelefreqs_p, trait_mean = trait_mean, pf = ploidy_freq)
 	het = [heterozygosities_p(d)]
 	af = [allelefreqs_p(d)]
 	tm = [trait_mean(d)]
-	p2 = [ploidy_freq(d)[1]]
-	p3 = [ploidy_freq(d)[2]]
-	p4 = [ploidy_freq(d)[3]]
+	p2 = [ploidy_freq(d)[2]]
+	p3 = [ploidy_freq(d)[3]]
+	p4 = [ploidy_freq(d)[4]]
 	
 	for n=1:ngen
-		d = random_mating_mixedp(d)
+		d = random_mating(d)
 		#d = unreduced_gamete(d)
 		push!(het, heterozygosities_p(d))
 		push!(af, allelefreqs_p(d))
 		push!(tm, trait_mean(d))
-		push!(p2, ploidy_freq(d)[1])
-		push!(p3, ploidy_freq(d)[2])
-		push!(p4, ploidy_freq(d)[3])
+		push!(p2, ploidy_freq(d)[2])
+		push!(p3, ploidy_freq(d)[3])
+		push!(p4, ploidy_freq(d)[4])
 	end
 	(het=het, af=af, tm=tm, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen)
 end
 
 """
-	evolving_deme_ploidyvar(d::AbstractDeme, ngen)
+	evolving_selectiondeme(d::AbstractDeme, ngen)
 
 Simulate a single deme with mixed ploidy, malthusian fitness and unreduced
 gamete formation.
 """
-function evolving_deme_ploidyvar(d::MixedPloidyDeme, ngen; 
+function evolving_selectiondeme(d::MixedPloidyDeme, ngen; 
 	heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = 
 	allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
 	het = [heterozygosities_p(d)]
 	pop = [length(d)]
 	tm = [trait_mean(d)]
 	af = [allelefreqs_p(d)]
-	p2 = [ploidy_freq(d)[1]]
-	p3 = [ploidy_freq(d)[2]]
-	p4 = [ploidy_freq(d)[3]]
+	p2 = [ploidy_freq(d)[2]]
+	p3 = [ploidy_freq(d)[3]]
+	p4 = [ploidy_freq(d)[4]]
 	fta = [f_trait_agents(d)]
 	
 	for n=1:ngen
@@ -498,9 +635,9 @@ function evolving_deme_ploidyvar(d::MixedPloidyDeme, ngen;
 		push!(pop, length(d))
 		push!(tm, trait_mean(d))
 		push!(af, allelefreqs_p(d))
-		push!(p2, ploidy_freq(d)[1])
-		push!(p3, ploidy_freq(d)[2])
-		push!(p4, ploidy_freq(d)[3])
+		push!(p2, ploidy_freq(d)[2])
+		push!(p3, ploidy_freq(d)[3])
+		push!(p4, ploidy_freq(d)[4])
 		push!(fta, f_trait_agents(d))
 		
 	end
@@ -508,28 +645,62 @@ function evolving_deme_ploidyvar(d::MixedPloidyDeme, ngen;
 end
 	
 """
-	evolving_deme_UG(d::AbstractDeme, ngen)
+	evolving_ugdeme(d::AbstractDeme, ngen)
 
 Simulate a single deme with mixed ploidy, malthusian fitness and unreduced
 gamete formation.
 """
-function evolving_deme_UG(d::MixedPloidyDeme, ngen; pf = ploidy_freq)
+function evolving_ugdeme(d::MixedPloidyDeme, ngen; pf = ploidy_freq)
 
 	pop = [length(d)]
-	p2 = [ploidy_freq(d)[1]]
-	p3 = [ploidy_freq(d)[2]]
-	p4 = [ploidy_freq(d)[3]]
+	p2 = [ploidy_freq(d)[2]]
+	p3 = [ploidy_freq(d)[3]]
+	p4 = [ploidy_freq(d)[4]]
 	
 	for n=1:ngen
 		d = mating_PnB(d)
 		d = mutate(d) 
 		push!(pop, length(d))
-		push!(p2, ploidy_freq(d)[1])
-		push!(p3, ploidy_freq(d)[2])
-		push!(p4, ploidy_freq(d)[3])
+		push!(p2, ploidy_freq(d)[2])
+		push!(p3, ploidy_freq(d)[3])
+		push!(p4, ploidy_freq(d)[4])
 		
 	end
 	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen) 
+end
+
+"""
+	evolving_islanddeme(d::AbstractDeme, ngen)
+
+Simulate a single deme with mixed ploidy, malthusian fitness and unreduced
+gamete formation.
+"""
+function evolving_islanddeme(d::IslandDeme, ngen; 
+	heterozygosities_p=heterozygosities_p, fit=directional_selection, trait_mean = trait_mean, allelefreqs_p = 
+	allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
+	het = [heterozygosities_p(d)]
+	pop = [length(d)]
+	tm = [trait_mean(d)]
+	af = [allelefreqs_p(d)]
+	p2 = [ploidy_freq(d)[2]]
+	p3 = [ploidy_freq(d)[3]]
+	p4 = [ploidy_freq(d)[4]]
+	fta = [f_trait_agents(d)]
+	
+	for n=1:ngen
+		d = mating_PnB(d)
+		d = mutate(d) 
+		push!(het, heterozygosities_p(d))
+		push!(pop, length(d))
+		push!(tm, trait_mean(d))
+		push!(af, allelefreqs_p(d))
+		push!(p2, ploidy_freq(d)[2])
+		push!(p3, ploidy_freq(d)[3])
+		push!(p4, ploidy_freq(d)[4])
+		push!(fta, f_trait_agents(d))
+		
+	end
+	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
 end
 
 """
@@ -605,11 +776,8 @@ end
 
 """
 	ploidy_freq(d::AbstractDeme)
-
-Random function I quickly wrote to check the population size of haploids and
-diploids seperately. Should be generalized.
 """
-ploidy_freq(d::AbstractDeme) = counts(map(ploidy, d.agents))
+ploidy_freq(d::AbstractDeme) = counts(map(ploidy, d.agents), 1:4)
 
 var_add(a::Agent,α) = ploidy(a)*α^2*sum(heterozygosities_p(a))
 
@@ -618,7 +786,7 @@ var_add(a::Agent,α) = ploidy(a)*α^2*sum(heterozygosities_p(a))
 """
     trait(a::Agent)
 """
-trait(a::Agent) = sum(a)/a.d  # is this how we define it? shouldn' ploidy come in there?
+trait(a::Agent) = sum(a)/ploidy(a)  # is this how we define it? shouldn't ploidy come in there?
 	
 """
 	trait_mean(d::AbstractDeme)
@@ -630,6 +798,11 @@ function trait_mean(d::AbstractDeme)
 end
 
 """
-	f_trait_agents(d::MixedPloidyDeme)
+	f_trait_agents(d::AbstractDeme)
 """
-f_trait_agents(d::MixedPloidyDeme) = map(trait, d.agents)
+f_trait_agents(d::AbstractDeme) = map(trait, d.agents)
+
+
+#dominance
+#pollen <-> seed migration
+#assortative mating
