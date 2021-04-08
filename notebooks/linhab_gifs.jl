@@ -17,13 +17,13 @@ d = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.], 0), K=5
 habi = Habitat(demes=[d])
 
 # ╔═╡ 5bc3759e-8f3f-11eb-3458-3d39fe093824
-g_lin = linear_gradient(habi)
+g_lin = linear_gradient(0.1,12.5,250)
 
 # ╔═╡ 5c000970-8f3f-11eb-0c5d-ef59668300a9
 hab = initiate_habitat(d, g_lin, 0.5, 0.5, 50, 50)
 
 # ╔═╡ 8e623f10-8e85-11eb-098f-7184885620f4
-sim_hab = evolving_habitat(hab, 1)
+sim_hab = evolving_habitat(hab, 100)
 
 # ╔═╡ 9f274e80-8e85-11eb-1b80-f5511b4a63f0
 begin
@@ -70,7 +70,7 @@ begin
 	end
 	het_demes, cordsh
 	end
-	anim_range_Vg = @animate for i ∈ 1:10
+	anim_range_Vg = @animate for i ∈ 1:100
 		sim_habA = sim_hab.data[i]
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -101,7 +101,7 @@ end
 
 # ╔═╡ e34a6b20-8efc-11eb-059d-397e876bd4bc
 begin
-	anim_range = @animate for i ∈ 1:10
+	anim_range = @animate for i ∈ 1:100
 		sim_habA = sim_hab.data[i]
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -118,7 +118,7 @@ begin
 		#hline!([K], label = "K")
 		hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
 		#vline!([Dm/2], label = "Starting deme")
-		plot!([margin]*5, color=:yellow, label = "Deterministic range margin")
+		#plot!([margin]*5, color=:yellow, label = "Deterministic range margin")
 		plot!(ppf1, grid=false, color=:blue, label="Diploid")
 		plot!(ppf2, grid=false, color=:green, label="Triploid")
 		plot!(ppf3, grid=false, color=:red, label="Tetraploid")
@@ -146,7 +146,7 @@ begin
 	trait_agents, cordst
 	end
 	
-	anim_range_trait = @animate for i ∈ 1:10
+	anim_range_trait = @animate for i ∈ 1:100
 		sim_habA = sim_hab.data[i]
 		trait_means = [trait_mean(deme) for deme in sim_habA.demes]
 	    trait_means_p = map(mean, trait_means)

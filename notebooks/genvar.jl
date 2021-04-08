@@ -5,79 +5,159 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 8ea08d1e-8bff-11eb-3fbb-f74cf53a2eed
-using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
-
-# ╔═╡ 2b840c70-8697-11eb-36e2-27dc0929a48b
-using PolyStab
+using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes, DataFrames
 
 # ╔═╡ ded34c80-8699-11eb-33ce-214cb4f59699
-using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_deme_UG, evolving_deme_ploidyvar, heterozygosities_p, allelefreqs_p, neutral_evolving_deme, recombine_poly, random_mating_mixedp
+using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, evolving_neutraldeme, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy, trait_mean, ploidy_freq, evolving_haploiddeme, evolving_selectiondeme
 
 # ╔═╡ b79eb4e0-8696-11eb-0949-555c0c3c411f
 md"""### Genetic variance in a mixed ploidy population"""
 
-# ╔═╡ 3f70dcc0-8bfd-11eb-3df6-6709900e71ce
-d_p2 = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 1., 200, [2], 500, d=2.),randagent_p(0.5, 0.1, 250, [4], 0, d=4.)), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.] )
+# ╔═╡ 09e48960-9875-11eb-35fe-5122ae8dbe5f
+md""" ##### Initialization of demes with different ploidy levels (haploid, diploid, tetraploid)"""
 
-# ╔═╡ 6cea6720-8bfd-11eb-3640-d5d0098ebd7a
-sim_p2 = neutral_evolving_deme(d_p2, 500)
+# ╔═╡ 217c5170-8e52-11eb-175c-c9b8476ae81b
+d_p1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [1., 0., 0., 0.],100), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.])
+
+# ╔═╡ 3f70dcc0-8bfd-11eb-3df6-6709900e71ce
+d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],100), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.])
 
 # ╔═╡ 39b5e750-8dbd-11eb-3f64-c12fa3fe01d5
-d_p4 = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 1., 200, [2], 0, d=2.),randagent_p(0.5, 0.1, 250, [4], 500, d=4.)), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.] )
+d_p4 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],100), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.])
 
-# ╔═╡ 4dddd0d0-8dbd-11eb-37ae-d3b33fb87952
-sim_p4 = neutral_evolving_deme(d_p4, 500)
+# ╔═╡ 3106b1d0-9875-11eb-36ac-0d2b98a73fd4
+md""" ##### Dynamics in a neutral deme (random mating, no selection)"""
 
-# ╔═╡ bc1ee9d0-8dbd-11eb-2d41-af9fd9e2cce4
-heterozygosities_p(d_p2)
+# ╔═╡ a8d89200-8e52-11eb-1277-b1857f7ea0fe
+begin
+neutral_p1 = evolving_haploiddeme(d_p1, 500)
+neutral_p2 = evolving_neutraldeme(d_p2, 500)
+neutral_p4 = evolving_neutraldeme(d_p4, 500)
+end
 
-# ╔═╡ c9616230-8dbd-11eb-27df-27dbfd045c89
-heterozygosities_p(d_p4)
+# ╔═╡ 692446be-97d7-11eb-148b-5d67df7ee834
+"""
+	loci(d::AbstractDeme)
+"""
+function loci(d::AbstractDeme)
+	[agent.loci for agent in d.agents]
+end
+
+# ╔═╡ 3c0b0cf0-9868-11eb-3730-7bb7df2114d4
+begin
+loc = loci(d_p4)[1]
+	for i in 2:length(d_p4)
+		loc = vcat(loc, loci(d_p4)[i])
+	end
+convert(DataFrame, loc)
+end
 
 # ╔═╡ 66a25c90-8bff-11eb-2a53-09b98728f17c
 begin
-	Hₒ_p2 = map(mean, sim_p2.het)
-	Hₒ_p4 = map(mean, sim_p4.het)
+	Hₒ_p1 = map(mean, neutral_p1.het)
+	Hₒ_p2 = map(mean, neutral_p2.het)
+	Hₒ_p4 = map(mean, neutral_p4.het)
 	expected_heterozygosity(H₀, t, N) = ((1.0-1.0/(2*N))^t)*H₀
-	plot(Hₒ_p2, grid=false, color=:blue, label="\$H_op2(t)\$")
+	eh_1(H₀, t, N) = ((1.0-1.0/(N))^t)*H₀
+	eh_2(H₀, t, N) = ((1.0-1.0/(2*N))^t)*H₀
+	eh_4(H₀, t, N) = ((1.0-1.0/(4*N))^t)*H₀
+	plot(Hₒ_p1, grid=false, color=:black, label="\$H_op1(t)\$", title="LOH")
+	plot!(Hₒ_p2, grid=false, color=:blue, label="\$H_op2(t)\$")
 	plot!(Hₒ_p4, grid=false, color=:red, label="\$H_op4(t)\$")
-	plot!(0:sim_p2.ngen+1, 
-		t->expected_heterozygosity(0.5*(1-0.5), t, 500),
+	#plot!(0:sim_p2.ngen+1, 
+		#t->expected_heterozygosity(0.5*(1-0.5), t, 50),
+		#linestyle=:dash, color=:black, 
+		#label = "\$(1-1/N)^t H_o(0)\$")
+	plot!(0:neutral_p1.ngen+1, 
+		t->eh_1(0.5*(1-0.5), t, 100),
 		linestyle=:dash, color=:black, 
 		label = "\$(1-1/N)^t H_o(0)\$")
+	plot!(0:neutral_p2.ngen+1, 
+		t->eh_2(0.5*(1-0.5), t, 100),
+		linestyle=:dash, color=:blue, 
+		label = "\$(1-1/2N)^t H_o(0)\$")
+	plot!(0:neutral_p4.ngen+1, 
+		t->eh_4(0.5*(1-0.5), t, 100),
+		linestyle=:dash, color=:red, 
+		label = "\$(1-1/4N)^t H_o(0)\$")
 	xlabel!("\$t\$")
 	ylabel!("\$H(t)\$")
 end
 
-# ╔═╡ a68923f2-8c06-11eb-131d-133c229a5505
-begin
-dp = MixedPloidyDeme(agents = vcat(randagent_p(0.5, 1., 200, [2], 100, d=2.),randagent_p(0.5, 0.1, 250, [4], 0, d=4.)), OV = [1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.] )
-dps = foldl((dp,i)->random_mating_mixedp(dp), 1:1000, init=dp)
-sort(unique(allelefreqs_p(dps))) == [0., 1.]
-end
-
 # ╔═╡ 1b1541de-8dbf-11eb-041c-815c116efeeb
 begin
-	pop_p2 = map(mean, sim_p2.p2)
-	pop_p4 = map(mean, sim_p4.p4)
-	plot(pop_p2, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	pop_p1 = map(mean, neutral_p1.p1)
+	pop_p2 = map(mean, neutral_p2.p2)
+	pop_p4 = map(mean, neutral_p4.p4)
+	plot(pop_p1, grid=false, color=:black, label="\$pop_p1(t)\$", title="Population size")
+	plot!(pop_p2, grid=false, color=:blue, label="\$pop_p2(t)\$")
 	plot!(pop_p4, grid=false, color=:red, label="\$pop_p4(t)\$")
 
 	xlabel!("\$t\$")
 	ylabel!("\$pop(t)\$")
 end
 
+# ╔═╡ 3fc09382-986b-11eb-29d6-57eeb0eddb77
+md""" ##### Dynamics in a deme with densitiy dependence and stabilizing selection"""
+
+# ╔═╡ 47dc60c0-9876-11eb-3d70-cd03509cbad8
+begin
+stabsel_p1 = evolving_selectiondeme(d_p1,500)
+stabsel_p2 = evolving_selectiondeme(d_p2,500)
+stabsel_p4 = evolving_selectiondeme(d_p4,500)
+end
+
+# ╔═╡ 66257e10-9879-11eb-2367-d706689f326a
+begin
+	traitmean_p1 = map(mean, stabsel_p1.tm)
+	traitmean_p2 = map(mean, stabsel_p2.tm)
+	traitmean_p4 = map(mean, stabsel_p4.tm)
+	plot(traitmean_p1, grid=false, color=:black, label=false)
+	plot!(traitmean_p2, grid=false, color=:blue, label=false)
+	plot!(traitmean_p4, grid=false, color=:red, label=false)
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+end
+
+# ╔═╡ 63ad1c50-987f-11eb-1512-df6fc858aaca
+
+
+# ╔═╡ c9b2b8d0-9879-11eb-294a-952184f8bf9c
+begin
+	popsize_p1 = map(mean, stabsel_p1.pop)
+	popsize_p2 = map(mean, stabsel_p2.pop)
+	popsize_p4 = map(mean, stabsel_p4.pop)
+	plot(popsize_p1, grid=false, color=:black, label=false)
+	plot!(popsize_p2, grid=false, color=:blue, label=false)
+	plot!(popsize_p4, grid=false, color=:red, label=false)
+	xlabel!("\$t\$")
+	ylabel!("Population size")
+end
+
+# ╔═╡ 21c69f40-9876-11eb-0f98-cf5c73410b72
+md""" ###### Effect of genotype to phenotype map"""
+
+# ╔═╡ 487c7150-9876-11eb-0bf3-4557f19a59af
+
+
 # ╔═╡ Cell order:
 # ╟─b79eb4e0-8696-11eb-0949-555c0c3c411f
 # ╠═8ea08d1e-8bff-11eb-3fbb-f74cf53a2eed
-# ╠═2b840c70-8697-11eb-36e2-27dc0929a48b
 # ╠═ded34c80-8699-11eb-33ce-214cb4f59699
+# ╠═09e48960-9875-11eb-35fe-5122ae8dbe5f
+# ╠═217c5170-8e52-11eb-175c-c9b8476ae81b
 # ╠═3f70dcc0-8bfd-11eb-3df6-6709900e71ce
-# ╠═6cea6720-8bfd-11eb-3640-d5d0098ebd7a
 # ╠═39b5e750-8dbd-11eb-3f64-c12fa3fe01d5
-# ╠═4dddd0d0-8dbd-11eb-37ae-d3b33fb87952
-# ╠═bc1ee9d0-8dbd-11eb-2d41-af9fd9e2cce4
-# ╠═c9616230-8dbd-11eb-27df-27dbfd045c89
-# ╠═66a25c90-8bff-11eb-2a53-09b98728f17c
-# ╠═a68923f2-8c06-11eb-131d-133c229a5505
-# ╠═1b1541de-8dbf-11eb-041c-815c116efeeb
+# ╟─3106b1d0-9875-11eb-36ac-0d2b98a73fd4
+# ╠═a8d89200-8e52-11eb-1277-b1857f7ea0fe
+# ╟─692446be-97d7-11eb-148b-5d67df7ee834
+# ╟─3c0b0cf0-9868-11eb-3730-7bb7df2114d4
+# ╟─66a25c90-8bff-11eb-2a53-09b98728f17c
+# ╟─1b1541de-8dbf-11eb-041c-815c116efeeb
+# ╟─3fc09382-986b-11eb-29d6-57eeb0eddb77
+# ╠═47dc60c0-9876-11eb-3d70-cd03509cbad8
+# ╠═66257e10-9879-11eb-2367-d706689f326a
+# ╠═63ad1c50-987f-11eb-1512-df6fc858aaca
+# ╠═c9b2b8d0-9879-11eb-294a-952184f8bf9c
+# ╟─21c69f40-9876-11eb-0f98-cf5c73410b72
+# ╠═487c7150-9876-11eb-0bf3-4557f19a59af
