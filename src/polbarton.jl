@@ -100,15 +100,18 @@ end
 """
     Habitat{D}
 
-A 1-dimensional habitat, i.e. an array of connected demes. This implements
-the migration aspects of the population genetic environment.
+A 1-dimensional habitat as an array of connected demes.
+- `σ` : Variance of dispersal
+- `b` : Steepness of linear gradient
+- `θ` : Phenotypic optimum in the central deme of the habitat
+- `Dm` : Number of demes
 """
 @with_kw struct Habitat{D,T}
     demes::Vector{D}
-    σ ::T = sqrt(1/2) #variance of dispersal
-    b ::T = 0.1 #steepness of linear gradient
-	θ ::T = 12.5 #phenotypic optimum in the center
-    Dm::T = 250. #number of demes to initialize
+    σ ::T = sqrt(1/2) 
+    b ::T = 0.1 
+	θ ::T = 12.5 
+    Dm::T = 250. 
 end
 
 #Some useful short functions:
@@ -147,7 +150,7 @@ end
 # Example:
 # A mixed ploidy deme with ~25 diploids and ~25 tetraploids, where α is 0.5 and
 # number of loci is 50.  
-# d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0.5, 0., 0.5],50))
+# d_mp = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0.5, 0., 0.5],50))
 
 Base.rand(rng::AbstractRNG, d::AbstractDeme, n) = rand(rng, d.agents, n)
 Base.rand(d::AbstractDeme, n::Int) = rand(d.agents, n)
@@ -382,6 +385,15 @@ function number_of_offspring(d::MixedPloidyDeme, a::Agent)
 end
 
 """
+	number_of_offspring_det(d::AbstractDeme, a::Agent)
+NOF without demographic stochasticity.
+"""
+function number_of_offspring_det(d::MixedPloidyDeme, a::Agent)
+    logw = malthusian_fitness(d, a)
+    exp(logw)
+end
+
+"""
 	number_of_offspring(d::IslandDeme, a::Agent)
 """
 function number_of_offspring(d::IslandDeme, a::Agent)
@@ -395,9 +407,9 @@ end
 	mating_PnB(d::MixedPloidyDeme{A})
 
 Mating in a mixed ploidy deme with unreduced gamete formation and partner
-choice weighted by fitness (cfr. PnB).
+choice weighted by fitness where every individual has all it's offspring with the same partner(cfr. PnB).
 """
-function mating_PnB_x(d::MixedPloidyDeme{A}) where A
+function mating_PnB(d::MixedPloidyDeme{A}) where A
 	new_agents =  A[]
 	fitnesses = exp.(malthusian_fitness(d))
 	for i=1:length(d)
@@ -425,15 +437,49 @@ function mating_PnB_x(d::MixedPloidyDeme{A}) where A
     d(new_agents)
 end 
 
+"""
+	mating_PnB_det(d::MixedPloidyDeme{A})
+
+Mating in a mixed ploidy deme with unreduced gamete formation and partner
+choice weighted by fitness where every individual has all it's offspring with the same partner(cfr. PnB).
+"""
+function mating_PnB_det(d::MixedPloidyDeme{A}) where A
+	new_agents =  A[]
+	fitnesses = exp.(malthusian_fitness(d))
+	for i=1:length(d)
+        # so here an individual has all it's offspring with the same partner?
+        # perhaps it would be more reasonable to have `noff` parental pairs
+        # for B1? (would make more sense for plants at least?). In that case 
+        # we'd have something like
+        # Bs = sample(d.agents, weights(fitnesses), noff)
+        # new_agents = vcat(new_agents, filter(!ismock, map(B2->mate_p(B1, B2), Bs)))
+        # where `ismock` checks whether an offspring is a mock agent (for a failed
+        # agent, cfr. remark above, or if you keep the `0`, ismock would be x->x==0)
+        # see function `suggested` below
+		B1 = d.agents[i]
+		noff = number_of_offspring_det(d,B1)
+		B2 = sample(d.agents)
+		#B2 = rand(d.agents)
+		#child = mate(B1,B2)
+		m = mate_p(B1,B2,d)
+		if m != 0
+			for c in 1:noff 
+				push!(new_agents, m)
+			end
+		end
+	end
+    d(new_agents)
+end 
+
 ismock(x) = x == 0
 
 """
-	mating_PnB(d::MixedPloidyDeme{A})
+	mating_PnB_x(d::MixedPloidyDeme{A})
 
 Mating in a mixed ploidy deme with unreduced gamete formation and partner
-choice weighted by fitness (cfr. PnB).
+choice weighted by fitness.
 """
-function mating_PnB(d::AbstractDeme{A}) where A
+function mating_PnB_x(d::AbstractDeme{A}) where A
 	new_agents = A[]
 	fitnesses = exp.(malthusian_fitness(d))
 	for i=1:length(d)
@@ -530,26 +576,35 @@ end
 #Habitat level
 
 """
-	linear_gradient(h::Habitat)
+	linear_gradient(Dm,b,θ)
 
 Initialize a vector of phenotypic optima for each deme of the habibat according
-to a linear gradient. 
+to a linear gradient.
+- `b` : Steepness of linear gradient
+- `θ` : Phenotypic optimum in the central deme of the habitat
+- `Dm` : Number of demes 
 """
-function linear_gradient(h::Habitat) 
+function linear_gradient(b,θ,Dm) 
 	#KK = [i*b for i in 0:Dm-1]
 	#KK = [θ for i in 0:Dm-1]
-	a = -(h.Dm/2)*h.b + h.θ #where Dm is number of demes and b is gradient
-	KK = [(i*h.b)+a for i in 0:h.Dm-1]
+	a = -(Dm/2)*b + θ #where Dm is number of demes and b is gradient
+	KK = [(i*b)+a for i in 1:Dm]
     return KK
 end
 
 """
-	initiate_habitat(gradient::Vector)
+	initiate_habitat(d::MixedPloidyDeme, gradient, p, α, L, N)
 
 Aim should be to initiate a population for nd_s demes on a linear gradient
 (with slope b) and with optimal genetic variance where one half of the genes
 are adapted, meaning their clines take the form and spacing as assumed for the
 deterministic model under linkage equilibrium.
+- `d` : Empty deme
+- `gradient` : Linear gradient
+- `p` : 
+- `α` : Allelic effect size
+- `L` : Number of loci
+- `N` : Number of starting individuals in central deme
 """
 function initiate_habitat(d::MixedPloidyDeme, gradient, p, α, L, N)
     #ag = randagent_p(p, α, L, [0., 1., 0., 0.], 0)
@@ -676,6 +731,40 @@ function evolving_selectiondeme(d::MixedPloidyDeme, ngen;
 	
 	for n=1:ngen
 		d = mating_PnB(d)
+		d = mutate(d) 
+		push!(het, heterozygosities_p(d))
+		push!(pop, length(d))
+		push!(tm, trait_mean(d))
+		push!(af, allelefreqs_p(d))
+		push!(p2, ploidy_freq(d)[2])
+		push!(p3, ploidy_freq(d)[3])
+		push!(p4, ploidy_freq(d)[4])
+		push!(fta, f_trait_agents(d))
+		
+	end
+	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
+end
+
+"""
+	evolving_selectiondeme_det(d::AbstractDeme, ngen)
+
+Simulate a single deme with mixed ploidy, malthusian fitness and unreduced
+gamete formation.
+"""
+function evolving_selectiondeme_det(d::MixedPloidyDeme, ngen; 
+	heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = 
+	allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
+	het = [heterozygosities_p(d)]
+	pop = [length(d)]
+	tm = [trait_mean(d)]
+	af = [allelefreqs_p(d)]
+	p2 = [ploidy_freq(d)[2]]
+	p3 = [ploidy_freq(d)[3]]
+	p4 = [ploidy_freq(d)[4]]
+	fta = [f_trait_agents(d)]
+	
+	for n=1:ngen
+		d = mating_PnB_det(d)
 		d = mutate(d) 
 		push!(het, heterozygosities_p(d))
 		push!(pop, length(d))
