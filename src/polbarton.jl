@@ -385,15 +385,6 @@ function number_of_offspring(d::MixedPloidyDeme, a::Agent)
 end
 
 """
-	number_of_offspring_det(d::AbstractDeme, a::Agent)
-NOF without demographic stochasticity.
-"""
-function number_of_offspring_det(d::MixedPloidyDeme, a::Agent)
-    logw = malthusian_fitness(d, a)
-    exp(logw)
-end
-
-"""
 	number_of_offspring(d::IslandDeme, a::Agent)
 """
 function number_of_offspring(d::IslandDeme, a::Agent)
@@ -425,40 +416,6 @@ function mating_PnB(d::MixedPloidyDeme{A}) where A
 		B1 = d.agents[i]
 		noff = number_of_offspring(d,B1)
 		B2 = sample(d.agents, weights(fitnesses))
-		#B2 = rand(d.agents)
-		#child = mate(B1,B2)
-		m = mate_p(B1,B2,d)
-		if m != 0
-			for c in 1:noff 
-				push!(new_agents, m)
-			end
-		end
-	end
-    d(new_agents)
-end 
-
-"""
-	mating_PnB_det(d::MixedPloidyDeme{A})
-
-Mating in a mixed ploidy deme with unreduced gamete formation and partner
-choice weighted by fitness where every individual has all it's offspring with the same partner(cfr. PnB).
-"""
-function mating_PnB_det(d::MixedPloidyDeme{A}) where A
-	new_agents =  A[]
-	fitnesses = exp.(malthusian_fitness(d))
-	for i=1:length(d)
-        # so here an individual has all it's offspring with the same partner?
-        # perhaps it would be more reasonable to have `noff` parental pairs
-        # for B1? (would make more sense for plants at least?). In that case 
-        # we'd have something like
-        # Bs = sample(d.agents, weights(fitnesses), noff)
-        # new_agents = vcat(new_agents, filter(!ismock, map(B2->mate_p(B1, B2), Bs)))
-        # where `ismock` checks whether an offspring is a mock agent (for a failed
-        # agent, cfr. remark above, or if you keep the `0`, ismock would be x->x==0)
-        # see function `suggested` below
-		B1 = d.agents[i]
-		noff = number_of_offspring_det(d,B1)
-		B2 = sample(d.agents)
 		#B2 = rand(d.agents)
 		#child = mate(B1,B2)
 		m = mate_p(B1,B2,d)
@@ -744,40 +701,6 @@ function evolving_selectiondeme(d::MixedPloidyDeme, ngen;
 	end
 	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
 end
-
-"""
-	evolving_selectiondeme_det(d::AbstractDeme, ngen)
-
-Simulate a single deme with mixed ploidy, malthusian fitness and unreduced
-gamete formation.
-"""
-function evolving_selectiondeme_det(d::MixedPloidyDeme, ngen; 
-	heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = 
-	allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
-	het = [heterozygosities_p(d)]
-	pop = [length(d)]
-	tm = [trait_mean(d)]
-	af = [allelefreqs_p(d)]
-	p2 = [ploidy_freq(d)[2]]
-	p3 = [ploidy_freq(d)[3]]
-	p4 = [ploidy_freq(d)[4]]
-	fta = [f_trait_agents(d)]
-	
-	for n=1:ngen
-		d = mating_PnB_det(d)
-		d = mutate(d) 
-		push!(het, heterozygosities_p(d))
-		push!(pop, length(d))
-		push!(tm, trait_mean(d))
-		push!(af, allelefreqs_p(d))
-		push!(p2, ploidy_freq(d)[2])
-		push!(p3, ploidy_freq(d)[3])
-		push!(p4, ploidy_freq(d)[4])
-		push!(fta, f_trait_agents(d))
-		
-	end
-	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
-end
 	
 """
 	evolving_ugdeme(d::AbstractDeme, ngen)
@@ -938,10 +861,15 @@ end
 f_trait_agents(d::AbstractDeme) = map(trait, d.agents)
 
 """
-	loci(d::AbstractDeme)
+	loci_df(d::AbstractDeme)
 """
-function loci(d::AbstractDeme)
-	[agent.loci for agent in d.agents]
+function loci_df(d::AbstractDeme)
+	v = [agent.loci for agent in d.agents]
+	loci = v[1]
+		for i in 2:length(d)
+			loci = vcat(loci, v[i])
+		end
+	DataFrame(loci)
 end
 
 #dominance
