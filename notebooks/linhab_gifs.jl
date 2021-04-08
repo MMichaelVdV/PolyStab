@@ -20,10 +20,10 @@ habi = Habitat(demes=[d])
 g_lin = linear_gradient(habi)
 
 # ╔═╡ 5c000970-8f3f-11eb-0c5d-ef59668300a9
-hab = initiate_habitat(d, g_lin, 0.5, 0.1, 250, 50)
+hab = initiate_habitat(d, g_lin, 0.5, 0.5, 50, 50)
 
 # ╔═╡ 8e623f10-8e85-11eb-098f-7184885620f4
-sim_hab = evolving_habitat(hab, 100)
+sim_hab = evolving_habitat(hab, 1)
 
 # ╔═╡ 9f274e80-8e85-11eb-1b80-f5511b4a63f0
 begin
@@ -70,7 +70,7 @@ begin
 	end
 	het_demes, cordsh
 	end
-	anim_range_Vg = @animate for i ∈ 1:100
+	anim_range_Vg = @animate for i ∈ 1:10
 		sim_habA = sim_hab.data[i]
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -96,12 +96,12 @@ begin
 		xlabel!("Space")
 		ylabel!("Genetic variance")
 	end every 1
-	gif(anim_range_Vg, "fizzyVg.gif", fps = 3)
+	gif(anim_range_Vg, "geneticvariance.gif", fps = 3)
 end
 
 # ╔═╡ e34a6b20-8efc-11eb-059d-397e876bd4bc
 begin
-	anim_range = @animate for i ∈ 1:100
+	anim_range = @animate for i ∈ 1:10
 		sim_habA = sim_hab.data[i]
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -127,7 +127,7 @@ begin
 		xlabel!("Space")
 		ylabel!("Population size N")
 	end every 1
-	gif(anim_range, "fizzypop.gif", fps = 3)
+	gif(anim_range, "popsize.gif", fps = 3)
 end
 
 # ╔═╡ 822b8dc2-8efb-11eb-3f4d-4b86b1cff707
@@ -146,7 +146,7 @@ begin
 	trait_agents, cordst
 	end
 	
-	anim_range_trait = @animate for i ∈ 1:100
+	anim_range_trait = @animate for i ∈ 1:10
 		sim_habA = sim_hab.data[i]
 		trait_means = [trait_mean(deme) for deme in sim_habA.demes]
 	    trait_means_p = map(mean, trait_means)
@@ -158,7 +158,7 @@ begin
 		xlabel!("Space")
 		ylabel!("Trait Z")
 	end every 1
-	gif(anim_range_trait, "fizzy.gif", fps = 3)
+	gif(anim_range_trait, "phenotype.gif", fps = 3)
 end
 
 # ╔═╡ Cell order:

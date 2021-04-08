@@ -300,6 +300,30 @@ function gametogenesis(d::AbstractDeme{A}) where A
 end
 
 """
+	mateh(a::Agent, b::Agent)
+Mating in a haploid population.
+"""
+function mateh(a::Agent, b::Agent)
+    newloci = similar(a.loci)
+    for i in 1:length(a)
+		@inbounds newloci[i] = rand() < 0.5 ? a[i] : b[i]
+    end
+	Agent(newloci, a.d)
+end	
+
+"""
+	random_matingh(d::AbstractDeme)
+Random mating in a haploid deme.
+"""
+function random_matingh(d::AbstractDeme)
+    newdeme = similar(d.agents)
+    for i=1:length(d)
+		@inbounds newdeme[i] = mateh(rand(d, 2)...)
+	end
+	d(newdeme)
+end 
+
+"""
 	mate_p(a::Agent, b::Agent)
 """
 function mate_p(a, b)
@@ -341,7 +365,7 @@ Random mating in a mixed ploidy deme.
 function random_mating(d::AbstractDeme{A}) where A
     new_agents =  A[]
     for i=1:length(d)
-		pair = mate_p(rand(d, 2)...)
+		pair = mate_p(rand(d, 2)...,d)
 		if pair != 0
 			push!(new_agents, pair)
 		end
@@ -416,7 +440,7 @@ function mating_PnB(d::AbstractDeme{A}) where A
 		B1 = d.agents[i]
 		noff = number_of_offspring(d, B1)
         Bs = sample(d.agents, weights(fitnesses), noff) 
-        offspring = filter(!ismock, map(B2->mate_p(B1, B2), Bs))
+        offspring = filter(!ismock, map(B2->mate_p(B1, B2, d), Bs))
         new_agents = vcat(new_agents, offspring)
     end
     d(new_agents)
@@ -583,6 +607,28 @@ function mutate(d::AbstractDeme{A}) where A
 end 
 
 #Simulations:
+
+"""
+	evolving_haploiddeme(d::AbstractDeme, ngen)
+
+Simulate a single random mating deme with mixed ploidy.
+"""
+function evolving_haploiddeme(d::AbstractDeme, ngen; heterozygosities_p = heterozygosities_p, allelefreqs_p = allelefreqs_p, trait_mean = trait_mean, pf = ploidy_freq)
+	het = [heterozygosities_p(d)]
+	af = [allelefreqs_p(d)]
+	tm = [trait_mean(d)]
+	p1 = [ploidy_freq(d)[1]]
+	
+	for n=1:ngen
+		d = random_matingh(d)
+		#d = unreduced_gamete(d)
+		push!(het, heterozygosities_p(d))
+		push!(af, allelefreqs_p(d))
+		push!(tm, trait_mean(d))
+		push!(p1, ploidy_freq(d)[1])
+	end
+	(het=het, af=af, tm=tm, deme=d, p1=p1, ngen=ngen)
+end
 
 """
 	evolving_neutraldeme(d::AbstractDeme, ngen)
@@ -786,7 +832,7 @@ var_add(a::Agent,α) = ploidy(a)*α^2*sum(heterozygosities_p(a))
 """
     trait(a::Agent)
 """
-trait(a::Agent) = sum(a)/ploidy(a)  # is this how we define it? shouldn't ploidy come in there?
+trait(a::Agent) = sum(a)/ploidy(a)
 	
 """
 	trait_mean(d::AbstractDeme)
@@ -802,6 +848,12 @@ end
 """
 f_trait_agents(d::AbstractDeme) = map(trait, d.agents)
 
+"""
+	loci(d::AbstractDeme)
+"""
+function loci(d::AbstractDeme)
+	[agent.loci for agent in d.agents]
+end
 
 #dominance
 #pollen <-> seed migration
