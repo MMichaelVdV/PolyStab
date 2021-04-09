@@ -8,7 +8,7 @@ using InteractiveUtils
 using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes, DataFrames, StatsPlots
 
 # ╔═╡ ded34c80-8699-11eb-33ce-214cb4f59699
-using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, evolving_neutraldeme, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy, trait_mean, randagent
+using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, evolving_neutraldeme, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy, trait_mean, randagent, evolving_haploiddeme, mate_p
 
 # ╔═╡ b79eb4e0-8696-11eb-0949-555c0c3c411f
 md"""### Genetic variance in a mixed ploidy population"""
@@ -122,9 +122,6 @@ stabsel_p2 = evolving_selectiondeme(d_p2,500)
 stabsel_p4 = evolving_selectiondeme(d_p4,500)
 end
 
-# ╔═╡ c1798110-9885-11eb-2e75-ef20122e8add
-md""" Stabilizing selection is expected to further degrade genetic variance."""
-
 # ╔═╡ fc96ac10-9884-11eb-1735-d751fd99c805
 begin
 	Hₒs_p1 = map(mean, stabsel_p1.het)
@@ -215,7 +212,6 @@ md""" ###### Effect of genotype to phenotype map"""
 # ╠═1b1541de-8dbf-11eb-041c-815c116efeeb
 # ╟─3fc09382-986b-11eb-29d6-57eeb0eddb77
 # ╠═47dc60c0-9876-11eb-3d70-cd03509cbad8
-# ╟─c1798110-9885-11eb-2e75-ef20122e8add
 # ╟─fc96ac10-9884-11eb-1735-d751fd99c805
 # ╟─66257e10-9879-11eb-2367-d706689f326a
 # ╟─63ad1c50-987f-11eb-1512-df6fc858aaca

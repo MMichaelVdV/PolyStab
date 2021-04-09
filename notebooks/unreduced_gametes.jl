@@ -45,7 +45,7 @@ Starting from a population of only diploid individuals, according to this model,
 """
 
 # ╔═╡ 575c04e0-97e7-11eb-0750-eb108125e90a
-d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],175), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.80 0.20 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], K=200)
+d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.80 0.20 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], K=200)
 
 # ╔═╡ e0789de0-7c6e-11eb-0900-3387c904ea0b
 sim_popvar = evolving_selectiondeme(d_p,150)
@@ -91,8 +91,9 @@ function grid_search(t)
 	p2 = []
 	p4 = []
 	for u in range(0, stop=0.5, length=t)
+		for rep in 1:10
 		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
-		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],175), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=200)
+		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],45), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=50)
 		sim_ploidyvar = evolving_selectiondeme(d_p,50)
 		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
 			push!(ploidy,2)
@@ -104,12 +105,13 @@ function grid_search(t)
 		push!(pop_size, pop)
 		push!(p2, sim_ploidyvar.p2[end])
 		push!(p4, sim_ploidyvar.p4[end])
+		end
 	end
 	ploidy, param, pop_size, p2, p4
 end
 
 # ╔═╡ 39c92860-7c7e-11eb-1efe-13bf99e99d1e
-stats_2 = grid_search(200)
+stats_2 = grid_search(100)
 
 # ╔═╡ ec061ade-8801-11eb-2449-f3788b4ffa9b
 #logistic regression 
@@ -142,7 +144,7 @@ logistic.(X.*βmean)
 end
 
 # ╔═╡ c88e13d0-7c7e-11eb-0119-731f7ddc65ce
-dp_2 = [(stats_2[2][i],stats_2[1][i],stats_2[3][i]) for i in 1:200]
+dp_2 = [(stats_2[2][i],stats_2[1][i],stats_2[3][i]) for i in 1:1000]
 
 # ╔═╡ 37231930-7c7f-11eb-2524-9115fc85d926
 begin
@@ -237,6 +239,7 @@ function grid_search_2(t)
 	p2 = []
 	p4 = []
 	for u in range(0, stop=0.5, length=t)
+		for rep in 1:10
 		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1-u 0. u ]
 		d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],175), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=200)
 		sim_ploidyvar = evolving_selectiondeme(d_p2,50)
@@ -250,15 +253,16 @@ function grid_search_2(t)
 		push!(param, u)
 		push!(p2, sim_ploidyvar.p2[end])
 		push!(p4, sim_ploidyvar.p4[end])
+		end
 	end
 	ploidy, param, pop_size, p2, p4
 end
 
 # ╔═╡ 52fc8ae0-7cd6-11eb-1731-f3c71b08b7a9
-stats_3 = grid_search_2(500)
+stats_3 = grid_search_2(200)
 
 # ╔═╡ 99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
-dp_3 = [(stats_3[2][i],stats_3[1][i],stats_3[3][i]) for i in 1:500]
+dp_3 = [(stats_3[2][i],stats_3[1][i],stats_3[3][i]) for i in 1:2000]
 
 # ╔═╡ c0370950-7cd6-11eb-1113-9b2c9104da16
 begin
@@ -404,6 +408,47 @@ end
 # ╔═╡ 302363ee-7c6c-11eb-0d7b-effeadcdeb60
 md"""#### Functions"""
 
+# ╔═╡ b54e9160-98c0-11eb-0f5a-f1216dc4f615
+begin
+function prob(b)
+		c = 0
+		for x in b
+			if x == 4
+				c += 1
+			end
+		end
+		c/length(b)
+	end
+
+function stabprob(a)
+	i = 1
+	j = 10
+	p = []
+	while j <= length(a)
+		push!(p,prob(a[i:j]))
+		i += 10
+		j += 10
+	end
+	p
+	end	
+end		
+
+# ╔═╡ a352f65e-98c3-11eb-2048-d3e731947c4b
+begin
+tick1 = stabprob(stats_2[1])
+plot([0.005:0.005:0.5...],tick1,label=false)
+vline!([0.17],label="u=0.17",linewidth=2,style=:dash)
+hline!([0.50],label=false,linewidth=2,style=:dash)
+end
+
+# ╔═╡ f5064130-98c1-11eb-1d9c-bbe9ff236b23
+begin
+tick2 = stabprob(stats_3[1])
+plot([0.0025:0.0025:0.5...],tick2)
+vline!([0.20],label="u=0.20",linewidth=2,style=:dash)
+hline!([0.50],label=false,linewidth=2,style=:dash)
+end
+
 # ╔═╡ Cell order:
 # ╟─bd2ab750-7c60-11eb-3cc5-6d57dd448dfd
 # ╠═98180cf0-7c6b-11eb-0da9-c55b3cf2a066
@@ -416,11 +461,12 @@ md"""#### Functions"""
 # ╠═e5916552-7c6e-11eb-1868-a7b856e0ad1f
 # ╟─4cde5ba0-7c79-11eb-23e1-d1ac938c0e6b
 # ╟─1f6a4e72-7d48-11eb-0933-eb25e7a5b568
-# ╟─e315b920-7c7d-11eb-0f34-5782accf7286
+# ╠═e315b920-7c7d-11eb-0f34-5782accf7286
 # ╠═39c92860-7c7e-11eb-1efe-13bf99e99d1e
 # ╠═c88e13d0-7c7e-11eb-0119-731f7ddc65ce
+# ╠═a352f65e-98c3-11eb-2048-d3e731947c4b
 # ╠═37231930-7c7f-11eb-2524-9115fc85d926
-# ╠═d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
+# ╟─d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
 # ╠═41392210-7c85-11eb-19bf-675f7a929063
 # ╠═b7e83d6e-7c84-11eb-0e72-7b4c25184221
 # ╠═616389e0-7c85-11eb-13c9-fbf0587d3ccc
@@ -431,10 +477,11 @@ md"""#### Functions"""
 # ╟─57d84bf0-7c6b-11eb-0e68-f99c717f46e4
 # ╠═0cdd11b0-97ed-11eb-1862-a1c728804ef5
 # ╠═f89b70d0-7c70-11eb-2d9c-d9abf241dd17
-# ╠═28e30f50-7c71-11eb-072c-dffe12b4b437
-# ╠═ed0024e0-7cd5-11eb-1548-f70db6fdda06
+# ╟─28e30f50-7c71-11eb-072c-dffe12b4b437
+# ╟─ed0024e0-7cd5-11eb-1548-f70db6fdda06
 # ╠═52fc8ae0-7cd6-11eb-1731-f3c71b08b7a9
-# ╟─99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
+# ╠═f5064130-98c1-11eb-1d9c-bbe9ff236b23
+# ╠═99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
 # ╠═c0370950-7cd6-11eb-1113-9b2c9104da16
 # ╠═55373330-7ff8-11eb-351c-9df644942e4d
 # ╠═fb49b790-7cd6-11eb-3043-3563217174e9
@@ -453,3 +500,4 @@ md"""#### Functions"""
 # ╠═e419ec50-87fa-11eb-230a-8f6396f0e459
 # ╠═0144f6d0-87fb-11eb-0fa7-7149bfb316db
 # ╠═47183362-97e7-11eb-2573-99a97f304e99
+# ╠═b54e9160-98c0-11eb-0f5a-f1216dc4f615
