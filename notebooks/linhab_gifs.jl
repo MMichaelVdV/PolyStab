@@ -11,7 +11,7 @@ using Statistics, Plots
 using PolyStab: randagent_p, MixedPloidyDeme, Habitat, linear_gradient, initiate_habitat, evolving_habitat, ploidy_freq, heterozygosities_p, trait_mean, trait
 
 # ╔═╡ 5c5b59a0-8e5f-11eb-22e2-f18c548bd551
-d = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.], 0), K=50,  OV = [1.0 0.1 0.0 0.0; 0.1 1.0 0.0 0.0; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0], UG = [0.0 0.0 0.0 0.0; 0.85 0.15 0.0 0.0; 0.0 0.0 0.0 0.0; 0.0 0.85 0.0 0.15])
+d = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.], 0), K=50,  OV = [1.0 0.1 0.0 0.0; 0.1 1.0 0.0 0.0; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0], UG = [0.0 0.0 0.0 0.0; 0.85 0.15 0.0 0.0; 0.45 0.45 0.1 0.0; 0.1 0.9 0.0 0.])
 
 # ╔═╡ 22341570-8e62-11eb-2dc0-919c8bbaeb55
 habi = Habitat(demes=[d])
@@ -23,7 +23,7 @@ g_lin = linear_gradient(0.1,12.5,250)
 hab = initiate_habitat(d, g_lin, 0.5, 0.5, 50, 50)
 
 # ╔═╡ 8e623f10-8e85-11eb-098f-7184885620f4
-sim_hab = evolving_habitat(hab, 100)
+sim_hab = evolving_habitat(hab, 500)
 
 # ╔═╡ 9f274e80-8e85-11eb-1b80-f5511b4a63f0
 begin
@@ -101,7 +101,7 @@ end
 
 # ╔═╡ e34a6b20-8efc-11eb-059d-397e876bd4bc
 begin
-	anim_range = @animate for i ∈ 1:100
+	anim_range = @animate for i ∈ 1:500
 		sim_habA = sim_hab.data[i]
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -114,20 +114,20 @@ begin
 		ppf3 = [ploidy_freq(deme)[4] for deme  in sim_habA.demes]
 		het_demes, cordsh = f_het_demes(sim_habA)
 		
-		plot(pop_sizes_p, grid=false, color=:black, label="Tetraploid")
+		#plot(pop_sizes_p, grid=false, color=:black, label="Tetraploid")
 		#hline!([K], label = "K")
-		hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
+		#hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
 		#vline!([Dm/2], label = "Starting deme")
 		#plot!([margin]*5, color=:yellow, label = "Deterministic range margin")
-		plot!(ppf1, grid=false, color=:blue, label="Diploid")
+		plot(ppf1, grid=false, color=:blue, label="Diploid", legend=false)
 		plot!(ppf2, grid=false, color=:green, label="Triploid")
 		plot!(ppf3, grid=false, color=:red, label="Tetraploid")
+	
+		#xlabel!("Space")
+		#ylabel!("Population size N")
 		
-		
-		xlabel!("Space")
-		ylabel!("Population size N")
 	end every 1
-	gif(anim_range, "popsize.gif", fps = 3)
+	gif(anim_range, "popsize.gif", fps = 7)
 end
 
 # ╔═╡ 822b8dc2-8efb-11eb-3f4d-4b86b1cff707

@@ -26,12 +26,12 @@ end
 @testset "Segregation" begin
     n = 1000
     k = 2
-    α = 1/√(k*n) #only works for very small allelic effect sizes
-    #α = 1.
+    #α = 1/√(k*n) #only works for very small allelic effect sizes
+    α = .2
     a = randagent(0.5, α, n, k)
     b = randagent(0.5, α, n, k)
     o = map(x->trait(mate_p(a,b)), 1:2500) 
     @info "" mean(o) var(o) 0.5*(trait(a)+trait(b)) n*(α^2 / 4)
     @test mean(o) ≈ 0.5*(trait(a) + trait(b)) atol=0.1
-    @test var(o) ≈ n * (α^2 / 4) atol=0.1 
+    @test var(o) ≈ n * (α^2 / 4) atol=n*(α^2 / 4) 
 end
