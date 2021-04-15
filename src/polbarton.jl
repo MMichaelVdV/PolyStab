@@ -161,6 +161,7 @@ Base.length(h::Habitat) = length(h.demes)
 
 # I think using `nloci` instead of length leads to more readable code
 nloci(a::Agent) = size(a.loci)[2]
+popsize(d::AbstractDeme) = length(d.agents)
 
 Base.push!(d::AbstractDeme, a::Agent) = push!(d.agents, a)
 
@@ -912,11 +913,8 @@ f_trait_agents(d::AbstractDeme) = map(trait, d.agents)
 """
 function loci_df(d::AbstractDeme)
 	v = [agent.loci for agent in d.agents]
-	loci = v[1]
-		for i in 2:length(d)
-			loci = vcat(loci, v[i])
-		end
-	DataFrame(loci)
+	h = reduce(vcat,v)
+	DataFrame(h)
 end
 
 #dominance

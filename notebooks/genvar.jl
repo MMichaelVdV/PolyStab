@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.17
+# v0.14.1
 
 using Markdown
 using InteractiveUtils
@@ -340,58 +340,154 @@ HWEv = HWE(0.5)
 genos = [[1.,0.],[2.,1.,0.],[3.,2.,1.,0.],[4.,3.,2.,1.,0.]]
 
 # ╔═╡ 64f75740-998a-11eb-2b32-3be7ffc3b2c6
-linear_map(v,α,d)=d*α*v./v[1]
-#exponential_map	
-	
-
-# ╔═╡ 4daa632e-998e-11eb-2713-fd8d266c9fbe
-#point size equal to frequencies
+begin
+	linear_map(v,α,d)=d*α*v.*(2/v[1])
+	exponential_map(v,α,d)=α*v.*(2/v[1]).^d
+end
 
 # ╔═╡ 24d80f30-998d-11eb-3ae4-1fb8cf59a7db
 phenos = linear_map.(genos,1.,1.)
 
+# ╔═╡ d6951824-f8e2-494a-91fa-4171aa017508
+q = reduce(vcat,HWEv)
+
 # ╔═╡ 9ea6ebb0-998d-11eb-26ba-eb12b920bf01
 begin
-	pHWE25 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false)
-	for (i,t) in enumerate(linear_map.(genos,1.,0.25))
-	scatter!([i for x in 1:length(t)],t,label=false,colour="black",ma=0.35,ms=10)
+	pHWE25 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	c1 = 1
+	for (i,t) in (enumerate(linear_map.(genos,1.,0.25)))
+		for x in 1:length(t)
+	scatter!(([i],t[x]),label=false,colour="black",ma=q[c1], ms=7.5)
+		c1+= 1
+		end
 	end
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
-	end
+end
 
 # ╔═╡ a091a4b0-998d-11eb-1d55-3f0288c81feb
 begin
-	pHWE50 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false)
-	for (i,t) in enumerate(linear_map.(genos,1.,0.5))
-	scatter!([i for x in 1:length(t)],t,label=false,colour="black",ma=0.35,ms=10)
+	pHWE50 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	c2 = 1
+	for (i,t) in (enumerate(linear_map.(genos,1.,0.50)))
+		for x in 1:length(t)
+	scatter!(([i],t[x]),label=false,colour="black",ma=q[c2], ms=7.5)
+		c2+= 1
+		end
 	end
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
-	end
+end
 
 # ╔═╡ a1e044c0-998d-11eb-0053-cb74ee4562da
 begin
-	pHWE75 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false)
-	for (i,t) in enumerate(linear_map.(genos,1.,0.75))
-	scatter!([i for x in 1:length(t)],t,label=false,colour="black",ma=0.35,ms=10)
+	pHWE75 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	c3 = 1
+	for (i,t) in (enumerate(linear_map.(genos,1.,0.75)))
+		for x in 1:length(t)
+	scatter!(([i],t[x]),label=false,colour="black",ma=q[c3], ms=7.5)
+		c3+= 1
+		end
 	end
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
-	end
+end
 
 # ╔═╡ 308c314e-998b-11eb-0e06-6765aa9acd7d
 begin
-	pHWE100 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false)
-	for (i,t) in enumerate(linear_map.(genos,1.,1.))
-	scatter!([i for x in 1:length(t)],t,label=false,colour="black",ma=0.35,ms=10)
+	pHWE100 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	c4 = 1
+	for (i,t) in (enumerate(linear_map.(genos,1.,1.)))
+		for x in 1:length(t)
+	scatter!(([i],t[x]),label=false,colour="black",ma=q[c4], ms=7.5)
+		c4+= 1
+		end
 	end
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
+end
+
+# ╔═╡ 5050db7e-2b37-4d9c-ae07-4836409eefe0
+begin
+	pHWE0e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	c5 = 1
+	for (i,t) in (enumerate(exponential_map.(genos,1.,0.)))
+		for x in 1:length(t)
+	scatter!(([i],t[x]),label=false,colour="black",ma=q[c5], ms=7.5)
+		c5+= 1
+		end
 	end
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+end
+
+# ╔═╡ 556426ae-e1f2-4987-beec-6a42490a5ce3
+begin
+	pHWE25e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	c6 = 1
+	for (i,t) in (enumerate(exponential_map.(genos,1.,0.25)))
+		for x in 1:length(t)
+	scatter!(([i],t[x]),label=false,colour="black",ma=q[c6], ms=7.5)
+		c6+= 1
+		end
+	end
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+end
+
+# ╔═╡ 1467a6ea-ea7e-47cb-af3a-bf64824750e9
+begin
+	pHWE50e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	c7 = 1
+	for (i,t) in (enumerate(exponential_map.(genos,1.,0.50)))
+		for x in 1:length(t)
+	scatter!(([i],t[x]),label=false,colour="black",ma=q[c7], ms=7.5)
+		c7+= 1
+		end
+	end
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+end
+
+# ╔═╡ 16fb1f40-a966-4920-952b-c5d366b7108f
+begin
+	pHWE75e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	c8 = 1
+	for (i,t) in (enumerate(exponential_map.(genos,1.,0.75)))
+		for x in 1:length(t)
+	scatter!(([i],t[x]),label=false,colour="black",ma=q[c8], ms=7.5)
+		c8+= 1
+		end
+	end
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+end
+
+# ╔═╡ fa082dbf-dbb9-4dda-b34b-0b4ed56c5082
+begin
+	pHWE100e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	c10 = 1
+	for (i,t) in (enumerate(exponential_map.(genos,1.,1.)))
+		for x in 1:length(t)
+	scatter!(([i],t[x]),label=false,colour="black",ma=q[c10], ms=7.5)
+		c10+= 1
+		end
+	end
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+end
+
+# ╔═╡ 81f637a0-c81f-4733-b3a5-f43482dff943
+plot(pHWE25,pHWE50,pHWE75,pHWE100)
+
+# ╔═╡ 1999d7bc-844c-4c83-88b0-a9f080d591ba
+plot(pHWE0e,pHWE25e,pHWE50e,pHWE75e,pHWE100e)
 
 # ╔═╡ 21c69f40-9876-11eb-0f98-cf5c73410b72
 md""" ###### Effect of genotype to phenotype map"""
+
+# ╔═╡ 9f0dcd88-a765-49fd-9b2c-73210a61618a
+#add domninance
 
 # ╔═╡ Cell order:
 # ╟─b79eb4e0-8696-11eb-0949-555c0c3c411f
@@ -432,14 +528,22 @@ md""" ###### Effect of genotype to phenotype map"""
 # ╟─c9b2b8d0-9879-11eb-294a-952184f8bf9c
 # ╟─9cdac49e-9884-11eb-2be7-832739ca5d66
 # ╟─fe5aa0f0-9939-11eb-1416-91041276c925
-# ╠═5ca18050-9955-11eb-2703-47174bc221a8
-# ╠═5ab3ba10-9955-11eb-1a12-7522af278a81
-# ╠═96ed7e30-998c-11eb-2a78-0b90cc4522c6
+# ╟─5ca18050-9955-11eb-2703-47174bc221a8
+# ╟─5ab3ba10-9955-11eb-1a12-7522af278a81
+# ╟─96ed7e30-998c-11eb-2a78-0b90cc4522c6
 # ╠═64f75740-998a-11eb-2b32-3be7ffc3b2c6
-# ╠═4daa632e-998e-11eb-2713-fd8d266c9fbe
 # ╠═24d80f30-998d-11eb-3ae4-1fb8cf59a7db
-# ╠═9ea6ebb0-998d-11eb-26ba-eb12b920bf01
-# ╠═a091a4b0-998d-11eb-1d55-3f0288c81feb
-# ╠═a1e044c0-998d-11eb-0053-cb74ee4562da
-# ╠═308c314e-998b-11eb-0e06-6765aa9acd7d
+# ╟─d6951824-f8e2-494a-91fa-4171aa017508
+# ╟─9ea6ebb0-998d-11eb-26ba-eb12b920bf01
+# ╟─a091a4b0-998d-11eb-1d55-3f0288c81feb
+# ╟─a1e044c0-998d-11eb-0053-cb74ee4562da
+# ╟─308c314e-998b-11eb-0e06-6765aa9acd7d
+# ╠═5050db7e-2b37-4d9c-ae07-4836409eefe0
+# ╟─556426ae-e1f2-4987-beec-6a42490a5ce3
+# ╟─1467a6ea-ea7e-47cb-af3a-bf64824750e9
+# ╠═16fb1f40-a966-4920-952b-c5d366b7108f
+# ╟─fa082dbf-dbb9-4dda-b34b-0b4ed56c5082
+# ╠═81f637a0-c81f-4733-b3a5-f43482dff943
+# ╠═1999d7bc-844c-4c83-88b0-a9f080d591ba
 # ╟─21c69f40-9876-11eb-0f98-cf5c73410b72
+# ╠═9f0dcd88-a765-49fd-9b2c-73210a61618a

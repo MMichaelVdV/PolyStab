@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.17
+# v0.14.1
 
 using Markdown
 using InteractiveUtils
@@ -12,6 +12,12 @@ using PolyStab
 
 # ╔═╡ 423cffe0-8b5f-11eb-1df4-ff7eed10289a
 using PolyStab: Agent, randagent_p, MixedPloidyDeme, IslandDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, random_mating, evolving_neutraldeme, evolving_islanddeme
+
+# ╔═╡ 10d563a1-fb0f-4b6c-ae10-b16f6bef2f86
+begin
+	using PolyStab:AbstractDeme
+	popsize(d::AbstractDeme) = length(d.agents)
+end
 
 # ╔═╡ a7bc4e02-8b5c-11eb-0e36-ef47de093003
 md""" ### Island model
@@ -182,6 +188,31 @@ end
 # ╔═╡ 4be009d0-8fd2-11eb-2338-15f33ab00a20
 plot(p21,p22,p23)
 
+# ╔═╡ 4b626564-9481-475d-a9f5-535ad7edc11f
+begin
+d0 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.])
+d10 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],10), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.])
+d50 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.])
+end
+
+# ╔═╡ 4abbc1ed-6bdf-4bf0-8cbd-3deee6770543
+md""" ##### Should be straightforward to implement habitat in 2D"""
+
+# ╔═╡ f64591c7-ee98-49e9-b849-25528c367757
+h_2D = [d0 d10 d0; d10 d50 d10; d0 d10 d0]
+
+# ╔═╡ 2f4f0446-4adb-4c0a-ab75-067891d61cc2
+popsize.(h_2D)
+
+# ╔═╡ 3bc77ec9-8577-4a7a-93b7-30f5b476cecf
+heatmap(popsize.(h_2D), c=cgrad([:white,:red,:yellow]))
+
+# ╔═╡ 5605ac82-c3f1-4869-b82e-70c8e6c5ff73
+begin
+	data = rand(10,10)
+	heatmap(data)
+end
+
 # ╔═╡ Cell order:
 # ╟─a7bc4e02-8b5c-11eb-0e36-ef47de093003
 # ╟─ba38834e-8b5c-11eb-246c-99429ab2ae27
@@ -218,3 +249,10 @@ plot(p21,p22,p23)
 # ╠═1cd88c70-8fd2-11eb-30bc-a3b3c916b97d
 # ╠═5a0f4c50-8c26-11eb-0f10-dfd79a2ff7c5
 # ╠═4be009d0-8fd2-11eb-2338-15f33ab00a20
+# ╠═4b626564-9481-475d-a9f5-535ad7edc11f
+# ╟─4abbc1ed-6bdf-4bf0-8cbd-3deee6770543
+# ╠═f64591c7-ee98-49e9-b849-25528c367757
+# ╠═10d563a1-fb0f-4b6c-ae10-b16f6bef2f86
+# ╠═2f4f0446-4adb-4c0a-ab75-067891d61cc2
+# ╠═3bc77ec9-8577-4a7a-93b7-30f5b476cecf
+# ╠═5605ac82-c3f1-4869-b82e-70c8e6c5ff73
