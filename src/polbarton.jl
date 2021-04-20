@@ -604,6 +604,28 @@ function random_walk(h::Habitat, p)
     new_h
 end
 
+"""
+	gaussian_dispersal(h::Habitat,σ)
+"""
+function Gaussian_dispersal(h::Habitat,σ)
+    new_h = emptycopy(h)
+	dist = Normal(0,σ)
+	dist_trunc = truncated(dist,-2*σ,2*σ)
+	bin_1 = pdf(dist, σ)
+	for (i, deme) in enumerate(h.demes)
+        for agent in deme.agents
+            step = -bin_1 < rand(dist_trunc) < bin_1  ?  0 : rand([-1,1])
+            if step == -1 && i == 1
+                step = 0
+            elseif step == 1  && i == length(h)
+                step = 0
+            end
+            push!(new_h.demes[i+step].agents, agent)
+        end
+    end
+    new_h
+end
+
 #Mutation:
 
 function mutate(d::AbstractDeme, a::Agent)

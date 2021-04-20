@@ -11,7 +11,7 @@ using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
 using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, evolving_neutraldeme, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy, trait_mean, randagent, evolving_haploiddeme, mate_p, evolving_selectiondemeh
 
 # ╔═╡ b79eb4e0-8696-11eb-0949-555c0c3c411f
-md"""### Genetic variance in a mixed ploidy population"""
+md"""### Single deme dynamics of a mixed ploidy population"""
 
 # ╔═╡ 09e48960-9875-11eb-35fe-5122ae8dbe5f
 md""" ##### Initialization of demes with different ploidy levels (haploid, diploid, tetraploid)"""
@@ -165,7 +165,7 @@ md""" ##### Dynamics in a deme with densitiy dependence and stabilizing selectio
 
 # ╔═╡ 47dc60c0-9876-11eb-3d70-cd03509cbad8
 begin
-stabsel_p1 = evolving_selectiondemeh(d_p1,500) #need to fix, switches to diploid
+stabsel_p1 = evolving_selectiondemeh(d_p1,500)
 stabsel_p2 = evolving_selectiondeme(d_p2,500)
 stabsel_p4 = evolving_selectiondeme(d_p4,500)
 end
@@ -175,6 +175,7 @@ begin
 plot(Normal(mean(stabsel_p1.fta[1]), std(stabsel_p1.fta[1])), color=:black, label="Haploid")
 plot!(Normal(mean(stabsel_p2.fta[1]), std(stabsel_p2.fta[1])), color=:blue, label="Diploid")
 plot!(Normal(mean(stabsel_p4.fta[1]), std(stabsel_p4.fta[1])), color=:red, label="Tetraploid")
+xlabel!("Phenotype before selection")
 end
 
 # ╔═╡ fc96ac10-9884-11eb-1735-d751fd99c805
@@ -220,7 +221,7 @@ end
 
 # ╔═╡ 0501879e-9928-11eb-01c1-23fdad736664
 begin
-	p1 = plot(traitmean_p1, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright)
+	p1 = plot(traitmean_p1, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Haploid")
 	for (i,t) in enumerate(stabsel_p1.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
@@ -232,7 +233,7 @@ end
 
 # ╔═╡ 70a06c90-992a-11eb-1a39-ff907051a107
 begin
-	p2 = plot(traitmean_p2, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright)
+	p2 = plot(traitmean_p2, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Diploid")
 	for (i,t) in enumerate(stabsel_p2.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
@@ -244,7 +245,7 @@ end
 
 # ╔═╡ 7209e7a0-992a-11eb-0690-159af85e9c8d
 begin
-	p4 = plot(traitmean_p4, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright)
+	p4 = plot(traitmean_p4, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Tetraploid")
 	for (i,t) in enumerate(stabsel_p4.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
@@ -264,39 +265,60 @@ end
 
 # ╔═╡ 44614280-9920-11eb-302b-6f959c8c2b94
 begin
-	plot(Normal(mean(stabsel_p1.fta[1]), std(stabsel_p1.fta[1])), label="")
+	plot(Normal(mean(stabsel_p1.fta[1]), std(stabsel_p1.fta[1])), label="", title="Haploid")
 	plot!(Normal(mean(stabsel_p1.fta[end]), std(stabsel_p1.fta[end])), label="")
+	xlabel!("Phenotype")
 end
 
 # ╔═╡ 809cf8b2-9926-11eb-2b5e-d97d23d44531
-histogram(stabsel_p1.fta[1], bins = 25, fillalpha = 0.4)
+begin
+	histogram(stabsel_p1.fta[1], bins = 25, fillalpha = 0.4, title="Haploid start")
+	xlabel!("Phenotype")
+end
 
 # ╔═╡ 651f5aa2-9927-11eb-392f-c7944c0ad0aa
-histogram(stabsel_p1.fta[end], bins = 25, fillalpha = 0.4)
+begin
+	histogram(stabsel_p1.fta[end], bins = 25, fillalpha = 0.4, title="Haploid after")
+	xlabel!("Phenotype")
+end
 
 # ╔═╡ 134a9ebe-9921-11eb-3d7e-cdd5d3ff9ee1
 begin
-	plot(Normal(mean(stabsel_p2.fta[1]), std(stabsel_p2.fta[1])), label="")
+	plot(Normal(mean(stabsel_p2.fta[1]), std(stabsel_p2.fta[1])), label="", title="Diploid")
 	plot!(Normal(mean(stabsel_p2.fta[end]), std(stabsel_p2.fta[end])), label="")
+	xlabel!("Phenotype")
 end
 
 # ╔═╡ bae32f30-9926-11eb-3f23-cf639e204a0e
-histogram(stabsel_p2.fta[1], bins = 25, fillalpha = 0.4)
+begin
+	histogram(stabsel_p2.fta[1], bins = 25, fillalpha = 0.4, title="Diploid start")
+	xlabel!("Phenotype")
+end
 
 # ╔═╡ c1e57720-9926-11eb-1d2d-058c7c88e98d
-histogram(stabsel_p2.fta[end], bins = 25, fillalpha = 0.4)
+begin
+	histogram(stabsel_p2.fta[end], bins = 25, fillalpha = 0.4, title="Diploid after")
+	xlabel!("Phenotype")
+end
 
 # ╔═╡ 158facc0-9921-11eb-25ef-a759b775ecdd
 begin
-	plot(Normal(mean(stabsel_p4.fta[1]), std(stabsel_p4.fta[1])), label="")
+	plot(Normal(mean(stabsel_p4.fta[1]), std(stabsel_p4.fta[1])), label="",title="Tetraploid")
 	plot!(Normal(mean(stabsel_p4.fta[end]), std(stabsel_p4.fta[end])), label="")
+	xlabel!("Phenotype")
 end
 
 # ╔═╡ cb25c830-9926-11eb-01f3-b3ddd767318b
-histogram(stabsel_p4.fta[1], bins = 25, fillalpha = 0.4)
+begin
+	histogram(stabsel_p4.fta[1], bins = 25, fillalpha = 0.4, title="Tetraploid start")
+	xlabel!("Phenotype")
+end
 
-# ╔═╡ d0d5eda0-9926-11eb-30ac-9998afb1a028
-histogram(stabsel_p4.fta[end], bins = 25, fillalpha = 0.4)
+# ╔═╡ 32ea0626-9019-4f27-8844-70c4f696549e
+begin
+	histogram(stabsel_p4.fta[end], bins = 25, fillalpha = 0.4, title="Tetraploid after")
+	xlabel!("Phenotype")
+end
 
 # ╔═╡ db982b20-9923-11eb-285b-b9d57489b052
 md""" Phenotypic variance seems to persist longer in tetraploids under stabilizing selection, this coulbd be mainly due to the effect of less genetic drift or something else. Tetraploid population takes longer to reach equilibrium."""
@@ -353,7 +375,7 @@ q = reduce(vcat,HWEv)
 
 # ╔═╡ 9ea6ebb0-998d-11eb-26ba-eb12b920bf01
 begin
-	pHWE25 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	pHWE25 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400), title="D=0.25")
 	c1 = 1
 	for (i,t) in (enumerate(linear_map.(genos,1.,0.25)))
 		for x in 1:length(t)
@@ -367,7 +389,7 @@ end
 
 # ╔═╡ a091a4b0-998d-11eb-1d55-3f0288c81feb
 begin
-	pHWE50 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	pHWE50 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400), title="D=0.50")
 	c2 = 1
 	for (i,t) in (enumerate(linear_map.(genos,1.,0.50)))
 		for x in 1:length(t)
@@ -381,7 +403,7 @@ end
 
 # ╔═╡ a1e044c0-998d-11eb-0053-cb74ee4562da
 begin
-	pHWE75 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	pHWE75 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400), title="D=0.75")
 	c3 = 1
 	for (i,t) in (enumerate(linear_map.(genos,1.,0.75)))
 		for x in 1:length(t)
@@ -395,7 +417,7 @@ end
 
 # ╔═╡ 308c314e-998b-11eb-0e06-6765aa9acd7d
 begin
-	pHWE100 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	pHWE100 = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400), title="D=1")
 	c4 = 1
 	for (i,t) in (enumerate(linear_map.(genos,1.,1.)))
 		for x in 1:length(t)
@@ -409,7 +431,7 @@ end
 
 # ╔═╡ 5050db7e-2b37-4d9c-ae07-4836409eefe0
 begin
-	pHWE0e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	pHWE0e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400), title="D=0")
 	c5 = 1
 	for (i,t) in (enumerate(exponential_map.(genos,1.,0.)))
 		for x in 1:length(t)
@@ -423,7 +445,7 @@ end
 
 # ╔═╡ 556426ae-e1f2-4987-beec-6a42490a5ce3
 begin
-	pHWE25e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	pHWE25e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400), title="D=0.25")
 	c6 = 1
 	for (i,t) in (enumerate(exponential_map.(genos,1.,0.25)))
 		for x in 1:length(t)
@@ -437,7 +459,7 @@ end
 
 # ╔═╡ 1467a6ea-ea7e-47cb-af3a-bf64824750e9
 begin
-	pHWE50e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	pHWE50e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400), title="D=0.50")
 	c7 = 1
 	for (i,t) in (enumerate(exponential_map.(genos,1.,0.50)))
 		for x in 1:length(t)
@@ -451,7 +473,7 @@ end
 
 # ╔═╡ 16fb1f40-a966-4920-952b-c5d366b7108f
 begin
-	pHWE75e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	pHWE75e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400), title="D=0.75")
 	c8 = 1
 	for (i,t) in (enumerate(exponential_map.(genos,1.,0.75)))
 		for x in 1:length(t)
@@ -465,7 +487,7 @@ end
 
 # ╔═╡ fa082dbf-dbb9-4dda-b34b-0b4ed56c5082
 begin
-	pHWE100e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400))
+	pHWE100e = plot(grid=false, color=:black,label=false,linewidth=3,legend=:false, size=(400,400), title="D=1")
 	c10 = 1
 	for (i,t) in (enumerate(exponential_map.(genos,1.,1.)))
 		for x in 1:length(t)
@@ -523,7 +545,7 @@ md""" ###### Effect of genotype to phenotype map"""
 # ╠═c1e57720-9926-11eb-1d2d-058c7c88e98d
 # ╠═158facc0-9921-11eb-25ef-a759b775ecdd
 # ╠═cb25c830-9926-11eb-01f3-b3ddd767318b
-# ╠═d0d5eda0-9926-11eb-30ac-9998afb1a028
+# ╠═32ea0626-9019-4f27-8844-70c4f696549e
 # ╟─db982b20-9923-11eb-285b-b9d57489b052
 # ╟─c9b2b8d0-9879-11eb-294a-952184f8bf9c
 # ╟─9cdac49e-9884-11eb-2be7-832739ca5d66
@@ -538,10 +560,10 @@ md""" ###### Effect of genotype to phenotype map"""
 # ╟─a091a4b0-998d-11eb-1d55-3f0288c81feb
 # ╟─a1e044c0-998d-11eb-0053-cb74ee4562da
 # ╟─308c314e-998b-11eb-0e06-6765aa9acd7d
-# ╠═5050db7e-2b37-4d9c-ae07-4836409eefe0
+# ╟─5050db7e-2b37-4d9c-ae07-4836409eefe0
 # ╟─556426ae-e1f2-4987-beec-6a42490a5ce3
 # ╟─1467a6ea-ea7e-47cb-af3a-bf64824750e9
-# ╠═16fb1f40-a966-4920-952b-c5d366b7108f
+# ╟─16fb1f40-a966-4920-952b-c5d366b7108f
 # ╟─fa082dbf-dbb9-4dda-b34b-0b4ed56c5082
 # ╠═81f637a0-c81f-4733-b3a5-f43482dff943
 # ╠═1999d7bc-844c-4c83-88b0-a9f080d591ba
