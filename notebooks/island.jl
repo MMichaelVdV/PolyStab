@@ -14,7 +14,10 @@ using PolyStab
 using PolyStab: Agent, randagent_p, MixedPloidyDeme, IslandDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, random_mating, evolving_neutraldeme, evolving_islanddeme
 
 # ╔═╡ 44771223-a589-4de3-9fea-321b70138d80
-using PolyStab: malthusian_fitness, trait_mean, ploidy_freq, f_trait_agents, mating_PnB_x
+using PolyStab: malthusian_fitness, trait_mean, ploidy_freq, f_trait_agents, mating_PnB_x, directional_selection, mating_PnB, mutate
+
+# ╔═╡ c0a08e7f-dca4-4107-b2b3-d18d7dae77a8
+using PolyStab: popsize
 
 # ╔═╡ a7bc4e02-8b5c-11eb-0e36-ef47de093003
 md""" ### Island model
@@ -44,25 +47,31 @@ md""" First we can look a the case with a single migrant migrating to a single i
 md""" The island can be modelled as a single deme:"""
 
 # ╔═╡ 2625fd72-8b5f-11eb-1e69-adf12cbd84c9
-island = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.)
+island = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5)
 
 # ╔═╡ c4067530-8fcc-11eb-322e-bdeba99f75a4
-islanddeme = IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], β=.2)
+islanddeme = IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], β=.25, θ=14.5)
+
+# ╔═╡ bfc7fa55-15a7-4690-9c33-7cfffedc975c
+islanddeme_UG = IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.9 0.1 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], β=.25, θ=14.5)
 
 # ╔═╡ 6c24a8d9-7ecd-471a-b3d8-7b7ab6ef32d2
 begin
-n = 50. #number of loci
-α = 0.5 #allelic effect size
+n = 250. #number of loci
+α = 0.1 #allelic effect size
 d = 1
 E_mean2 = n*α*d*0.5
 E_var2 = 0.5 * n * (α^2 / 4)
-distro = map(x->trait(randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]),1:500)
+distro = map(x->trait(randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],1)[1]),1:500)
 	
 plot(Normal(E_mean2,sqrt(E_var2)),color=:black, label="Expected 2N")
 plot!(Normal(mean(distro), std(distro)), label="Observed 2N")
 xlabel!("\$phenotype\$")
 ylabel!("\$\$")
 end
+
+# ╔═╡ 09247474-d2d7-4a19-b3b6-dccf77fcd7f0
+sort(distro)
 
 # ╔═╡ 8272fcde-8b5f-11eb-1c13-b591229f902f
 migrant = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]
@@ -104,10 +113,10 @@ island
 islanddeme
 
 # ╔═╡ 58605950-8b61-11eb-16d9-0ff9be46d489
-island_p = evolving_selectiondeme(island,20)
+island_p = evolving_selectiondeme(island,30)
 
 # ╔═╡ 145aba50-8fcd-11eb-081d-4ffe44449e3f
-island_p2 = evolving_islanddeme(islanddeme,20)
+island_p2 = evolving_islanddeme(islanddeme,30)
 
 # ╔═╡ 6df662b0-8b6a-11eb-0e74-611b7747413e
 begin
@@ -201,25 +210,28 @@ end
 plot(p21,p22,p23)
 
 # ╔═╡ 4ce3fdbb-82f2-46da-a226-485306b0d91b
+ md""" ### Black-hole sink dynamics"""
 
+# ╔═╡ e87406ec-2deb-4fda-9e49-5f95676b32c3
+md""" A black-hole sink a metaphor for a deme with one-way immigration from a source population and without emigration."""
 
 # ╔═╡ 602cebcc-46bf-48fe-a3d3-163318796b98
-md""" ### Simulations"""
+ md""" ### Simulations with a single migrant"""
 
 # ╔═╡ 1182e78a-f422-4e14-b6f4-e6f2c05c3da4
 island_s2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.)
 
-# ╔═╡ c3814ccf-976e-4c9c-99dc-ddab6b4945b8
-#migrant_s2 = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]
-
-# ╔═╡ 9db991e8-49af-44be-abdb-646d5409d879
-#trait(migrant_s2)
-
-# ╔═╡ 6b38a600-768f-4abc-9e3f-63a010b15461
-#push!(island_s2.agents,migrant_s2)
+# ╔═╡ 824018c1-6f6b-40ff-8b77-aebaccc20afc
+island_s2i = IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25)
 
 # ╔═╡ 8841a695-1110-487e-bd8a-720ef80a64c3
 s2 = map(x->(evolving_selectiondeme(MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.),20)).pop[end], 1:1000) 
+
+# ╔═╡ 2da9fafc-64c4-4c4c-a0c8-2e248ae84441
+s2i = map(x->(evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25),20)).pop[end], 1:1000) 
+
+# ╔═╡ ef4e8ee0-828f-478c-ba12-1a555d620019
+sort(s2i)
 
 # ╔═╡ b3f9e34a-2a82-4223-ac2a-6c9e8442b0ab
 begin
@@ -231,20 +243,30 @@ end
 # ╔═╡ 1265d278-030c-48f9-8f2b-b73375b64823
 length(s2[s2 .> 0])/1000
 
+# ╔═╡ 84c68f37-fc5a-4383-a142-61aa55df437b
+begin
+	histogram(s2i, bins = 25, fillalpha = 0.4, title="Estab of diploid migrant")
+	xlabel!("\$popsize\$")
+	ylabel!("\$n\$")
+end
+
+# ╔═╡ 43de9885-feb2-4cac-84ef-1012cef84d87
+length(s2i[s2i .> 0])/1000
+
 # ╔═╡ 06a553ee-662d-4bbf-8a5f-365912b14175
 island_s4 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.)
 
-# ╔═╡ d7dae018-84ac-493d-96a3-d400073b29a2
-#migrant_s4 = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],1)[1]
-
-# ╔═╡ 2d4c5f74-07a5-4082-b75b-93a772376173
-#trait(migrant_s4)
-
-# ╔═╡ 65cbc68c-7176-4bc1-8a2a-20f245311918
-#push!(island_s4.agents,migrant_s4)
+# ╔═╡ 27568f24-dd03-4f3e-a0cc-296bc9ba2667
+island_s4i = IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25)
 
 # ╔═╡ 0d4614ce-3d3b-4b57-ba53-9b42a11c711b
 s4 = map(x->(evolving_selectiondeme(MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.),20)).pop[end], 1:1000) 
+
+# ╔═╡ 288e3007-316f-4c1f-9569-b34e6607e1a4
+s4i = map(x->(evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25),20)).pop[end], 1:1000) 
+
+# ╔═╡ 345540d4-9ead-4433-922e-24f7c33f7d7f
+sort(s4i)
 
 # ╔═╡ 091ec75c-9d54-4b3d-bc45-dbb748ca447a
 begin
@@ -256,14 +278,97 @@ end
 # ╔═╡ 558da9c6-e3f1-481e-86c2-8b825ae1f75f
 length(s4[s4 .> 0])/1000
 
+# ╔═╡ 637464b6-fe68-4abc-8306-1e784f0352e5
+begin
+	histogram(s4i, bins = 25, fillalpha = 0.4, title="Estab of tetraploid migrant")
+	xlabel!("\$popsize\$")
+	ylabel!("\$n\$")
+end
+
+# ╔═╡ 45729e96-a64d-46ac-be71-dab33e8e1a9d
+length(s4i[s4i .> 0])/1000
+
 # ╔═╡ 71012460-b6af-4282-a78d-692d0a2a9577
 md""" IMPORTANT REMARK: The starting phenotypic variance of the island simulated this way for 4N is only half of that of 2N, i.e. there will be less migrants with extreme phenotypes. """
+
+# ╔═╡ 22f70e65-e0b2-4188-91bb-b39c0a74c7a0
+md""" ### Single migrant with reduced gamete formation"""
+
+# ╔═╡ 5cdf4ed0-5140-416c-8549-a07cdeaf20e0
+island_s2i_UG = IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.8)
+
+# ╔═╡ 6abce643-05ba-4635-9f96-c57e981773af
+island_p2UG = evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25), 20)
+
+# ╔═╡ 5c9319b3-158c-4ffc-903a-374ffd4c8cdd
+begin
+	pf2_p2UG = island_p2UG.p2
+	pf3_p2UG = island_p2UG.p3
+	pf4_p2UG = island_p2UG.p4
+	p21_UG = plot(pf2_p2UG, grid=false, color=:blue, label="diploids", legend=:bottomright)
+	#plot!(pf3_p1, grid=false, color=:green, label="triploids")
+	plot!(pf4_p2UG, grid=false, color=:red, label="tetraploids")
+	hline!([island_s2i_UG.K],label ="K",colour = "black",linestyle=:dash)
+	xlabel!("\$t\$")
+	ylabel!("Number of individuals")
+end
+
+# ╔═╡ 7c401941-33bf-4dd5-b231-3ab76c1666d0
+begin
+	traitmean_ploidy2UG = map(mean, island_p2UG.tm)
+	p22_UG = plot(traitmean_ploidy2UG, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright) #title="Stabilizing selection"
+	for (i,t) in enumerate(island_p2UG.fta)
+	scatter!([i for x in 1:length(t)],t,label=false,colour="black",ma=0.35,ms=2.5)
+	end
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+	hline!([island_s2i_UG.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+end
+
+# ╔═╡ 6da715d6-a372-4962-9d27-e99983783e7c
+begin
+	p22_fitUG = plot(exp.(island_s2i_UG.β .* (traitmean_ploidy2UG .- island_s2i_UG.θ)), grid=false, color=:red, label=false,linewidth=3,legend=:bottomright) #title="Stabilizing selection"
+	for (i,t) in enumerate(island_p2UG.fta)
+	scatter!([i for x in 1:length(t)],exp.(island_s2i_UG.β.*(t.-island_s2i_UG.θ)),label=false,colour="black",ma=0.35,ms=2.5)
+	end
+	xlabel!("\$t\$")
+	ylabel!("Mean fitness")
+	#hline!([island_s2i_UG.θ],label="Optimal henotype",colour="black",linestyle=:dash)
+end
+
+# ╔═╡ fd29f45c-f9b8-46ac-afa9-c14456631a32
+begin
+	Hₒ_ploidyhet2UG = map(mean, 2 .*island_p2UG.het)
+	#expected_heterozygosity(H₀, t, N) = ((1.0-1.0/(2*N))^t)*H₀
+	p23_UG = plot(Hₒ_ploidyhet2UG, grid=false, color=:black, label="\$H_o(t)\$", title = "LOH")
+	plot!(1:island_p2UG.ngen, 
+		t->expected_heterozygosity(Hₒ_ploidyhet2UG[1], t, 50),
+		linestyle=:dash, color=:black, 
+		label = "\$(1-1/2N)^t H_o(0)\$")
+	V_A2UG = map(sum, 2*(0.1)^2 .*island_p2UG.het)
+	plot!(V_A2UG, grid=false, color=:red, label="\$V_A(t)\$")
+	xlabel!("\$t\$")
+	ylabel!("\$H(t)\$")
+end
+
+# ╔═╡ dbf67254-e59b-4603-9848-e03cdb304f4f
+s2i_UG = map(x->(evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25),20)).pop[end], 1:1000) 
+
+# ╔═╡ 43105e05-0e7e-40f0-b631-6c68ed1b8c3b
+begin
+	histogram(s2i_UG, bins = 25, fillalpha = 0.4, title="Estab with UG")
+	xlabel!("\$popsize\$")
+	ylabel!("\$n\$")
+end
+
+# ╔═╡ 425c53b6-d7f4-4af6-8051-7bb0baa6cd18
+length(s2i_UG[s2i_UG .> 0])/1000
 
 # ╔═╡ 318e6c52-4a13-40af-bc12-af9b1185e6f7
 md""" ### Continuous migration """
 
 # ╔═╡ 95ee86cd-14df-42da-b7b6-e094551c298e
-function evolving_islandwmigration(d::MixedPloidyDeme, ngen; 
+function evolving_islandwmigration(d::MixedPloidyDeme, M, ngen; 
 	heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = 
 	allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
 	het = [heterozygosities_p(d)]
@@ -276,8 +381,11 @@ function evolving_islandwmigration(d::MixedPloidyDeme, ngen;
 	fta = [f_trait_agents(d)]
 	
 	for n=1:ngen
-		mig = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]
-		push!(d.agents,mig)
+		migrants = rand(Poisson(M))
+		for m in 1:migrants
+			migrant = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]
+			push!(d.agents,migrant)
+		end
 		d = mating_PnB_x(d)
 		#d = mutate(d) 
 		push!(het, heterozygosities_p(d))
@@ -293,11 +401,83 @@ function evolving_islandwmigration(d::MixedPloidyDeme, ngen;
 	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
 end
 
-# ╔═╡ c60e7da5-3294-4ca0-908c-d3941b559c62
-island_m2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.)
+# ╔═╡ 4dba1515-8509-402a-97db-437b47cdfda3
+function evolving_islanddememigration(d::IslandDeme, M, ngen; 
+	heterozygosities_p=heterozygosities_p, fit=directional_selection, trait_mean = trait_mean, allelefreqs_p = 
+	allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
+	het = [heterozygosities_p(d)]
+	pop = [length(d)]
+	tm = [trait_mean(d)]
+	af = [allelefreqs_p(d)]
+	p2 = [ploidy_freq(d)[2]]
+	p3 = [ploidy_freq(d)[3]]
+	p4 = [ploidy_freq(d)[4]]
+	fta = [f_trait_agents(d)]
+	
+	for n=1:ngen
+		migrants = rand(Poisson(M))
+		for m in 1:migrants
+			migrant = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]
+			push!(d.agents,migrant)
+		end
+		d = mating_PnB(d)
+		#d = mutate(d) 
+		push!(het, heterozygosities_p(d))
+		push!(pop, length(d))
+		push!(tm, trait_mean(d))
+		push!(af, allelefreqs_p(d))
+		push!(p2, ploidy_freq(d)[2])
+		push!(p3, ploidy_freq(d)[3])
+		push!(p4, ploidy_freq(d)[4])
+		push!(fta, f_trait_agents(d))
+		
+	end
+	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
+end
+
+# ╔═╡ 215b79da-0b74-47f7-8aa2-fb9960165f59
+function evolving_islandwbreak(d::IslandDeme, M, L, ngen; 
+	heterozygosities_p=heterozygosities_p, fit=directional_selection, trait_mean = trait_mean, allelefreqs_p = 
+	allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
+	het = [heterozygosities_p(d)]
+	pop = [length(d)]
+	tm = [trait_mean(d)]
+	af = [allelefreqs_p(d)]
+	p2 = [ploidy_freq(d)[2]]
+	p3 = [ploidy_freq(d)[3]]
+	p4 = [ploidy_freq(d)[4]]
+	fta = [f_trait_agents(d)]
+	c = 0
+	
+	for t=1:ngen
+		if popsize(d) < L
+		migrants = rand(Poisson(M))
+		for m in 1:migrants
+			migrant = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]
+			push!(d.agents,migrant)
+		end
+		d = mating_PnB(d)
+		#d = mutate(d) 
+		push!(het, heterozygosities_p(d))
+		push!(pop, length(d))
+		push!(tm, trait_mean(d))
+		push!(af, allelefreqs_p(d))
+		push!(p2, ploidy_freq(d)[2])
+		push!(p3, ploidy_freq(d)[3])
+		push!(p4, ploidy_freq(d)[4])
+		push!(fta, f_trait_agents(d))
+		c += 1
+		else break
+		end
+	end
+	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=c, het=het,tm=tm, af=af, fta=fta) 
+end
 
 # ╔═╡ 5645c34b-5049-49e7-ab47-c0cb33e3e6a8
-sim_mig = evolving_islandwmigration(island_m2, 20)
+sim_mig = evolving_islandwmigration(MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5), 1, 20)
+
+# ╔═╡ 6619c52f-5072-42dc-aaa5-1c916e6d040f
+sim_migi= evolving_islanddememigration(IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 1, 20)
 
 # ╔═╡ f1595c57-e039-41aa-b8e9-9997cdc19641
 begin
@@ -311,6 +491,9 @@ begin
 	xlabel!("\$t\$")
 	ylabel!("Number of individuals")
 end
+
+# ╔═╡ 57b440b4-b07b-4875-90e8-7fabae68970e
+exp(-1)
 
 # ╔═╡ ce63121d-7c50-49d2-a60c-1771bcd01ae9
 begin
@@ -339,6 +522,256 @@ begin
 	ylabel!("\$H(t)\$")
 end
 
+# ╔═╡ 52129db9-cc6b-4bd9-b3a4-3308a4dfe5f8
+begin
+	pf2_p2mi = sim_migi.p2
+	pf3_p2mi = sim_migi.p3
+	pf4_p2mi = sim_migi.p4
+	p21mi = plot(pf2_p2mi, grid=false, color=:blue, label="diploids", legend=:topright)
+	#plot!(pf3_p1, grid=false, color=:green, label="triploids")
+	plot!(pf4_p2mi, grid=false, color=:red, label="tetraploids")
+	hline!([island.K],label ="K",colour = "black",linestyle=:dash)
+	xlabel!("\$t\$")
+	ylabel!("Number of individuals")
+end
+
+# ╔═╡ bab28060-5865-4693-8ade-ecfd52a3c7c1
+begin
+	traitmean_migi = map(mean, sim_migi.tm)
+	p2mi = plot(traitmean_migi, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright) #title="Stabilizing selection"
+	for (i,t) in enumerate(sim_mig.fta)
+	scatter!([i for x in 1:length(t)],t,label=false,colour="black",ma=0.35,ms=2.5)
+	end
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+	hline!([island.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+end
+
+# ╔═╡ 72fa64a3-3253-42b9-a8bf-5d47b8fdaa52
+begin
+	Hₒ_ploidyhet2mi = map(mean, 2 .*sim_migi.het)
+	#expected_heterozygosity(H₀, t, N) = ((1.0-1.0/(2*N))^t)*H₀
+	p23mi = plot(Hₒ_ploidyhet2mi, grid=false, color=:black, label="\$H_o(t)\$", title = "LOH")
+	plot!(1:sim_migi.ngen, 
+		t->expected_heterozygosity(Hₒ_ploidyhet2mi[1], t, 50),
+		linestyle=:dash, color=:black, 
+		label = "\$(1-1/2N)^t H_o(0)\$")
+	V_A2mi = map(sum, 2*(0.1)^2 .*sim_migi.het)
+	plot!(V_A2mi, grid=false, color=:red, label="\$V_A(t)\$")
+	xlabel!("\$t\$")
+	ylabel!("\$H(t)\$")
+end
+
+# ╔═╡ 6efa7a7e-0806-4bde-b519-4753d62fb699
+begin
+	plot(Poisson(0.01), label="M=0.01", xlim = (0,10),
+	ylim = (0,1))
+	plot!(Poisson(0.1), label="M=0.1")
+	plot!(Poisson(1.), label="M=1")
+	plot!(Poisson(10.), label="M=10")
+	plot!(Poisson(25.), label="M=25")
+	plot!(Poisson(50.), label="M=50")
+end
+
+# ╔═╡ 02b516d4-6a80-43d3-8b05-30f56a1459f0
+begin
+	i_00_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_10_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_20_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_30_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_40_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_50_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_60_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ 4278d8d1-8634-4be2-be12-0bfe80b67baf
+begin
+	i_00_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i_10_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i_20_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i_30_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i_40_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25),0.1, 100, 10000)).ngen[end], 1:20)
+	i_50_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25),0.1, 100, 10000)).ngen[end], 1:20)
+	i_60_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ e0399c8e-5d34-484d-854b-11fae2c9ee59
+begin
+	i_00_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_10_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_20_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_30_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_40_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_50_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_60_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ ce9051fd-2fc7-429a-882d-86fe8f8fc765
+begin
+	i_00_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i_10_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i_20_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i_30_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i_40_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i_50_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i_60_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ 3117b134-1168-4318-b845-1bf7f1cbfc4b
+begin
+	i_00_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i_10_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i_20_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i_30_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i_40_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i_50_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i_60_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ 96e50f72-39c4-4fa6-9fe3-bb03a202450c
+begin
+	p2nsim = plot([1,2,3,4,5],[mean(i_00_001b), mean(i_00_01b), mean(i_00_1b), mean(i_00_10b), mean(i_00_100b)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false)
+	plot!([1,2,3,4,5],[mean(i_10_001b), mean(i_10_01b), mean(i_10_1b), mean(i_10_10b), mean(i_10_100b)], label="△z=10", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4,5],[mean(i_20_001b), mean(i_20_01b), mean(i_20_1b), mean(i_20_10b), mean(i_20_100b)], label="△z=20", marker = ([:hex :d]), color=:blue)
+		plot!([1,2,3,4,5],[mean(i_30_001b), mean(i_30_01b), mean(i_30_1b), mean(i_30_10b), mean(i_30_100b)], label="△z=30", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4,5],[mean(i_40_001b), mean(i_40_01b), mean(i_40_1b), mean(i_40_10b), mean(i_40_100b)], label="△z=40", marker = ([:hex :d]), color=:blue)
+		plot!([1,2,3,4,5],[mean(i_50_001b), mean(i_50_01b), mean(i_50_1b), mean(i_50_10b), mean(i_50_100b)], label="△z=50", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4,5],[mean(i_60_001b), mean(i_60_01b), mean(i_60_1b), mean(i_60_10b), mean(i_60_100b)], label="△z=60", marker = ([:hex :d]), color=:blue)
+	xlabel!("Migration rate")
+	ylabel!("Time to establish")
+#savefig(p2nsim, "Estab_2n")
+end
+
+# ╔═╡ 04b7b74f-5971-432e-a630-10a67c7f0c3a
+begin
+	i4_00_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i4_10_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i4_20_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i4_30_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i4_40_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i4_50_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i4_60_1b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ 9456b032-7a9b-45bb-bfcc-3cad3e23ab7b
+begin
+	i4_00_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i4_10_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i4_20_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i4_30_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i4_40_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25),0.1, 100, 10000)).ngen[end], 1:20)
+	i4_50_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250,[0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25),0.1, 100, 10000)).ngen[end], 1:20)
+	i4_60_01b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ e6f3ec85-47e2-40cb-913f-3c746975b7e4
+begin
+	i4_00_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i4_10_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i4_20_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i4_30_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i4_40_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i4_50_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i4_60_001b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ c03cf01a-6741-4d57-a105-3f7bb8a03715
+begin
+	i4_00_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i4_10_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i4_20_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i4_30_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i4_40_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i4_50_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+	i4_60_10b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 10, 300, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ 8100b6d0-14d9-4c79-9cfd-d3c9e73fe9bc
+begin
+	i4_00_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i4_10_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i4_20_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i4_30_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i4_40_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i4_50_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+	i4_60_100b = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 0., 0., 1.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 100, 300, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ abf94ddb-4440-4059-b4b4-88b52b0a6f08
+begin
+	p4nsim = plot([1,2,3,4,5],[mean(i4_00_001b), mean(i4_00_01b), mean(i4_00_1b), mean(i4_00_10b), mean(i4_00_100b)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false)
+	plot!([1,2,3,4,5],[mean(i4_10_001b), mean(i4_10_01b), mean(i4_10_1b), mean(i4_10_10b), mean(i4_10_100b)], label="△z=10", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4,5],[mean(i4_20_001b), mean(i4_20_01b), mean(i4_20_1b), mean(i4_20_10b), mean(i4_20_100b)], label="△z=20", marker = ([:hex :d]), color=:blue)
+		plot!([1,2,3,4,5],[mean(i4_30_001b), mean(i4_30_01b), mean(i4_30_1b), mean(i4_30_10b), mean(i4_30_100b)], label="△z=30", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4,5],[mean(i4_40_001b), mean(i4_40_01b), mean(i4_40_1b), mean(i4_40_10b), mean(i4_40_100b)], label="△z=40", marker = ([:hex :d]), color=:blue)
+		plot!([1,2,3,4,5],[mean(i4_50_001b), mean(i4_50_01b), mean(i4_50_1b), mean(i4_50_10b), mean(i4_50_100b)], label="△z=50", marker = ([:hex :d]), color=:black)
+	plot!([1,2,3,4,5],[mean(i4_60_001b), mean(i4_60_01b), mean(i4_60_1b), mean(i4_60_10b), mean(i4_60_100b)], label="△z=50", marker = ([:hex :d]), color=:black)
+	xlabel!("Migration rate")
+	ylabel!("Time to establish")
+#savefig(p4nsim, "Estab_4n")
+end
+
+# ╔═╡ 5452b1f1-78f9-4ed4-9050-c2867881872f
+u = 0.17 
+
+# ╔═╡ 599b73d6-b3df-4e0e-b227-1594f062ecc1
+begin
+	i_00_1bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_10_1bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_20_1bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_30_1bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_40_1bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_50_1bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+	i_60_1bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 1, 100, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ da88070d-da7a-45b7-a756-f85bd1a63dda
+begin
+	i_00_01bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i_10_01bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i_20_01bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i_30_01bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i_40_01bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i_50_01bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+	i_60_01bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 0.1, 100, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ ce586b06-6a17-4360-8ab1-be60b90087a0
+begin
+	i_00_001bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_10_001bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_20_001bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_30_001bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_40_001bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_50_001bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+	i_60_001bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 0.01, 100, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ 70f024ed-0a5a-4630-a087-1e2ae0c9627e
+begin
+	i_00_10bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.25), 10., 100, 10000)).ngen[end], 1:20)
+	i_10_10bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.5, β=0.25), 10., 100, 10000)).ngen[end], 1:20)
+	i_20_10bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 10., 100, 10000)).ngen[end], 1:20)
+	i_30_10bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 10, 100, 10000)).ngen[end], 1:20)
+	i_40_10bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=16.5, β=0.25), 10., 100, 10000)).ngen[end], 1:20)
+	i_50_10bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5, β=0.25), 10., 100, 10000)).ngen[end], 1:20)
+	i_60_10bUG = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=18.5, β=0.25), 10., 100, 10000)).ngen[end], 1:20)
+end
+
+# ╔═╡ 15a60434-8fac-4f55-a98a-958de300ce3c
+begin
+	p2nsimUG = plot([1,2,3,4],[mean(i_00_001bUG), mean(i_00_01bUG), mean(i_00_1bUG), mean(i_00_10bUG)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false)
+	plot!([1,2,3,4],[mean(i_10_001bUG), mean(i_10_01bUG), mean(i_10_1bUG), mean(i_10_10bUG)], label="△z=10", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4],[mean(i_20_001bUG), mean(i_20_01bUG), mean(i_20_1bUG), mean(i_20_10bUG)], label="△z=20", marker = ([:hex :d]), color=:blue)
+		plot!([1,2,3,4],[mean(i_30_001bUG), mean(i_30_01bUG), mean(i_30_1bUG), mean(i_30_10bUG)], label="△z=30", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4],[mean(i_40_001bUG), mean(i_40_01bUG), mean(i_40_1bUG), mean(i_40_10bUG)], label="△z=40", marker = ([:hex :d]), color=:blue)
+		plot!([1,2,3,4],[mean(i_50_001bUG), mean(i_50_01bUG), mean(i_50_1bUG), mean(i_50_10bUG)], label="△z=50", marker = ([:hex :d]), color=:black)
+	plot!([1,2,3,4],[mean(i_60_001bUG), mean(i_60_01bUG), mean(i_60_1bUG), mean(i_60_10bUG)], label="△z=50", marker = ([:hex :d]), color=:black)
+	xlabel!("Migration rate")
+	ylabel!("Time to establish")
+#savefig(p2nsimUG, "Estab_2n_UH")
+end
+
 # ╔═╡ Cell order:
 # ╟─a7bc4e02-8b5c-11eb-0e36-ef47de093003
 # ╟─ba38834e-8b5c-11eb-246c-99429ab2ae27
@@ -351,7 +784,9 @@ end
 # ╟─d97a6a70-8b5d-11eb-0ed6-056d834ce9bb
 # ╠═2625fd72-8b5f-11eb-1e69-adf12cbd84c9
 # ╠═c4067530-8fcc-11eb-322e-bdeba99f75a4
+# ╠═bfc7fa55-15a7-4690-9c33-7cfffedc975c
 # ╠═6c24a8d9-7ecd-471a-b3d8-7b7ab6ef32d2
+# ╠═09247474-d2d7-4a19-b3b6-dccf77fcd7f0
 # ╠═8272fcde-8b5f-11eb-1c13-b591229f902f
 # ╠═93754ff5-0428-4188-bf46-49137ee1fc4f
 # ╠═faa45f90-8b6b-11eb-2826-776161a15a58
@@ -376,28 +811,69 @@ end
 # ╠═1cd88c70-8fd2-11eb-30bc-a3b3c916b97d
 # ╠═5a0f4c50-8c26-11eb-0f10-dfd79a2ff7c5
 # ╠═4be009d0-8fd2-11eb-2338-15f33ab00a20
-# ╠═4ce3fdbb-82f2-46da-a226-485306b0d91b
+# ╟─4ce3fdbb-82f2-46da-a226-485306b0d91b
+# ╟─e87406ec-2deb-4fda-9e49-5f95676b32c3
 # ╟─602cebcc-46bf-48fe-a3d3-163318796b98
 # ╠═1182e78a-f422-4e14-b6f4-e6f2c05c3da4
-# ╠═c3814ccf-976e-4c9c-99dc-ddab6b4945b8
-# ╠═9db991e8-49af-44be-abdb-646d5409d879
-# ╠═6b38a600-768f-4abc-9e3f-63a010b15461
+# ╠═824018c1-6f6b-40ff-8b77-aebaccc20afc
 # ╠═8841a695-1110-487e-bd8a-720ef80a64c3
+# ╠═2da9fafc-64c4-4c4c-a0c8-2e248ae84441
+# ╠═ef4e8ee0-828f-478c-ba12-1a555d620019
 # ╠═b3f9e34a-2a82-4223-ac2a-6c9e8442b0ab
 # ╠═1265d278-030c-48f9-8f2b-b73375b64823
+# ╠═84c68f37-fc5a-4383-a142-61aa55df437b
+# ╠═43de9885-feb2-4cac-84ef-1012cef84d87
 # ╠═06a553ee-662d-4bbf-8a5f-365912b14175
-# ╠═d7dae018-84ac-493d-96a3-d400073b29a2
-# ╠═2d4c5f74-07a5-4082-b75b-93a772376173
-# ╠═65cbc68c-7176-4bc1-8a2a-20f245311918
+# ╠═27568f24-dd03-4f3e-a0cc-296bc9ba2667
 # ╠═0d4614ce-3d3b-4b57-ba53-9b42a11c711b
+# ╠═288e3007-316f-4c1f-9569-b34e6607e1a4
+# ╠═345540d4-9ead-4433-922e-24f7c33f7d7f
 # ╠═091ec75c-9d54-4b3d-bc45-dbb748ca447a
 # ╠═558da9c6-e3f1-481e-86c2-8b825ae1f75f
+# ╠═637464b6-fe68-4abc-8306-1e784f0352e5
+# ╠═45729e96-a64d-46ac-be71-dab33e8e1a9d
 # ╟─71012460-b6af-4282-a78d-692d0a2a9577
+# ╟─22f70e65-e0b2-4188-91bb-b39c0a74c7a0
+# ╠═5cdf4ed0-5140-416c-8549-a07cdeaf20e0
+# ╠═6abce643-05ba-4635-9f96-c57e981773af
+# ╠═5c9319b3-158c-4ffc-903a-374ffd4c8cdd
+# ╠═7c401941-33bf-4dd5-b231-3ab76c1666d0
+# ╠═6da715d6-a372-4962-9d27-e99983783e7c
+# ╠═fd29f45c-f9b8-46ac-afa9-c14456631a32
+# ╠═dbf67254-e59b-4603-9848-e03cdb304f4f
+# ╠═43105e05-0e7e-40f0-b631-6c68ed1b8c3b
+# ╠═425c53b6-d7f4-4af6-8051-7bb0baa6cd18
 # ╟─318e6c52-4a13-40af-bc12-af9b1185e6f7
 # ╠═44771223-a589-4de3-9fea-321b70138d80
+# ╠═c0a08e7f-dca4-4107-b2b3-d18d7dae77a8
 # ╠═95ee86cd-14df-42da-b7b6-e094551c298e
-# ╠═c60e7da5-3294-4ca0-908c-d3941b559c62
+# ╠═4dba1515-8509-402a-97db-437b47cdfda3
+# ╠═215b79da-0b74-47f7-8aa2-fb9960165f59
 # ╠═5645c34b-5049-49e7-ab47-c0cb33e3e6a8
+# ╠═6619c52f-5072-42dc-aaa5-1c916e6d040f
 # ╠═f1595c57-e039-41aa-b8e9-9997cdc19641
+# ╠═57b440b4-b07b-4875-90e8-7fabae68970e
 # ╠═ce63121d-7c50-49d2-a60c-1771bcd01ae9
 # ╠═f51ad793-1dc2-4515-8b7c-627904bc016e
+# ╠═52129db9-cc6b-4bd9-b3a4-3308a4dfe5f8
+# ╠═bab28060-5865-4693-8ade-ecfd52a3c7c1
+# ╠═72fa64a3-3253-42b9-a8bf-5d47b8fdaa52
+# ╠═6efa7a7e-0806-4bde-b519-4753d62fb699
+# ╠═02b516d4-6a80-43d3-8b05-30f56a1459f0
+# ╠═4278d8d1-8634-4be2-be12-0bfe80b67baf
+# ╠═e0399c8e-5d34-484d-854b-11fae2c9ee59
+# ╠═ce9051fd-2fc7-429a-882d-86fe8f8fc765
+# ╠═3117b134-1168-4318-b845-1bf7f1cbfc4b
+# ╠═96e50f72-39c4-4fa6-9fe3-bb03a202450c
+# ╠═04b7b74f-5971-432e-a630-10a67c7f0c3a
+# ╠═9456b032-7a9b-45bb-bfcc-3cad3e23ab7b
+# ╠═e6f3ec85-47e2-40cb-913f-3c746975b7e4
+# ╠═c03cf01a-6741-4d57-a105-3f7bb8a03715
+# ╠═8100b6d0-14d9-4c79-9cfd-d3c9e73fe9bc
+# ╠═abf94ddb-4440-4059-b4b4-88b52b0a6f08
+# ╠═5452b1f1-78f9-4ed4-9050-c2867881872f
+# ╠═599b73d6-b3df-4e0e-b227-1594f062ecc1
+# ╠═da88070d-da7a-45b7-a756-f85bd1a63dda
+# ╠═ce586b06-6a17-4360-8ab1-be60b90087a0
+# ╠═70f024ed-0a5a-4630-a087-1e2ae0c9627e
+# ╠═15a60434-8fac-4f55-a98a-958de300ce3c

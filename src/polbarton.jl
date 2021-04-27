@@ -526,7 +526,7 @@ function mating_PnB(d::IslandDeme{A}) where A
 	fitnesses = exp.(directional_selection(d))
 	for i=1:length(d)
  		B1 = d.agents[i]
-		noff = number_of_offspring(d,B1)
+		noff = popsize(d) < 350 ? number_of_offspring(d,B1) : 1 #limits popsize to prevent exponential explosion
 		B2 = sample(d.agents, weights(fitnesses))
 		m = mate_p(B1,B2,d)
 		if m != 0
