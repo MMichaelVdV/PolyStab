@@ -77,14 +77,16 @@ a2 = randagent(0.5, α, n, 2)
 b2 = randagent(0.5, α, n, 2)
 o2 = map(x->trait(mate_p(a2,b2)), 1:2500) 
 
+distro = map(x->trait(randagent(0.5, α, n, 2)),1:2500)
+
 O_mean2 = mean(o2)
 E_mean2 = 0.5*(trait(a2) + trait(b2)) 
 O_var2 = var(o2)
-E_var2 = n * (α^2 / 4)
+E_var2 = 0.5 * n * (α^2 / 4)
 	
 a4 = randagent(0.5, α, n, 4)
 b4 = randagent(0.5, α, n, 4)
-o4 = map(x->trait(mate_p(a4,b4)), 1:5000) 
+o4 = map(x->trait(mate_p(a4,b4)), 1:2500) 
 
 O_mean4 = mean(o4)
 E_mean4 = 0.5*(trait(a4) + trait(b4)) 
@@ -92,6 +94,7 @@ O_var4 = var(o4)
 E_var4 = 
 	
 plot(Normal(O_mean2, sqrt(O_var2)),color=:blue, label="Observed 2N")
+plot!(Normal(mean(distro), std(distro)), label="HWLE 2N")
 plot!(Normal(O_mean4, sqrt(O_var4)),color=:red, label="Observed 4N")
 plot!(Normal(E_mean2,sqrt(E_var2)),color=:black, label="Expected 2N")
 xlabel!("\$phenotype\$")
@@ -509,7 +512,7 @@ plot(pHWE0e,pHWE25e,pHWE50e,pHWE75e,pHWE100e)
 md""" ###### Effect of genotype to phenotype map"""
 
 # ╔═╡ 9f0dcd88-a765-49fd-9b2c-73210a61618a
-#add domninance
+#add domninance, recessive
 
 # ╔═╡ Cell order:
 # ╟─b79eb4e0-8696-11eb-0949-555c0c3c411f
@@ -546,9 +549,9 @@ md""" ###### Effect of genotype to phenotype map"""
 # ╠═158facc0-9921-11eb-25ef-a759b775ecdd
 # ╠═cb25c830-9926-11eb-01f3-b3ddd767318b
 # ╠═32ea0626-9019-4f27-8844-70c4f696549e
-# ╟─db982b20-9923-11eb-285b-b9d57489b052
-# ╟─c9b2b8d0-9879-11eb-294a-952184f8bf9c
-# ╟─9cdac49e-9884-11eb-2be7-832739ca5d66
+# ╠═db982b20-9923-11eb-285b-b9d57489b052
+# ╠═c9b2b8d0-9879-11eb-294a-952184f8bf9c
+# ╠═9cdac49e-9884-11eb-2be7-832739ca5d66
 # ╟─fe5aa0f0-9939-11eb-1416-91041276c925
 # ╟─5ca18050-9955-11eb-2703-47174bc221a8
 # ╟─5ab3ba10-9955-11eb-1a12-7522af278a81
