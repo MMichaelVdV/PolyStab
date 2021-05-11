@@ -45,7 +45,7 @@ Starting from a population of only diploid individuals, according to this model,
 """
 
 # ╔═╡ 575c04e0-97e7-11eb-0750-eb108125e90a
-d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.80 0.20 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], K=200)
+d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.83 0.17 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], K=200)
 
 # ╔═╡ e0789de0-7c6e-11eb-0900-3387c904ea0b
 sim_popvar = evolving_selectiondeme(d_p,150)
@@ -54,7 +54,7 @@ sim_popvar = evolving_selectiondeme(d_p,150)
 begin
 	pf1_var = sim_popvar.p2
 	pf2_var = sim_popvar.p4
-	plot(pf1_var, grid=false, color=:blue, label="diploid", title="u=0.20")
+	plot(pf1_var, grid=false, color=:blue, label="diploid", title="u=0.17")
 	plot!(pf2_var, grid=false, color=:red, label="tetraploid")
 	xlabel!("\$t\$")
 	ylabel!("Number of individuals")
@@ -177,7 +177,7 @@ binz = bin(dp_2)
 begin
 	p1 = histogram(binz[1], bins=50, label=false, title="Diploid > Tetraploid")
 	vline!([0.17], label="u=0.17",linewidth=5)
-	xlabel!("u (unreduced gamete formation 2n)")
+	xlabel!("u")
 	ylabel!("Count")
 end
 
@@ -185,22 +185,19 @@ end
 begin
 	p2 = histogram(binz[2], bins=50, label=false, title="Tetraploid > Diploid")
 	vline!([0.17], label="u=0.17",linewidth=5)
-	xlabel!("u (unreduced gamete formation 2n)")
+	xlabel!("u")
 	ylabel!("Count")
 end
 
 # ╔═╡ ff0cb820-7ff9-11eb-00e7-cf90fe869537
 begin
-p7 = plot(stats_2[2], stats_2[3], grid=false, color=:black, label="Pop size after t generations")
-plot!(stats_2[2], stats_2[4], grid=false, color=:green, label="Diploids")
-plot!(stats_2[2], stats_2[5], grid=false, color=:red, label="Tetraploids")
+p7 = plot(stats_2[2], stats_2[3], grid=false, color=:white, label="Pop size after t generations")
+scatter!(stats_2[2], stats_2[4], grid=false, color=:green, label="Diploids")
+scatter!(stats_2[2], stats_2[5], grid=false, color=:red, label="Tetraploids")
 vline!([0.17], label="u=0.17",linewidth=5)
 xlabel!("\$u\$")
 ylabel!("Number of individuals")
 end
-
-# ╔═╡ 7f182630-7cc6-11eb-071d-0d22322e64e2
-plot(p1,p2,p3,p7)
 
 # ╔═╡ a478224e-7c70-11eb-133b-03e027bf81c8
 md""" ### Case 2 (Felber, 1991)"""
@@ -274,9 +271,9 @@ end
 
 # ╔═╡ 55373330-7ff8-11eb-351c-9df644942e4d
 begin
-p8 = plot(stats_3[2], stats_3[3], grid=false, color=:black, label="Pop size after t generations")
-plot!(stats_3[2], stats_3[4], grid=false, color=:green, label="Diploids")
-plot!(stats_3[2], stats_3[5], grid=false, color=:red, label="Tetraploids")
+p8 = plot(stats_3[2], stats_3[3], grid=false, color=:white, label="Pop size after t generations")
+scatter!(stats_3[2], stats_3[4], grid=false, color=:green, label="Diploids")
+scatter!(stats_3[2], stats_3[5], grid=false, color=:red, label="Tetraploids")
 vline!([0.17], label="u=0.17",linewidth=5)
 xlabel!("\$u\$")
 ylabel!("Number of individuals")
@@ -300,9 +297,6 @@ begin
 	xlabel!("u=v")
 	ylabel!("Count")
 end
-
-# ╔═╡ c5025790-7cd7-11eb-24f8-51d85dc4b968
-plot(p5,p6,p4,p8)
 
 # ╔═╡ 1abbabe0-87fb-11eb-271e-53e02f1ec547
 md""" ### Cytogenic load"""
@@ -436,18 +430,28 @@ end
 # ╔═╡ a352f65e-98c3-11eb-2048-d3e731947c4b
 begin
 tick1 = stabprob(stats_2[1])
-plot([0.005:0.005:0.5...],tick1,label=false)
+grid1 = plot([0.005:0.005:0.5...],tick1,label=false)
 vline!([0.17],label="u=0.17",linewidth=2,style=:dash)
 hline!([0.50],label=false,linewidth=2,style=:dash)
+xlabel!("u")
+ylabel!("P estab")
 end
+
+# ╔═╡ 7f182630-7cc6-11eb-071d-0d22322e64e2
+plot(p1,p2,grid1,p7, legend=false)
 
 # ╔═╡ f5064130-98c1-11eb-1d9c-bbe9ff236b23
 begin
 tick2 = stabprob(stats_3[1])
-plot([0.0025:0.0025:0.5...],tick2)
+grid2 = plot([0.0025:0.0025:0.5...],tick2, label=false)
 vline!([0.20],label="u=0.20",linewidth=2,style=:dash)
 hline!([0.50],label=false,linewidth=2,style=:dash)
+xlabel!("u")
+ylabel!("P estab")
 end
+
+# ╔═╡ c5025790-7cd7-11eb-24f8-51d85dc4b968
+plot(p5,p6,grid2,p8, legend=false)
 
 # ╔═╡ Cell order:
 # ╟─bd2ab750-7c60-11eb-3cc5-6d57dd448dfd
@@ -466,12 +470,12 @@ end
 # ╠═c88e13d0-7c7e-11eb-0119-731f7ddc65ce
 # ╠═a352f65e-98c3-11eb-2048-d3e731947c4b
 # ╠═37231930-7c7f-11eb-2524-9115fc85d926
-# ╠═d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
+# ╟─d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
 # ╠═41392210-7c85-11eb-19bf-675f7a929063
 # ╠═b7e83d6e-7c84-11eb-0e72-7b4c25184221
 # ╠═616389e0-7c85-11eb-13c9-fbf0587d3ccc
 # ╠═ff0cb820-7ff9-11eb-00e7-cf90fe869537
-# ╟─7f182630-7cc6-11eb-071d-0d22322e64e2
+# ╠═7f182630-7cc6-11eb-071d-0d22322e64e2
 # ╠═ec061ade-8801-11eb-2449-f3788b4ffa9b
 # ╟─a478224e-7c70-11eb-133b-03e027bf81c8
 # ╟─57d84bf0-7c6b-11eb-0e68-f99c717f46e4

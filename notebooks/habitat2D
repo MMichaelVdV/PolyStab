@@ -21,15 +21,15 @@ end
 
 # ╔═╡ a449125a-0d09-41c2-ab28-1afd40065747
 begin
-d0 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], K=50)
-d0p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], K=50)
-d10 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],10), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], K=50)
-d50 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], K=50)
-d500 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],500), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], K=50)
+d0 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.92 0.08 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
+d0p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.92 0.08 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=13.5)
+d10 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],10), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.92 0.08 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
+d50 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.92 0.08 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
+d500 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],500), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.92 0.08 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0. ], K=50)
 end
 
 # ╔═╡ 45aa806a-c591-4c27-a5e6-c8cb412561f7
-h_2D = [d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0 d0 d0 d0 d0 d0 d0 d0 d0 d50 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0; d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0]
+h_2D = [d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d50 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p]
 
 # ╔═╡ f5e391cc-92a2-4918-ab33-61e1b70a0e2b
 begin
@@ -212,12 +212,6 @@ begin
 
 end
 
-# ╔═╡ 035059d7-8d84-4077-87c4-a05d7ab3e1cc
-
-
-# ╔═╡ e49cf0fe-7143-434a-bae8-e1103f2a3701
-plot(ph2d,p1h2d,p2h2d,p3h2d,p4h2d)
-
 # ╔═╡ 66d2cf4c-f6b1-462c-b124-f3eb1dc9adb8
 begin
 	anim_2D = @animate for i ∈ 1:100
@@ -225,6 +219,42 @@ begin
 		end every 1
 	gif(anim_2D, "polystab2Dgaus.gif", fps = 4)
 end
+
+# ╔═╡ d7fd219f-7c3d-49ae-8143-e7144d3db253
+sim_hab.data
+
+# ╔═╡ 221bf2a9-afb4-4d98-96bc-248960c1f99b
+begin
+	function f_het_demes(h::Habitat2D{D}) where D
+    het_demes = Matrix{Float64}(undef, size(h.demes))
+	for (i, d) in pairs(h.demes)
+		if length(d) != 0
+			het_demes[i[1],i[2]] = d.α^2*sum(heterozygosities_p(d))
+		else
+			het_demes[i[1],i[2]] = 0.
+		end
+	end
+	het_demes
+	end
+	
+anim_range_Vg = @animate for i ∈ 1:100
+	sim_habA = sim_hab.data[i]
+
+	het_demes = f_het_demes(sim_habA)
+		
+	p1 = heatmap(het_demes, grid=false, c=cgrad([:white,:black]), label="Vg_mean deme")
+	
+	xlabel!("Space")
+	ylabel!("Genetic variance")
+	end every 1
+	gif(anim_range_Vg, "geneticvariance2D.gif", fps = 3)
+end
+
+# ╔═╡ 035059d7-8d84-4077-87c4-a05d7ab3e1cc
+p_het = heatmap(f_het_demes(sim_hab.h), grid=false, c=cgrad([:white,:black]), label="Vg_mean deme")
+
+# ╔═╡ e49cf0fe-7143-434a-bae8-e1103f2a3701
+plot(ph2d,p1h2d,p2h2d,p3h2d,p4h2d,p_het)
 
 # ╔═╡ Cell order:
 # ╠═62e605b0-a299-11eb-2e86-6fa01314f1ec
@@ -254,3 +284,5 @@ end
 # ╠═035059d7-8d84-4077-87c4-a05d7ab3e1cc
 # ╠═e49cf0fe-7143-434a-bae8-e1103f2a3701
 # ╠═66d2cf4c-f6b1-462c-b124-f3eb1dc9adb8
+# ╠═d7fd219f-7c3d-49ae-8143-e7144d3db253
+# ╠═221bf2a9-afb4-4d98-96bc-248960c1f99b

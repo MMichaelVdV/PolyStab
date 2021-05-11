@@ -820,10 +820,10 @@ function grid_search(t)
 	p2 = []
 	p4 = []
 	for u in range(0, stop=0.5, length=t)
-		for rep in 1:10
+		for rep in 1:20
 		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
-		d_p = IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, μ=0., θ=12.5, β=0.25)
-		sim_ploidyvar = evolving_islandwbreak(d_p, 1., 100, 10000)
+		d_p = IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, μ=0., θ=14.5, β=0.25)
+		sim_ploidyvar = evolving_islandwbreak(d_p, .01, 100, 10000)
 		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
 			push!(ploidy,2)
 		else
@@ -840,10 +840,10 @@ function grid_search(t)
 end
 
 # ╔═╡ b330afb1-a2be-4f6d-9395-93b2ff931031
-stats = grid_search(100)
+stats = grid_search(200)
 
 # ╔═╡ ab1bb2e8-2317-45b0-a62d-b640526d96ff
-dp_2 = [(stats[2][i],stats[1][i],stats[3][i]) for i in 1:1000]
+dp_2 = [(stats[2][i],stats[1][i],stats[3][i]) for i in 1:2000]
 
 # ╔═╡ 13f6f773-5dd4-421b-9b35-7ae09bd0c3d7
 begin
@@ -859,12 +859,12 @@ function prob(b)
 
 function stabprob(a)
 	i = 1
-	j = 10
+	j = 20
 	p = []
 	while j <= length(a)
 		push!(p,prob(a[i:j]))
-		i += 10
-		j += 10
+		i += 20
+		j += 20
 	end
 	p
 	end	
@@ -873,9 +873,11 @@ end
 # ╔═╡ 810211aa-0fbf-41e9-b0c8-c01fce34adcb
 begin
 tick1 = stabprob(stats[1])
-plot([0.005:0.005:0.5...],tick1,label=false)
+plot([0.0025:0.0025:0.5...],tick1,label=false)
 vline!([0.17],label="u=0.17",linewidth=2,style=:dash)
 hline!([0.50],label=false,linewidth=2,style=:dash)
+xlabel!("u")
+ylabel!("P estab")
 end
 
 # ╔═╡ 43560e72-ad13-4efe-9f03-30d19a2ddf25
@@ -909,7 +911,7 @@ binz = bin(dp_2)
 begin
 	p1ug = histogram(binz[1], bins=50, label=false, title="Diploid > Tetraploid")
 	vline!([0.17], label="u=0.17",linewidth=5)
-	xlabel!("u (unreduced gamete formation 2n)")
+	xlabel!("u")
 	ylabel!("Count")
 end
 
@@ -917,7 +919,7 @@ end
 begin
 	p2ug = histogram(binz[2], bins=50, label=false, title="Tetraploid > Diploid")
 	vline!([0.17], label="u=0.17",linewidth=5)
-	xlabel!("u (unreduced gamete formation 2n)")
+	xlabel!("u")
 	ylabel!("Count")
 end
 
@@ -981,9 +983,9 @@ md""" Is this only for pops that estab >100? effect + effect of dir sel vs stab 
 # ╠═8841a695-1110-487e-bd8a-720ef80a64c3
 # ╠═2da9fafc-64c4-4c4c-a0c8-2e248ae84441
 # ╠═ef4e8ee0-828f-478c-ba12-1a555d620019
-# ╟─b3f9e34a-2a82-4223-ac2a-6c9e8442b0ab
+# ╠═b3f9e34a-2a82-4223-ac2a-6c9e8442b0ab
 # ╠═1265d278-030c-48f9-8f2b-b73375b64823
-# ╟─84c68f37-fc5a-4383-a142-61aa55df437b
+# ╠═84c68f37-fc5a-4383-a142-61aa55df437b
 # ╠═43de9885-feb2-4cac-84ef-1012cef84d87
 # ╠═06a553ee-662d-4bbf-8a5f-365912b14175
 # ╠═27568f24-dd03-4f3e-a0cc-296bc9ba2667
@@ -1046,10 +1048,10 @@ md""" Is this only for pops that estab >100? effect + effect of dir sel vs stab 
 # ╠═ae97a439-2eb8-43c8-a983-8cc4eaff3d9b
 # ╠═b330afb1-a2be-4f6d-9395-93b2ff931031
 # ╠═ab1bb2e8-2317-45b0-a62d-b640526d96ff
-# ╟─13f6f773-5dd4-421b-9b35-7ae09bd0c3d7
+# ╠═13f6f773-5dd4-421b-9b35-7ae09bd0c3d7
 # ╠═810211aa-0fbf-41e9-b0c8-c01fce34adcb
 # ╠═43560e72-ad13-4efe-9f03-30d19a2ddf25
-# ╟─3a8cbad9-f3d6-4e34-afd2-783774c00af1
+# ╠═3a8cbad9-f3d6-4e34-afd2-783774c00af1
 # ╠═69b3670a-e159-4434-88c1-4142a36eec6f
 # ╠═c4382312-f4ce-40de-857a-4c25122c6098
 # ╠═e552c371-4288-433f-a3f3-993cc6bd8e35

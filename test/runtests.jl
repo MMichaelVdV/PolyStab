@@ -31,7 +31,7 @@ end
     a = randagent(0.5, α, n, k)
     b = randagent(0.5, α, n, k)
     o = map(x->trait(mate_p(a,b)), 1:2500) 
-    @info "" mean(o) var(o) 0.5*(trait(a)+trait(b)) n*(α^2 / 4)
+    @info "" mean(o) var(o) 0.5*(trait(a)+trait(b)) 0.5*n*(1/k)*(α^2/4)
     @test mean(o) ≈ 0.5*(trait(a) + trait(b)) atol=0.1
-    @test var(o) ≈ 0.5*n * (1/k)*(α^2 / 4) atol=0.1
+    @test var(o) ≈ 0.5*n*(1/k)*(α^2/4) atol=0.1
 end

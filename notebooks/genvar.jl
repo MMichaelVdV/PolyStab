@@ -30,9 +30,9 @@ md""" ##### Dynamics in a neutral deme (random mating, no selection)"""
 
 # ╔═╡ a8d89200-8e52-11eb-1277-b1857f7ea0fe
 begin
-neutral_p1 = evolving_haploiddeme(d_p1, 500)
-neutral_p2 = evolving_neutraldeme(d_p2, 500)
-neutral_p4 = evolving_neutraldeme(d_p4, 500)
+neutral_p1 = evolving_haploiddeme(d_p1, 1000)
+neutral_p2 = evolving_neutraldeme(d_p2, 1000)
+neutral_p4 = evolving_neutraldeme(d_p4, 1000)
 end
 
 # ╔═╡ 66a25c90-8bff-11eb-2a53-09b98728f17c
@@ -115,38 +115,38 @@ end
 
 # ╔═╡ 3ec21690-992c-11eb-3b9f-4143af21edc5
 begin
-	p1n = plot(traitneutral_p1, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright)
+	p1n = plot(traitneutral_p1, grid=false, color=:red,linewidth=3,label="Mean phenotype", title="Haploid", legend=:bottomright)
 	for (i,t) in enumerate(neutral_p1.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
 	xlabel!("\$t\$")
-	ylabel!("Trait mean")
+	ylabel!("Phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(18,22)
+	ylims!(17,25)
 end
 
 # ╔═╡ 415089a2-992c-11eb-24c9-ff5fa01c0273
 begin
-	p2n = plot(traitneutral_p2, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright)
+	p2n = plot(traitneutral_p2, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid", legend=:bottomright)
 	for (i,t) in enumerate(neutral_p2.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
 	xlabel!("\$t\$")
-	ylabel!("Trait mean")
+	ylabel!("Phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(18,22)
+	ylims!(17,25)
 end
 
 # ╔═╡ 42f31610-992c-11eb-03e1-5b5f8ca6a2fc
 begin
-	p4n = plot(traitneutral_p4, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright)
+	p4n = plot(traitneutral_p4, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid",legend=:bottomright)
 	for (i,t) in enumerate(neutral_p4.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
 	xlabel!("\$t\$")
-	ylabel!("Trait mean")
+	ylabel!("Phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(18,22)
+	ylims!(17,25)
 end
 
 # ╔═╡ 1b1541de-8dbf-11eb-041c-815c116efeeb
@@ -534,7 +534,7 @@ md""" ###### Effect of genotype to phenotype map"""
 # ╟─3fc09382-986b-11eb-29d6-57eeb0eddb77
 # ╠═47dc60c0-9876-11eb-3d70-cd03509cbad8
 # ╠═d6c03b40-9939-11eb-244b-3d747272f440
-# ╟─fc96ac10-9884-11eb-1735-d751fd99c805
+# ╠═fc96ac10-9884-11eb-1735-d751fd99c805
 # ╠═66257e10-9879-11eb-2367-d706689f326a
 # ╠═0501879e-9928-11eb-01c1-23fdad736664
 # ╠═70a06c90-992a-11eb-1a39-ff907051a107

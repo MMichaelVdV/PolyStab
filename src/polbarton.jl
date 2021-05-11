@@ -7,7 +7,7 @@ Agent of arbitrary ploidy level.
 """
 @with_kw struct Agent{T}
     loci::Matrix{T}
-    d::T = 1. # allelic effect scaler for different ploidy levels
+    d::T = 1. # allelic effect scaler 
 end
 
 """
@@ -914,7 +914,7 @@ var_add(a::Agent,α) = ploidy(a)*α^2*sum(heterozygosities_p(a))
 """
     trait(a::Agent)
 """
-trait(a::Agent) = sum(a)/ploidy(a)
+trait(a::Agent) = a.d*(sum(a)/ploidy(a))
 	
 """
 	trait_mean(d::AbstractDeme)
