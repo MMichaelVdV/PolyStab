@@ -940,5 +940,130 @@ function loci_df(d::AbstractDeme)
 end
 
 #dominance
+
+"""
+    trait_add(a::Agent)
+"""
+trait_add(a::Agent) = a.d*(sum(a)/ploidy(a))
+
+"""
+    trait_dom(a::Agent)
+"""
+function trait_dom(a::Agent) 
+	dom = (sum(a.loci,dims=1)) .> 0
+	a.d*(sum(dom))
+end
+
+"""
+    trait_res(a::Agent)
+"""
+function trait_rec(a::Agent)
+	rec = (sum(a.loci,dims=1)) .== 0
+	a.d*(sum(rec))
+end
+
+"""
+	malthusian_fitness(d::AbstractDeme)
+
+Return the Malthusian fitness (density dependence and stabilizing selection) of each agent in a deme.
+"""
+function malthusian_fitness(d::MixedPloidyDeme, map)
+N = length(d)
+fitnesses = Float64[]
+for agent in d.agents
+	z = map(agent)
+	f = d.rm*(1-(N/d.K))-((z-d.θ)^2)/(2*d.Vs)
+	push!(fitnesses, f)
+end
+fitnesses
+end
+
+"""
+	malthusian_fitness(d::AbstractDeme,a::Agent)
+
+Return the Malthusian fitness (density dependence and stabilizing selection) of a single agent in a deme.
+"""
+function malthusian_fitness(d::MixedPloidyDeme,a::Agent, map)
+N = length(d)
+z = map(a)
+return d.rm*(1-(N/d.K))-((z-d.θ)^2)/(2*d.Vs)
+end 
+
+"""
+	number_of_offspring(d::AbstractDeme, a::Agent)
+"""
+function number_of_offspring(d::MixedPloidyDeme, a::Agent, map)
+logw = malthusian_fitness(d, a, map)
+rand(Poisson(exp(logw)))
+end
+
+"""
+	mating_PnB_x(d::MixedPloidyDeme{A})
+
+Mating in a mixed ploidy deme with unreduced gamete formation and partner
+choice weighted by fitness.
+"""
+function mating_PnB_x(d::AbstractDeme{A}, ftgmap) where A
+	new_agents = A[]
+	fitnesses = exp.(malthusian_fitness(d, ftgmap))
+	for i=1:length(d)
+		B1 = d.agents[i]
+		noff = number_of_offspring(d, B1, ftgmap)
+        Bs = sample(d.agents, weights(fitnesses), noff) 
+        offspring = filter(!ismock, map(B2->mate_p(B1, B2, d), Bs))
+        new_agents = vcat(new_agents, offspring)
+    end
+    d(new_agents)
+end
+
+"""
+	trait_mean(d::AbstractDeme)
+"""
+function trait_mean(d::AbstractDeme, ftgmap)
+length(d.agents) == 0 && return 0.
+z = map(ftgmap, d.agents)
+sum(z)/length(d)
+end
+
+"""
+	f_trait_agents(d::AbstractDeme)
+"""
+f_trait_agents(d::AbstractDeme, ftgmap) = map(ftgmap, d.agents)
+
+"""
+	evolving_selectiondeme(d::AbstractDeme, ngen)
+
+Simulate a single deme with mixed ploidy, malthusian fitness and unreduced
+gamete formation.
+"""
+function evolving_selectiondeme(d::MixedPloidyDeme, ftgmap, ngen; 
+heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = 
+allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
+het = [heterozygosities_p(d)]
+pop = [length(d)]
+tm = [trait_mean(d, ftgmap)]
+af = [allelefreqs_p(d)]
+p2 = [ploidy_freq(d)[2]]
+p3 = [ploidy_freq(d)[3]]
+p4 = [ploidy_freq(d)[4]]
+fta = [f_trait_agents(d, ftgmap)]
+
+for n=1:ngen
+	d = mating_PnB_x(d, ftgmap)
+	d = mutate(d) 
+	push!(het, heterozygosities_p(d))
+	push!(pop, length(d))
+	push!(tm, trait_mean(d, ftgmap))
+	push!(af, allelefreqs_p(d))
+	push!(p2, ploidy_freq(d)[2])
+	push!(p3, ploidy_freq(d)[3])
+	push!(p4, ploidy_freq(d)[4])
+	push!(fta, f_trait_agents(d, ftgmap))
+	
+end
+(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
+end
+
+
 #pollen <-> seed migration
 #assortative mating

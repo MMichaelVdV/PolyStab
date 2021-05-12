@@ -10,6 +10,9 @@ using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
 # ╔═╡ ded34c80-8699-11eb-33ce-214cb4f59699
 using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, evolving_neutraldeme, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy, trait_mean, randagent, evolving_haploiddeme, mate_p, evolving_selectiondemeh
 
+# ╔═╡ 91826552-6b17-491f-ad1b-77e06dfcdeb6
+using PolyStab: malthusian_fitness, trait_add, trait_dom, trait_rec
+
 # ╔═╡ b79eb4e0-8696-11eb-0949-555c0c3c411f
 md"""### Single deme dynamics of a mixed ploidy population"""
 
@@ -514,6 +517,125 @@ md""" ###### Effect of genotype to phenotype map"""
 # ╔═╡ 9f0dcd88-a765-49fd-9b2c-73210a61618a
 #add domninance, recessive
 
+# ╔═╡ 06fdb4ff-0ae0-4cab-872f-248c57636bd0
+t = randagent_p(0.5, 1., 100, [0., 0., 0., 4.],1)[1]
+
+# ╔═╡ eb3861f9-82c8-42f5-96f0-8a5835dd2fea
+t.loci
+
+# ╔═╡ abe2c5fa-66c3-4596-8597-1e0f631ac9fa
+trait_dom(t)
+
+# ╔═╡ 525af8b0-c1ab-46b5-bb4d-608fb5001dc3
+trait_rec(t)
+
+# ╔═╡ 7d5350c9-8e87-4488-9832-27de32f3fb97
+begin
+td2 = MixedPloidyDeme(agents = randagent_p(0.5, 1., 10, [0., 1., 0., 0.], 200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 5., Vs = 1.)
+td4 = MixedPloidyDeme(agents = randagent_p(0.5, 1., 10, [0., 0., 0., 1.], 200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 5., Vs = 1.)
+end
+
+# ╔═╡ 268eb9a9-57e2-4a42-9b3f-f5866fbbfb2f
+malthusian_fitness(td2,t,trait_add)
+
+# ╔═╡ b5de9dfd-b875-4189-880e-d3b49a14d299
+malthusian_fitness(td2,t,trait_dom)
+
+# ╔═╡ bb6b43f2-d6f3-4322-9906-4e75698527a9
+malthusian_fitness(td2,t,trait_rec)
+
+# ╔═╡ 6a68dd7b-65d4-4f58-aff2-371d79f17064
+begin
+add_p2 = evolving_selectiondeme(td2,trait_add,500)
+add_p4 = evolving_selectiondeme(td4,trait_add,500)
+dom_p2 = evolving_selectiondeme(td2,trait_dom,500)
+dom_p4 = evolving_selectiondeme(td4,trait_dom,500)
+rec_p2 = evolving_selectiondeme(td2,trait_rec,500)
+rec_p4 = evolving_selectiondeme(td4,trait_rec,500)
+end
+
+# ╔═╡ 13005ec3-a28c-4ac6-8cee-3d6c4a5def84
+begin
+plot(Normal(mean(dom_p2.fta[1]), std(dom_p2.fta[1])), color=:black, label="domp2")
+plot!(Normal(mean(dom_p4.fta[1]), std(dom_p4.fta[1])), color=:blue, label="domp4")
+plot!(Normal(mean(rec_p2.fta[1]), std(rec_p2.fta[1])), color=:green, label="rec2")
+plot!(Normal(mean(rec_p4.fta[1]), std(rec_p4.fta[1])), color=:red, label="rec4")
+plot!(Normal(mean(add_p2.fta[1]), std(add_p2.fta[1])), color=:orange, label="add2")
+plot!(Normal(mean(add_p4.fta[1]), std(add_p4.fta[1])), color=:pink, label="add4")
+xlabel!("Phenotype before selection")
+end
+
+# ╔═╡ 440b6029-d2f8-4f36-866e-9a79f68266bf
+begin
+	Hₒd_p2 = map(mean, dom_p2.het)
+	Hₒd_p4 = map(mean, dom_p4.het)
+	Hₒr_p2 = map(mean, rec_p2.het)
+	Hₒr_p4 = map(mean, rec_p4.het)
+	Hₒa_p2 = map(mean, add_p2.het)
+	Hₒa_p4 = map(mean, add_p4.het)
+
+	plot(Hₒd_p2, grid=false, color=:black, label="\$H_op1(t)\$", title="LOH")
+	plot!(Hₒd_p4, grid=false, color=:blue, label="\$H_op2(t)\$")
+	plot!(Hₒr_p2, grid=false, color=:red, label="\$H_op4(t)\$")
+	plot!(Hₒr_p4, grid=false, color=:red, label="\$H_op4(t)\$")
+	plot!(Hₒa_p2, grid=false, color=:red, label="\$H_op4(t)\$")
+	plot!(Hₒa_p4, grid=false, color=:red, label="\$H_op4(t)\$")
+	#plot!(0:sim_p2.ngen+1, 
+		#t->expected_heterozygosity(0.5*(1-0.5), t, 50),
+		#linestyle=:dash, color=:black, 
+		#label = "\$(1-1/N)^t H_o(0)\$")
+	plot!(0:neutral_p1.ngen+1, 
+		t->eh_1(0.5*(1-0.5), t, 100),
+		linestyle=:dash, color=:black, 
+		label = "\$(1-1/N)^t H_o(0)\$")
+	plot!(0:neutral_p2.ngen+1, 
+		t->eh_2(0.5*(1-0.5), t, 100),
+		linestyle=:dash, color=:blue, 
+		label = "\$(1-1/2N)^t H_o(0)\$")
+	plot!(0:neutral_p4.ngen+1, 
+		t->eh_4(0.5*(1-0.5), t, 100),
+		linestyle=:dash, color=:red, 
+		label = "\$(1-1/4N)^t H_o(0)\$")
+	xlabel!("\$t\$")
+	ylabel!("\$H(t)\$")
+end
+
+# ╔═╡ 6030f17d-1ce9-42fe-9c90-44a4101f7312
+begin
+	traitmean_p2r = map(mean, rec_p2.tm)
+	traitmean_p4r = map(mean, rec_p4.tm)
+	traitmean_p2d = map(mean, dom_p2.tm)
+	traitmean_p4d = map(mean, dom_p4.tm)
+	traitmean_p2a = map(mean, add_p2.tm)
+	traitmean_p4a = map(mean, add_p4.tm)
+	plot(traitmean_p2r, grid=false, color=:black, label=false)
+	plot!(traitmean_p4r, grid=false, color=:blue, label=false)
+	plot!(traitmean_p2d, grid=false, color=:black, label=false)
+	plot!(traitmean_p4d, grid=false, color=:blue, label=false)
+	plot!(traitmean_p2a, grid=false, color=:black, label=false)
+	plot!(traitmean_p4a, grid=false, color=:blue, label=false)
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+end
+
+# ╔═╡ 79b23d8f-18b3-416f-8a44-0d4baf3d9cec
+begin
+	popsize_p2r = map(mean, rec_p2.pop)
+	popsize_p4r = map(mean, rec_p4.pop)
+	popsize_p2d = map(mean, dom_p2.pop)
+	popsize_p4d = map(mean, dom_p4.pop)
+	popsize_p2a = map(mean, add_p2.pop)
+	popsize_p4a = map(mean, add_p4.pop)
+	plot(popsize_p2r, grid=false, color=:black, label=false)
+	plot!(popsize_p4r, grid=false, color=:blue, label=false)
+	plot!(popsize_p2d, grid=false, color=:blue, label=false)
+	plot!(popsize_p4d, grid=false, color=:blue, label=false)
+	plot!(popsize_p2a, grid=false, color=:blue, label=false)
+	plot!(popsize_p4a, grid=false, color=:blue, label=false)
+	xlabel!("\$t\$")
+	ylabel!("Population size")
+end
+
 # ╔═╡ Cell order:
 # ╟─b79eb4e0-8696-11eb-0949-555c0c3c411f
 # ╠═8ea08d1e-8bff-11eb-3fbb-f74cf53a2eed
@@ -539,7 +661,7 @@ md""" ###### Effect of genotype to phenotype map"""
 # ╠═0501879e-9928-11eb-01c1-23fdad736664
 # ╠═70a06c90-992a-11eb-1a39-ff907051a107
 # ╠═7209e7a0-992a-11eb-0690-159af85e9c8d
-# ╟─63ad1c50-987f-11eb-1512-df6fc858aaca
+# ╠═63ad1c50-987f-11eb-1512-df6fc858aaca
 # ╠═44614280-9920-11eb-302b-6f959c8c2b94
 # ╠═809cf8b2-9926-11eb-2b5e-d97d23d44531
 # ╠═651f5aa2-9927-11eb-392f-c7944c0ad0aa
@@ -549,7 +671,7 @@ md""" ###### Effect of genotype to phenotype map"""
 # ╠═158facc0-9921-11eb-25ef-a759b775ecdd
 # ╠═cb25c830-9926-11eb-01f3-b3ddd767318b
 # ╠═32ea0626-9019-4f27-8844-70c4f696549e
-# ╠═db982b20-9923-11eb-285b-b9d57489b052
+# ╟─db982b20-9923-11eb-285b-b9d57489b052
 # ╠═c9b2b8d0-9879-11eb-294a-952184f8bf9c
 # ╠═9cdac49e-9884-11eb-2be7-832739ca5d66
 # ╟─fe5aa0f0-9939-11eb-1416-91041276c925
@@ -572,3 +694,17 @@ md""" ###### Effect of genotype to phenotype map"""
 # ╠═1999d7bc-844c-4c83-88b0-a9f080d591ba
 # ╟─21c69f40-9876-11eb-0f98-cf5c73410b72
 # ╠═9f0dcd88-a765-49fd-9b2c-73210a61618a
+# ╠═91826552-6b17-491f-ad1b-77e06dfcdeb6
+# ╠═06fdb4ff-0ae0-4cab-872f-248c57636bd0
+# ╠═eb3861f9-82c8-42f5-96f0-8a5835dd2fea
+# ╠═abe2c5fa-66c3-4596-8597-1e0f631ac9fa
+# ╠═525af8b0-c1ab-46b5-bb4d-608fb5001dc3
+# ╠═7d5350c9-8e87-4488-9832-27de32f3fb97
+# ╠═268eb9a9-57e2-4a42-9b3f-f5866fbbfb2f
+# ╠═b5de9dfd-b875-4189-880e-d3b49a14d299
+# ╠═bb6b43f2-d6f3-4322-9906-4e75698527a9
+# ╠═6a68dd7b-65d4-4f58-aff2-371d79f17064
+# ╠═13005ec3-a28c-4ac6-8cee-3d6c4a5def84
+# ╟─440b6029-d2f8-4f36-866e-9a79f68266bf
+# ╠═6030f17d-1ce9-42fe-9c90-44a4101f7312
+# ╠═79b23d8f-18b3-416f-8a44-0d4baf3d9cec
