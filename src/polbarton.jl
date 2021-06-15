@@ -12,6 +12,7 @@ end
 
 """
 	GametePool{T}
+
 Gamete container.
 """
 @with_kw struct GametePool{T}
@@ -27,7 +28,7 @@ end
 """
     SimpleDeme{A}
 
-A single random-mating, single ploidy level deme. 
+Single ploidy deme. 
 - `K` : Carrying capacity
 """
 @with_kw struct SimpleDeme{A} <: AbstractDeme{A}
@@ -38,8 +39,8 @@ end
 """
     MixedPloidyDeme{A,T}
 
-A single random-mating, mixed-ploidy level deme, most of the 'population
-genetic' environment should be implemented at this level (drift, selection,
+A single mixed-ploidy deme, most of the 'population
+genetic' environment is implemented at this level (drift, selection,
 mutation). OV: Viability matrix, a symmetric matrix that contains the viability
 of offspring for each possible combination of gametes. Ug: Unreduced gamete
 formation matrix, a matrix that contains the probability of unreduced gametes
@@ -69,8 +70,8 @@ end
 """
     IslandDeme{A,T}
 
-A single random-mating, mixed-ploidy level deme, most of the 'population
-genetic' environment should be implemented at this level (drift, selection,
+Single mixed-ploidy deme, most of the 'population
+genetic' environment is implemented at this level (drift, selection,
 mutation). OV: Viability matrix, a symmetric matrix that contains the viability
 of offspring for each possible combination of gametes. Ug: Unreduced gamete
 formation matrix, a matrix that contains the probability of unreduced gametes
@@ -100,7 +101,7 @@ end
 """
     Habitat{D}
 
-A 1-dimensional habitat as an array of connected demes.
+One-dimensional habitat (array of connected demes).
 - `σ` : Variance of dispersal
 - `b` : Steepness of linear gradient
 - `θ` : Phenotypic optimum in the central deme of the habitat
@@ -112,6 +113,20 @@ A 1-dimensional habitat as an array of connected demes.
     b ::T = 0.1 
 	θ ::T = 12.5 
     Dm::T = 250. 
+end
+
+
+"""
+    Habitat2D{D}
+
+Two-dimensional habitat (matrix of connected demes).
+- `σ` : Variance of dispersal
+- `b` : Steepness of linear gradient
+- `θ` : Phenotypic optimum in the central deme of the habitat
+- `Dm` : Number of demes
+"""
+@with_kw struct Habitat2D{D,T}
+    demes::Matrix{D}
 end
 
 #Some useful short functions:
@@ -193,12 +208,6 @@ Free recombination between loci in a mixed ploidy population.
 """
 function recombination(a::Agent)
     genome = similar(a.loci)
-    # this was incorrect, you actually resample (with replacement) homologs 
-    # from the parental genome, and this will not generally be valid. I.e.
-    # in this implementation you can have an `Aaaa` individual recombining 
-    # to form an `AAAA` genome. Double reduction complicates this, but in
-    # the absence of double reduction (i.e. in the case of strict bivalent
-    # formation at meiosis) we should do a shuffling, not a resampling.
     for i in 1:nloci(a)
         genome[:,i] = shuffle(a.loci[:,i])
 	end
@@ -293,7 +302,7 @@ end
 """
 	gametogenesis(d::AbstractDeme{A})
 
-Gamete formation in a mixed ploidy population (1n to 4n).
+Gamete formation in a mixed ploidy population (up until 4n).
 """
 function gametogenesis(d::AbstractDeme{A}) where A
 	new_agents = A[]
@@ -399,7 +408,7 @@ end
 	mating_PnB(d::MixedPloidyDeme{A})
 
 Mating in a mixed ploidy deme with unreduced gamete formation and partner
-choice weighted by fitness where every individual has all it's offspring with the same partner(cfr. PnB).
+choice weighted by malthusian fitness and where every individual has all it's offspring with the same partner (cfr. PnB).
 """
 function mating_PnB(d::MixedPloidyDeme{A}) where A
 	new_agents =  A[]
@@ -435,7 +444,7 @@ ismock(x) = x == 0
 	mating_PnB_x(d::MixedPloidyDeme{A})
 
 Mating in a mixed ploidy deme with unreduced gamete formation and partner
-choice weighted by fitness.
+choice weighted by malthusian fitness.
 """
 function mating_PnB_x(d::AbstractDeme{A}) where A
 	new_agents = A[]
@@ -519,7 +528,7 @@ end
 """
 	mating_PnB(d::IslandDeme{A})
 
-Mating in a mixed ploidy islanddeme with unreduced gamete formation directional selection.
+Mating in a mixed ploidy islanddeme with directional selection.
 """
 function mating_PnB(d::IslandDeme{A}) where A
 	new_agents =  A[]
@@ -938,8 +947,6 @@ function loci_df(d::AbstractDeme)
 	h = reduce(vcat,v)
 	DataFrame(h)
 end
-
-#dominance
 
 """
     trait_add(a::Agent)

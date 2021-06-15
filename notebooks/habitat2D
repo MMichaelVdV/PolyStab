@@ -19,6 +19,9 @@ begin
 	popsize(d::AbstractDeme) = length(d.agents)
 end
 
+# ╔═╡ fe349ec8-3a44-44d0-b131-1fbe8224b2ae
+using PolyStab: trait_mean
+
 # ╔═╡ a449125a-0d09-41c2-ab28-1afd40065747
 begin
 d0 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.92 0.08 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
@@ -30,6 +33,19 @@ end
 
 # ╔═╡ 45aa806a-c591-4c27-a5e6-c8cb412561f7
 h_2D = [d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d50 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0 d0p d0p d0p; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p; d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p]
+
+# ╔═╡ a7433596-a76b-405c-a8cb-7ee15ee3ab55
+begin
+	da = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
+	db = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=13.)
+	dc = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=13.5)
+	dd = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=14.)
+	de = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=14.5)
+	df = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=15.)
+end
+
+# ╔═╡ 330a734f-7e8f-415f-9997-ef24b3d4b654
+h_2D_rainbow = [d50 da da da da da da da da da da da da da da da da da; da da da da da da da da da da da da da da da da da da; db db db db db db db db db db db db db db db db db db; db db db db db db db db db db db db db db db db db db; dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc; dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc; dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd; dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd; de de de de de de de de de de de de de de de de de de; de de de de de de de de de de de de de de de de de de; df df df df df df df df df df df df df df df df df df; df df df df df df df df df df df df df df df df df df]
 
 # ╔═╡ f5e391cc-92a2-4918-ab33-61e1b70a0e2b
 begin
@@ -48,7 +64,7 @@ end
 
 # ╔═╡ b1f0127f-1d83-45bb-90aa-5e1934d6f634
 begin
-hab2D = Habitat2D(demes=h_2D)
+hab2D = Habitat2D(demes=h_2D_rainbow)
 popsize.(hab2D.demes)
 heatmap(popsize.(h_2D), c=cgrad([:white,:red,:yellow]))
 end
@@ -163,7 +179,7 @@ end
 function evolving_habitat2D(h::Habitat2D{D}, ngen) where D
 	data = []
 	for n = 1:ngen
-		h = random_walk2D(h,0.5)
+		h = random_walk2D(h,0.15)
 		#ih = Gaussian_dispersal(h,σ)
 		new_h = Matrix{D}(undef, size(h.demes))
 		for (i, d) in pairs(h.demes)
@@ -178,7 +194,7 @@ function evolving_habitat2D(h::Habitat2D{D}, ngen) where D
 end
 
 # ╔═╡ 801ae3ca-3e92-4f00-9c15-cb277aa01228
-sim_hab = evolving_habitat2D(hab2D, 100)
+sim_hab = evolving_habitat2D(hab2D, 150)
 
 # ╔═╡ 595d5523-e9f3-4652-9ea9-1b1e9883a13d
 begin
@@ -229,7 +245,7 @@ begin
     het_demes = Matrix{Float64}(undef, size(h.demes))
 	for (i, d) in pairs(h.demes)
 		if length(d) != 0
-			het_demes[i[1],i[2]] = d.α^2*sum(heterozygosities_p(d))
+			het_demes[i[1],i[2]] = mean(heterozygosities_p(d))
 		else
 			het_demes[i[1],i[2]] = 0.
 		end
@@ -256,12 +272,41 @@ p_het = heatmap(f_het_demes(sim_hab.h), grid=false, c=cgrad([:white,:black]), la
 # ╔═╡ e49cf0fe-7143-434a-bae8-e1103f2a3701
 plot(ph2d,p1h2d,p2h2d,p3h2d,p4h2d,p_het)
 
+# ╔═╡ a76cce22-c6d3-4863-a674-8b1daa95444a
+begin
+	function f_trait_demes(h::Habitat2D{D}) where D
+    trait_demes = Matrix{Float64}(undef, size(h.demes))
+	for (i, d) in pairs(h.demes)
+		if length(d) != 0
+			trait_demes[i[1],i[2]] = trait_mean(d)
+		else
+			trait_demes[i[1],i[2]] = 0.
+		end
+	end
+	trait_demes
+	end
+	
+anim_range_tm = @animate for i ∈ 1:150
+	sim_habA = sim_hab.data[i]
+
+	trait_demes = f_trait_demes(sim_habA)
+		
+	p1 = heatmap(trait_demes, grid=false, c=cgrad([:red,:orange,:yellow,:green,:blue,:purple]), label="trait_mean deme")
+	
+	#xlabel!("Space")
+	#ylabel!("Trait mean")
+	end every 1
+	gif(anim_range_tm, "traitmean2D.gif", fps = 5)
+end
+
 # ╔═╡ Cell order:
 # ╠═62e605b0-a299-11eb-2e86-6fa01314f1ec
 # ╠═8147adb8-241e-4eaa-9e7d-333281d91021
 # ╠═1b1b41f7-6549-4e57-8a40-ea06d3f0d957
 # ╠═a449125a-0d09-41c2-ab28-1afd40065747
 # ╠═45aa806a-c591-4c27-a5e6-c8cb412561f7
+# ╠═a7433596-a76b-405c-a8cb-7ee15ee3ab55
+# ╠═330a734f-7e8f-415f-9997-ef24b3d4b654
 # ╠═6bf63cc4-ed68-4e4b-a2ad-ed19e3d8158b
 # ╠═f5e391cc-92a2-4918-ab33-61e1b70a0e2b
 # ╠═1ec006fd-1938-4614-8c23-e4280a245117
@@ -286,3 +331,5 @@ plot(ph2d,p1h2d,p2h2d,p3h2d,p4h2d,p_het)
 # ╠═66d2cf4c-f6b1-462c-b124-f3eb1dc9adb8
 # ╠═d7fd219f-7c3d-49ae-8143-e7144d3db253
 # ╠═221bf2a9-afb4-4d98-96bc-248960c1f99b
+# ╠═fe349ec8-3a44-44d0-b131-1fbe8224b2ae
+# ╠═a76cce22-c6d3-4863-a674-8b1daa95444a

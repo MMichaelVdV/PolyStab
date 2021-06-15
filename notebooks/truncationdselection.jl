@@ -274,7 +274,7 @@ function grid_search(t)
 		for rep in 1:10
 		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
 		d_p = IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, μ=0., θ=12.5, β=0.25)
-		sim_ploidyvar = evolving_islandwbreak(d_p, 0.5, 1., 100, 10000)
+		sim_ploidyvar = evolving_islandwbreak(d_p, 0.1, 1., 100, 10000)
 		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
 			push!(ploidy,2)
 		else
@@ -382,6 +382,125 @@ xlabel!("\$u\$")
 ylabel!("Number of individuals")
 end
 
+# ╔═╡ 8f4cb460-816f-4606-b0dd-7f9ef458a0b7
+md""" ##### Istand migration estab simulations"""
+
+# ╔═╡ 8e4eac9b-7e7d-4c06-8b79-d725db66da58
+us = 0.05
+
+# ╔═╡ 957cad0f-5fc9-4e42-b95f-200985d1a189
+UGs = [0. 0. 0. 0. ; 1-us us 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
+
+# ╔═╡ ce63bedf-7b25-49ad-adb7-7eb7ce5d3155
+T = 0.25
+
+# ╔═╡ b17758d8-6af2-426c-8ad9-2d0d70899849
+#dz1, m=[0.01,0.1,1,10], u=0.01
+begin
+est_1_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=0.25), T, 0.01, 100, 10000)), 1:20)
+est_1_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=0.25), T, 0.1, 100, 10000)), 1:20)
+est_1_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=0.25), T, 1., 100, 10000)), 1:20)
+est_1_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=0.25), T, 10., 100, 10000)), 1:20)
+end
+
+# ╔═╡ 5fc95e1e-8ed2-4a27-b8d0-f336059b92c5
+#dz2, m=[0.01,0.1,1,10], u=0.01
+begin
+est_2_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=14.5, β=0.25), T, 0.01, 100, 10000)), 1:20)
+est_2_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=14.5, β=0.25), T, 0.1, 100, 10000)), 1:20)
+est_2_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG =UGs, μ=0., θ=14.5, β=0.25), T, 1., 100, 10000)), 1:20)
+est_2_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=14.5, β=0.25), T, 10., 100, 10000)), 1:20)
+end
+
+# ╔═╡ 5d52146d-a595-4209-bcc1-0beec840f382
+#dz3, m=[0.01,0.1,1,10], u=0.01
+begin
+est_3_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=0.25), T, 0.01, 100, 10000)), 1:20)
+est_3_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=0.25), T, 0.1, 100, 10000)), 1:20)
+est_3_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=0.25), T, 1., 100, 10000)), 1:20)
+est_3_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=0.25), T, 10., 100, 10000)), 1:20)
+end
+
+# ╔═╡ 89a54f58-c8d2-4da9-9171-0425721efb7f
+#dz4, m=[0.01,0.1,1,10], u=0.01
+begin
+est_4_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=0.25), T, 0.01, 100, 10000)), 1:20)
+est_4_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=0.25), T, 0.1, 100, 10000)), 1:20)
+est_4_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=0.25), T, 1., 100, 10000)), 1:20)
+est_4_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=0.25), T, 10., 100, 10000)), 1:20)
+end
+
+# ╔═╡ 916b2e09-fc2f-4da7-8580-95f7d2556934
+begin
+	p1_001=sum([est_1_001_001[i].p4[end] for i in 1:20] .> 100)/sum([est_1_001_001[i].pop[end] for i in 1:20] .> 100)
+	p1_01=sum([est_1_01_001[i].p4[end] for i in 1:20] .> 100)/sum([est_1_01_001[i].pop[end] for i in 1:20] .> 100)
+	p1_1=sum([est_1_1_001[i].p4[end] for i in 1:20] .> 100)/sum([est_1_1_001[i].pop[end] for i in 1:20] .> 100)
+	p1_10=sum([est_1_10_001[i].p4[end] for i in 1:20] .> 100)/sum([est_1_10_001[i].pop[end] for i in 1:20] .> 100)
+	
+	p2_001=sum([est_2_001_001[i].p4[end] for i in 1:20] .> 100)/sum([est_2_001_001[i].pop[end] for i in 1:20] .> 100)
+	p2_01=sum([est_2_01_001[i].p4[end] for i in 1:20] .> 100)/sum([est_2_01_001[i].pop[end] for i in 1:20] .> 100)
+	p2_1=sum([est_2_1_001[i].p4[end] for i in 1:20] .> 100)/sum([est_2_1_001[i].pop[end] for i in 1:20] .> 100)
+	p2_10=sum([est_2_10_001[i].p4[end] for i in 1:20] .> 100)/sum([est_2_10_001[i].pop[end] for i in 1:20] .> 100)
+	
+	p3_001=sum([est_3_001_001[i].p4[end] for i in 1:20] .> 100)/sum([est_3_001_001[i].pop[end] for i in 1:20] .> 100)
+	p3_01=sum([est_3_01_001[i].p4[end] for i in 1:20] .> 100)/sum([est_3_01_001[i].pop[end] for i in 1:20] .> 100)
+	p3_1=sum([est_3_1_001[i].p4[end] for i in 1:20] .> 100)/sum([est_3_1_001[i].pop[end] for i in 1:20] .> 100)
+	p3_10=sum([est_3_10_001[i].p4[end] for i in 1:20] .> 100)/sum([est_3_10_001[i].pop[end] for i in 1:20] .> 100)
+	
+	p4_001=sum([est_4_001_001[i].p4[end] for i in 1:20] .> 100)/sum([est_4_001_001[i].pop[end] for i in 1:20] .> 100)
+	p4_01=sum([est_4_01_001[i].p4[end] for i in 1:20] .> 100)/sum([est_4_01_001[i].pop[end] for i in 1:20] .> 100)
+	p4_1=sum([est_4_1_001[i].p4[end] for i in 1:20] .> 100)/sum([est_4_1_001[i].pop[end] for i in 1:20] .> 100)
+	p4_10=sum([est_4_10_001[i].p4[end] for i in 1:20] .> 100)/sum([est_4_10_001[i].pop[end] for i in 1:20] .> 100)
+end
+
+# ╔═╡ 0fdf4cc3-8f35-477e-a9c0-5c5586570dfa
+begin
+estab2_01 = plot([1,2,3,4],[p1_001,p1_01,p1_1,p1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.05, T=0.25")
+plot!([1,2,3,4],[p2_001,p2_01,p2_1,p2_10], label="△z=2", marker = ([:hex :d]), color=:blue)
+plot!([1,2,3,4],[p3_001,p3_01,p3_1,p3_10], label="△z=3", marker = ([:hex :d]), color=:red)
+plot!([1,2,3,4],[p4_001,p4_01,p4_1,p4_10], label="△z=4", marker = ([:hex :d]), color=:black)
+xlabel!("Migration rate")
+ylabel!("Probability of tetraploid establishment")
+#savefig(estab_01, "Estab_01")
+end
+
+# ╔═╡ ada230a2-c927-463f-97aa-32f30c30bdc1
+begin
+st1_001=mean([est_1_001_001[i].ngen for i in 1:20])
+st1_01=mean([est_1_01_001[i].ngen for i in 1:20])
+st1_1=mean([est_1_1_001[i].ngen for i in 1:20])
+st1_10=mean([est_1_10_001[i].ngen for i in 1:20])
+
+st2_001=mean([est_2_001_001[i].ngen for i in 1:20])
+st2_01=mean([est_2_01_001[i].ngen for i in 1:20])
+st2_1=mean([est_2_1_001[i].ngen for i in 1:20])
+st2_10=mean([est_2_10_001[i].ngen for i in 1:20])
+
+st3_001=mean([est_3_001_001[i].ngen for i in 1:20])
+st3_01=mean([est_3_01_001[i].ngen for i in 1:20])
+st3_1=mean([est_3_1_001[i].ngen for i in 1:20])
+st3_10=mean([est_3_10_001[i].ngen for i in 1:20])
+
+st4_001=mean([est_4_001_001[i].ngen for i in 1:20])
+st4_01=mean([est_4_01_001[i].ngen for i in 1:20])
+st4_1=mean([est_4_1_001[i].ngen for i in 1:20])
+st4_10=mean([est_4_10_001[i].ngen for i in 1:20])
+end
+
+# ╔═╡ 0fdb44bd-8a61-4db8-ab56-d47586be6a01
+begin
+estab1_01 = plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.05, T=0.25")
+plot!([1,2,3,4],[st2_001, st2_01, st2_1, st2_10], label="△z=2", marker = ([:hex :d]), color=:blue)
+plot!([1,2,3,4],[st3_001, st3_01, st3_1, st3_10], label="△z=3", marker = ([:hex :d]), color=:red)
+plot!([1,2,3,4],[st4_001, st4_01, st4_1, st4_10], label="△z=4", marker = ([:hex :d]), color=:black)
+xlabel!("Migration rate")
+ylabel!("Time to establish")
+#savefig(p2nsimUG, "Estab_2n_UG020020")
+end
+
+# ╔═╡ 6d8a7d89-04dd-4df2-83c8-d3e7f6fc3096
+plot(estab1_01, estab2_01)
+
 # ╔═╡ Cell order:
 # ╟─c016ac10-b047-11eb-37a1-f198dc39687e
 # ╟─985ddc8f-d065-449b-9eeb-41003b7449a8
@@ -418,3 +537,16 @@ end
 # ╠═4dc218bf-d766-4611-9ddb-f89a3c7b2ad2
 # ╠═da6ca77e-59a7-4b6d-be7f-f745ddb92efd
 # ╠═00239b4e-8087-461d-a78c-54653f645ed0
+# ╟─8f4cb460-816f-4606-b0dd-7f9ef458a0b7
+# ╠═957cad0f-5fc9-4e42-b95f-200985d1a189
+# ╠═8e4eac9b-7e7d-4c06-8b79-d725db66da58
+# ╠═ce63bedf-7b25-49ad-adb7-7eb7ce5d3155
+# ╠═b17758d8-6af2-426c-8ad9-2d0d70899849
+# ╠═5fc95e1e-8ed2-4a27-b8d0-f336059b92c5
+# ╠═5d52146d-a595-4209-bcc1-0beec840f382
+# ╠═89a54f58-c8d2-4da9-9171-0425721efb7f
+# ╠═916b2e09-fc2f-4da7-8580-95f7d2556934
+# ╠═0fdf4cc3-8f35-477e-a9c0-5c5586570dfa
+# ╠═ada230a2-c927-463f-97aa-32f30c30bdc1
+# ╠═0fdb44bd-8a61-4db8-ab56-d47586be6a01
+# ╠═6d8a7d89-04dd-4df2-83c8-d3e7f6fc3096

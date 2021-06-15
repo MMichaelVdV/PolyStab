@@ -13,6 +13,9 @@ using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_ugdeme, evo
 # ╔═╡ 91826552-6b17-491f-ad1b-77e06dfcdeb6
 using PolyStab: malthusian_fitness, trait_add, trait_dom, trait_rec
 
+# ╔═╡ f4182f59-e44c-4f1d-838b-f4cd9ae8f22d
+using PolyStab: ploidy_freq, f_trait_agents, mating_PnB_x, mutate
+
 # ╔═╡ b79eb4e0-8696-11eb-0949-555c0c3c411f
 md"""### Single deme dynamics of a mixed ploidy population"""
 
@@ -531,8 +534,8 @@ trait_rec(t)
 
 # ╔═╡ 7d5350c9-8e87-4488-9832-27de32f3fb97
 begin
-td2 = MixedPloidyDeme(agents = randagent_p(0.5, 1., 10, [0., 1., 0., 0.], 200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 5., Vs = 1.)
-td4 = MixedPloidyDeme(agents = randagent_p(0.5, 1., 10, [0., 0., 0., 1.], 200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 5., Vs = 1.)
+td2 = MixedPloidyDeme(agents = randagent_p(0.5, 1., 1, [0., 1., 0., 0.], 200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 1., Vs = 1.)
+td4 = MixedPloidyDeme(agents = randagent_p(0.5, 1., 1, [0., 0., 0., 1.], 200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 1., Vs = 1.)
 end
 
 # ╔═╡ 268eb9a9-57e2-4a42-9b3f-f5866fbbfb2f
@@ -636,6 +639,111 @@ begin
 	ylabel!("Population size")
 end
 
+# ╔═╡ c54aa97e-b3d8-4d21-9248-e2c90da421d3
+"""
+    trait_exp(a::Agent)
+"""
+trait_exp(a::Agent) = sum(a)
+
+
+# ╔═╡ e40a4e8e-d06f-423a-bd7d-d9758cbfec48
+begin
+exp_p2 = evolving_selectiondeme(td2,trait_exp,500)
+exp_p4 = evolving_selectiondeme(td4,trait_exp,500)
+end
+
+# ╔═╡ 6a699fb2-48fc-4218-aab4-df4b9ff24149
+begin
+#plot(Normal(mean(add_p2.fta[1]), std(add_p2.fta[1])), color=:orange, label="add2")
+#plot!(Normal(mean(add_p4.fta[1]), std(add_p4.fta[1])), color=:pink, label="add4")
+plot(Normal(mean(exp_p2.fta[1]), std(exp_p2.fta[1])), color=:blue, label="exp2")
+plot!(Normal(mean(exp_p4.fta[1]), std(exp_p4.fta[1])), color=:red, label="exp4")
+end
+
+# ╔═╡ 65b6bbe9-da25-4e77-a21d-196dd4d60df9
+std(exp_p2.fta[1]), std(exp_p4.fta[1])
+
+# ╔═╡ 6764af4b-03f1-4522-a29e-c707547774c2
+
+
+# ╔═╡ b1d74108-092a-448e-9154-7cee90312ae9
+md""" #### Environmental stochasticity """
+
+# ╔═╡ 7747be96-6a81-42f6-b9ff-c69ef44b4648
+"""
+	evolving_selectiondeme(d::AbstractDeme, ngen)
+
+Simulate a single deme with mixed ploidy, malthusian fitness and unreduced
+gamete formation.
+"""
+function evolving_selectiondemeenv(d::MixedPloidyDeme, ftgmap, env, ngen; 
+heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = 
+allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
+het = [heterozygosities_p(d)]
+pop = [length(d)]
+tm = [trait_mean(d, ftgmap)]
+af = [allelefreqs_p(d)]
+p2 = [ploidy_freq(d)[2]]
+p3 = [ploidy_freq(d)[3]]
+p4 = [ploidy_freq(d)[4]]
+fta = [f_trait_agents(d, ftgmap)]
+
+for n=1:ngen
+	d = MixedPloidyDeme(agents=d.agents, K=d.K, θ=env[n], rm=d.rm, Vs=d.Vs, α=d.α, μ=d.μ, OV=d.OV, UG=d.UG)
+	d = mating_PnB_x(d, ftgmap)
+	d = mutate(d) 
+	push!(het, heterozygosities_p(d))
+	push!(pop, length(d))
+	push!(tm, trait_mean(d, ftgmap))
+	push!(af, allelefreqs_p(d))
+	push!(p2, ploidy_freq(d)[2])
+	push!(p3, ploidy_freq(d)[3])
+	push!(p4, ploidy_freq(d)[4])
+	push!(fta, f_trait_agents(d, ftgmap))
+	
+end
+(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
+end
+
+# ╔═╡ 1572237c-8151-4a73-b89c-696841a0b620
+env = 0.75 .* sin.(1/50 .* (1:500)) .+ 20
+
+# ╔═╡ 8b9268c8-e570-45c0-9fae-dc5c3dbd113e
+plot(env)
+
+# ╔═╡ 3b67e761-38ef-45ab-8ad3-76db4681bdd3
+d_p2env = MixedPloidyDeme(agents = randagent_p(0.5, 0.1, 200, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1)
+
+# ╔═╡ 922118f6-2492-438a-b5c7-e0824b9ed0dd
+stabselenv_p2 = evolving_selectiondemeenv(d_p2env, trait_exp, env, 500)
+
+# ╔═╡ 694dce49-d920-4470-8767-44993a973cf9
+begin
+traitmean_p2env = map(mean, stabselenv_p2.tm)
+popsize_p2env = map(mean, stabselenv_p2.pop)
+end
+
+# ╔═╡ 4f94e771-4b7d-4c5e-b71c-983fe829171b
+begin
+	p2env = plot(traitmean_p2env, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Diploid")
+	for (i,t) in enumerate(stabselenv_p2.fta)
+	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
+	end
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+	ylims!(18,22)
+end
+
+# ╔═╡ 7b466623-5b18-4027-8829-424671044dd8
+begin
+	plot(stabselenv_p2.pop, grid=false, color=:black, label=false)
+	plot!(stabselenv_p2.p2, grid=false, color=:red, label=false)
+	plot!(stabselenv_p2.p4, grid=false, color=:blue, label=false)
+	xlabel!("\$t\$")
+	ylabel!("Population size")
+end
+
 # ╔═╡ Cell order:
 # ╟─b79eb4e0-8696-11eb-0949-555c0c3c411f
 # ╠═8ea08d1e-8bff-11eb-3fbb-f74cf53a2eed
@@ -708,3 +816,18 @@ end
 # ╟─440b6029-d2f8-4f36-866e-9a79f68266bf
 # ╠═6030f17d-1ce9-42fe-9c90-44a4101f7312
 # ╠═79b23d8f-18b3-416f-8a44-0d4baf3d9cec
+# ╠═c54aa97e-b3d8-4d21-9248-e2c90da421d3
+# ╠═e40a4e8e-d06f-423a-bd7d-d9758cbfec48
+# ╠═6a699fb2-48fc-4218-aab4-df4b9ff24149
+# ╠═65b6bbe9-da25-4e77-a21d-196dd4d60df9
+# ╠═6764af4b-03f1-4522-a29e-c707547774c2
+# ╟─b1d74108-092a-448e-9154-7cee90312ae9
+# ╠═7747be96-6a81-42f6-b9ff-c69ef44b4648
+# ╠═1572237c-8151-4a73-b89c-696841a0b620
+# ╠═8b9268c8-e570-45c0-9fae-dc5c3dbd113e
+# ╠═f4182f59-e44c-4f1d-838b-f4cd9ae8f22d
+# ╠═3b67e761-38ef-45ab-8ad3-76db4681bdd3
+# ╠═922118f6-2492-438a-b5c7-e0824b9ed0dd
+# ╠═694dce49-d920-4470-8767-44993a973cf9
+# ╠═4f94e771-4b7d-4c5e-b71c-983fe829171b
+# ╠═7b466623-5b18-4027-8829-424671044dd8
