@@ -14,7 +14,7 @@ using PolyStab: Agent, randagent_p, MixedPloidyDeme, IslandDeme, trait, evolving
 md""" ### The effect of migration load on polyploid establishment"""
 
 # ╔═╡ e9d83c94-d3c4-41ca-b4d8-30ee1eda413d
-us = 0.05
+us = 0.15
 
 # ╔═╡ fb6945a6-5c05-474d-b8f8-2749fd304a30
 UGs = [0. 0. 0. 0. ; 1-us us 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
@@ -188,10 +188,10 @@ end
 
 # ╔═╡ 86f25465-e183-44a7-a160-596cf062ab8b
 begin
-estab2_01 = plot([1,2,3,4],[p1_001,p1_01,p1_1,p1_10], label="△z=1", marker = ([:hex :d]), color=:red, title="u=0.05", yerror=[sep1_001, sep1_01, sep1_1, sep1_10])
-plot!([1,2,3,4],[p2_001,p2_01,p2_1,p2_10], label="△z=2", marker = ([:hex :d]), color=:orange, yerror=[sep2_001, sep2_01, sep2_1, sep2_10])
-plot!([1,2,3,4],[p3_001,p3_01,p3_1,p3_10], label="△z=3", marker = ([:hex :d]), color=:yellow, yerror=[sep3_001, sep3_01, sep3_1, sep3_10])
-plot!([1,2,3,4],[p4_001,p4_01,p4_1,p4_10], label="△z=4", marker = ([:hex :d]), color=:green, yerror=[sep4_001, sep4_01, sep4_1, sep4_10])
+estab2_01 = plot([1,2,3,4],[p1_001,p1_01,p1_1,p1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.15", yerror=[sep1_001, sep1_01, sep1_1, sep1_10])
+plot!([1,2,3,4],[p2_001,p2_01,p2_1,p2_10], label="△z=2", marker = ([:hex :d]), color=:blue, yerror=[sep2_001, sep2_01, sep2_1, sep2_10])
+plot!([1,2,3,4],[p3_001,p3_01,p3_1,p3_10], label="△z=3", marker = ([:hex :d]), color=:red, yerror=[sep3_001, sep3_01, sep3_1, sep3_10])
+plot!([1,2,3,4],[p4_001,p4_01,p4_1,p4_10], label="△z=4", marker = ([:hex :d]), color=:black, yerror=[sep4_001, sep4_01, sep4_1, sep4_10])
 #plot!([1,2,3,4],[p5_001,p5_01,p5_1,p5_10], label="△z=5", marker = ([:hex :d]), color=:blue, ribbon=[sep5_001, sep5_01, sep5_1, sep5_10])
 #plot!([1,2,3,4],[p6_001,p6_01,p6_1,p6_10], label="△z=6", marker = ([:hex :d]), color=:purple, ribbon=[sep6_001, sep6_01, sep6_1, sep6_10])
 xlabel!("Migration rate")
@@ -258,10 +258,10 @@ end
 
 # ╔═╡ 82adacc5-8539-44e6-a688-98fd4735e691
 begin
-estab1_01 = plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:hex :d]), color=:purple, title="u=0.05", yerror=[se1_001, se1_01, se1_1, se1_10])
+estab1_01 = plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.15", yerror=[se1_001, se1_01, se1_1, se1_10])
 plot!([1,2,3,4],[st2_001, st2_01, st2_1, st2_10], label="△z=2", marker = ([:hex :d]), color=:blue, yerror=[se2_001, se2_01, se2_1, se2_10])
-plot!([1,2,3,4],[st3_001, st3_01, st3_1, st3_10], label="△z=3", marker = ([:hex :d]), color=:green, yerror=[se3_001, se3_01, se3_1, se3_10])
-plot!([1,2,3,4],[st4_001, st4_01, st4_1, st4_10], label="△z=4", marker = ([:hex :d]), color=:yellow, yerror=[se4_001, se4_01, se4_1, se4_10])
+plot!([1,2,3,4],[st3_001, st3_01, st3_1, st3_10], label="△z=3", marker = ([:hex :d]), color=:red, yerror=[se3_001, se3_01, se3_1, se3_10])
+plot!([1,2,3,4],[st4_001, st4_01, st4_1, st4_10], label="△z=4", marker = ([:hex :d]), color=:black, yerror=[se4_001, se4_01, se4_1, se4_10])
 #plot!([1,2,3,4],[st5_001, st5_01, st5_1, st5_10], label="△z=5", marker = ([:hex :d]), color=:orange, ribbon=[se5_001, se5_01, se5_1, se5_10])
 #plot!([1,2,3,4],[st6_001, st6_01, st6_1, st6_10], label="△z=6", marker = ([:hex :d]), color=:red, ribbon=[se6_001, se6_01, se6_1, se6_10])
 xlabel!("Migration rate")
