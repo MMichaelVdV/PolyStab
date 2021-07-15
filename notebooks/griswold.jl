@@ -15,5 +15,5 @@ md""" What does our model add? Stochasticity (drift, demographic) and quantitati
 
 # ╔═╡ Cell order:
 # ╟─0d5985be-dc2a-11eb-0d81-bb3723fa6379
-# ╠═85480190-9bf3-404d-a1ca-ee9f74014168
+# ╟─85480190-9bf3-404d-a1ca-ee9f74014168
 # ╠═2126ef78-837e-427b-8cb3-c049fc384dd3

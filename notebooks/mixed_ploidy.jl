@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.17
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -60,44 +60,6 @@ end
 # deme type that implements the necesary functions (such as `random_mating`)
 
 abstract type AbstractDeme{A} 
-end
-
-# ╔═╡ 2b000160-342f-11eb-07bc-0f389915fa2a
-# This is the initial thing we need, basic random mating but with gametes of
-# different ploidy levels (we assume to freely fuse).
-"""
-    MixedPloidyDeme{A,T}
-A single random-mating, mixed-ploidy level deme, most of the 'population
-genetic' environment should be implemented at this level (drift, selection,
-mutation). 
-- `K` : Carrying capacity
-- `θ` : Environmental optimum
-- `rm`: Mean Malthusian fitness
-- `Vs`: Variance of stabilizing selection
-- `u` : Unreduced gamete formation rate
-- `μ` : Mutation rate
-"""
-@with_kw struct MixedPloidyDeme{A,T} <: AbstractDeme{A}
-    agents::Vector{A}
-    K ::Int64 = 100
-    θ ::T     = 12.5
-    rm::T     = 1.06
-    Vs::T     = 1/2
-    u ::T     = 0.01
-    μ ::T     = 1e-6
-end
-
-# ╔═╡ 66d75f30-342f-11eb-2e72-fdbed6aa1ffd
-@with_kw struct SimpleDeme{A} <: AbstractDeme{A}
-    agents::Vector{A}
-    K ::Int64 = 15
-end
-
-# ╔═╡ 50310830-342f-11eb-1cf0-ff654c427368
-begin
-	# construct a new deme from an old one, this uses the 'type as function' syntax
-	(d::MixedPloidyDeme)(agents) = MixedPloidyDeme(agents, d.K, d.θ, d.rm, d.Vs, d.u, d.μ)
-	(d::SimpleDeme)(agents) = SimpleDeme(agents, d.K)
 end
 
 # ╔═╡ 71e25e1e-342f-11eb-1d0a-359cb259d7f7
@@ -850,28 +812,11 @@ end
 # ╔═╡ 926a0e2e-7c1a-11eb-3c33-cdaa406618c4
 md""" ## Multiple demes"""
 
-# ╔═╡ 9b9bac30-342f-11eb-120b-9d2e7354f241
-"""
-    Habitat{D}
-A 1-dimensional habitat, i.e. an array of connected demes. This implements
-the migration aspects of the population genetic environment.
-"""
-@with_kw struct Habitat{D,T}
-    demes::Vector{D}
-    σ ::T = 1/2 #variance of dispersal
-    b ::T = 0.1 #steepness of linear gradient
-	θ ::T = 12.5 #phenotypic optimum in the center
-    Dm::T = 250. #number of demes to initialize
-end
-
 # ╔═╡ dc976fe0-7c1d-11eb-2224-33418463cae8
 d_p
 
 # ╔═╡ a1bee470-7c1d-11eb-019e-09dcff0c5c73
 habi = Habitat(demes=[d_p])
-
-# ╔═╡ 20f9a2ae-7c24-11eb-2a8a-493c2e8b3dd5
-(h::Habitat)(demes) = Habitat(h.demes, h.σ, h.θ, h.b, h.dm)
 
 # ╔═╡ ce14f100-4012-11eb-0daf-19617768225e
 ms"""
@@ -1146,6 +1091,61 @@ begin
 	hline!([0.1*0.5*sqrt(0.5)], label = "E(V_G)") #b*σ*sqrt(Vs)
 	xlabel!("Space")
 	ylabel!("\$V_G\$")
+end
+
+# ╔═╡ 20f9a2ae-7c24-11eb-2a8a-493c2e8b3dd5
+(h::Habitat)(demes) = Habitat(h.demes, h.σ, h.θ, h.b, h.dm)
+
+# ╔═╡ 66d75f30-342f-11eb-2e72-fdbed6aa1ffd
+@with_kw struct SimpleDeme{A} <: AbstractDeme{A}
+    agents::Vector{A}
+    K ::Int64 = 15
+end
+
+# ╔═╡ 2b000160-342f-11eb-07bc-0f389915fa2a
+# This is the initial thing we need, basic random mating but with gametes of
+# different ploidy levels (we assume to freely fuse).
+"""
+    MixedPloidyDeme{A,T}
+A single random-mating, mixed-ploidy level deme, most of the 'population
+genetic' environment should be implemented at this level (drift, selection,
+mutation). 
+- `K` : Carrying capacity
+- `θ` : Environmental optimum
+- `rm`: Mean Malthusian fitness
+- `Vs`: Variance of stabilizing selection
+- `u` : Unreduced gamete formation rate
+- `μ` : Mutation rate
+"""
+@with_kw struct MixedPloidyDeme{A,T} <: AbstractDeme{A}
+    agents::Vector{A}
+    K ::Int64 = 100
+    θ ::T     = 12.5
+    rm::T     = 1.06
+    Vs::T     = 1/2
+    u ::T     = 0.01
+    μ ::T     = 1e-6
+end
+
+# ╔═╡ 50310830-342f-11eb-1cf0-ff654c427368
+begin
+	# construct a new deme from an old one, this uses the 'type as function' syntax
+	(d::MixedPloidyDeme)(agents) = MixedPloidyDeme(agents, d.K, d.θ, d.rm, d.Vs, d.u, d.μ)
+	(d::SimpleDeme)(agents) = SimpleDeme(agents, d.K)
+end
+
+# ╔═╡ 9b9bac30-342f-11eb-120b-9d2e7354f241
+"""
+    Habitat{D}
+A 1-dimensional habitat, i.e. an array of connected demes. This implements
+the migration aspects of the population genetic environment.
+"""
+@with_kw struct Habitat{D,T}
+    demes::Vector{D}
+    σ ::T = 1/2 #variance of dispersal
+    b ::T = 0.1 #steepness of linear gradient
+	θ ::T = 12.5 #phenotypic optimum in the center
+    Dm::T = 250. #number of demes to initialize
 end
 
 # ╔═╡ Cell order:

@@ -17,7 +17,7 @@ md"""### Assortative mating"""
 md""" H: Assortative mating can help to overcome minority cytotype exclusion. Effects on inbreeding depression, effects in finite population size (drift?), ...""" 
 
 # ╔═╡ 5b99efb0-ab9b-42e7-bf84-c1fb1787669a
-d_p1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 1., 0., 0.], 150), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1)
+d_p1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 0., 0., 1.], 150), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1)
 
 # ╔═╡ 2dcaedf3-c1f6-4170-a848-bf1c9e3d89ce
 ploidy.(d_p1.agents)
@@ -96,38 +96,74 @@ sum(weights(fitnesses))
 mating_PnB_s(d_p1, 0.1)
 
 # ╔═╡ d3eac2a7-ff67-418d-b6f1-0fb4e32f7868
-"""
-	evolving_selectiondeme(d::AbstractDeme, ngen)
-
-Simulate a single deme with mixed ploidy, malthusian fitness and unreduced
-gamete formation.
-"""
-function evolving_selectiondeme_s(d::MixedPloidyDeme, s, ngen; 
-	heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = 
-	allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
-	het = [heterozygosities_p(d)]
-	pop = [length(d)]
-	tm = [trait_mean(d)]
-	af = [allelefreqs_p(d)]
-	p2 = [ploidy_freq(d)[2]]
-	p3 = [ploidy_freq(d)[3]]
-	p4 = [ploidy_freq(d)[4]]
-	fta = [f_trait_agents(d)]
+begin
+	"""
+		evolving_selectiondeme(d::AbstractDeme, ngen)
 	
-	for n=1:ngen
-		d = mating_PnB_s(d, s)
-		d = mutate(d) 
-		push!(het, heterozygosities_p(d))
-		push!(pop, length(d))
-		push!(tm, trait_mean(d))
-		push!(af, allelefreqs_p(d))
-		push!(p2, ploidy_freq(d)[2])
-		push!(p3, ploidy_freq(d)[3])
-		push!(p4, ploidy_freq(d)[4])
-		push!(fta, f_trait_agents(d))
+	Simulate a single deme with mixed ploidy, malthusian fitness and unreduced
+	gamete formation.
+	"""
+	function evolving_selectiondeme_s(d::MixedPloidyDeme, s, ngen; 
+		heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = 
+		allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
+		het = [heterozygosities_p(d)]
+		pop = [length(d)]
+		tm = [trait_mean(d)]
+		af = [allelefreqs_p(d)]
+		p2 = [ploidy_freq(d)[2]]
+		p3 = [ploidy_freq(d)[3]]
+		p4 = [ploidy_freq(d)[4]]
+		fta = [f_trait_agents(d)]
 		
+		for n=1:ngen
+			d = mating_PnB_s(d, s)
+			d = mutate(d) 
+			push!(het, heterozygosities_p(d))
+			push!(pop, length(d))
+			push!(tm, trait_mean(d))
+			push!(af, allelefreqs_p(d))
+			push!(p2, ploidy_freq(d)[2])
+			push!(p3, ploidy_freq(d)[3])
+			push!(p4, ploidy_freq(d)[4])
+			push!(fta, f_trait_agents(d))
+			
+		end
+		(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
 	end
-	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
+	
+	"""
+		evolving_selectiondeme(d::AbstractDeme, ngen)
+	
+	Simulate a single deme with mixed ploidy, malthusian fitness and unreduced
+	gamete formation.
+	"""
+	function evolving_selectiondeme_a(d::MixedPloidyDeme, s, ngen; 
+		heterozygosities_p=heterozygosities_p, fit=malthusian_fitness, trait_mean = trait_mean, allelefreqs_p = 
+		allelefreqs_p, pf = ploidy_freq, fta = f_trait_agents)
+		het = [heterozygosities_p(d)]
+		pop = [length(d)]
+		tm = [trait_mean(d)]
+		af = [allelefreqs_p(d)]
+		p2 = [ploidy_freq(d)[2]]
+		p3 = [ploidy_freq(d)[3]]
+		p4 = [ploidy_freq(d)[4]]
+		fta = [f_trait_agents(d)]
+		
+		for n=1:ngen
+			d = mating_PnB_a(d, s)
+			d = mutate(d) 
+			push!(het, heterozygosities_p(d))
+			push!(pop, length(d))
+			push!(tm, trait_mean(d))
+			push!(af, allelefreqs_p(d))
+			push!(p2, ploidy_freq(d)[2])
+			push!(p3, ploidy_freq(d)[3])
+			push!(p4, ploidy_freq(d)[4])
+			push!(fta, f_trait_agents(d))
+			
+		end
+		(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
+	end
 end
 
 # ╔═╡ 7af043fa-36ed-418b-a523-eceee16f9d55
@@ -151,12 +187,12 @@ begin
 
 
 	
-	plot(Hₒ_sel_p2_00, grid=false, color=:black, label="\$H_op1(t)\$", title="LOH")
-	plot!(Hₒ_sel_p2_02, grid=false, color=:blue, label="\$H_op2(t)\$")
-	plot!(Hₒ_sel_p2_04, grid=false, color=:blue, label="\$H_op2(t)\$")
-	plot!(Hₒ_sel_p2_06, grid=false, color=:blue, label="\$H_op2(t)\$")
-	plot!(Hₒ_sel_p2_08, grid=false, color=:blue, label="\$H_op2(t)\$")
-	plot!(Hₒ_sel_p2_10, grid=false, color=:blue, label="\$H_op2(t)\$")	
+	plot(Hₒ_sel_p2_00, grid=false, color=:blue, label="\$H_op1(t)\$", title="LOH")
+	plot!(Hₒ_sel_p2_02, grid=false, color=:green, label="\$H_op2(t)\$")
+	plot!(Hₒ_sel_p2_04, grid=false, color=:red, label="\$H_op2(t)\$")
+	plot!(Hₒ_sel_p2_06, grid=false, color=:black, label="\$H_op2(t)\$")
+	plot!(Hₒ_sel_p2_08, grid=false, color=:gray, label="\$H_op2(t)\$")
+	plot!(Hₒ_sel_p2_10, grid=false, color=:purple, label="\$H_op2(t)\$")	
 	
 
 	xlabel!("\$t\$")
@@ -166,7 +202,7 @@ end
 # ╔═╡ 5b0f78ca-b778-4219-8d30-2a47fcf1b13b
 begin
 	trait_p2_00 = map(mean, sel_p2_00.tm)
-	p2n_00 = plot(trait_p2_00, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid", legend=:bottomright)
+	p2n_00 = plot(trait_p2_00, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, s=0", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_00.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
@@ -179,7 +215,7 @@ end
 # ╔═╡ 66d0a754-e4de-4b83-a4b3-6def51d80284
 begin
 	trait_p2_02 = map(mean, sel_p2_02.tm)
-	p2n_02 = plot(trait_p2_02, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid", legend=:bottomright)
+	p2n_02 = plot(trait_p2_02, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, s=0.2", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_02.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
@@ -192,7 +228,7 @@ end
 # ╔═╡ b313d866-28c9-41b7-a765-438bfcc747b6
 begin
 	trait_p2_04 = map(mean, sel_p2_04.tm)
-	p2n_04 = plot(trait_p2_04, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid", legend=:bottomright)
+	p2n_04 = plot(trait_p2_04, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, s=0.4", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_04.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
@@ -205,7 +241,7 @@ end
 # ╔═╡ bb562ff0-b950-4921-8daf-0052d4e7d3ff
 begin
 	trait_p2_06 = map(mean, sel_p2_06.tm)
-	p2n_06 = plot(trait_p2_06, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid", legend=:bottomright)
+	p2n_06 = plot(trait_p2_06, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid,s=0.6", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_06.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
@@ -218,7 +254,7 @@ end
 # ╔═╡ 5fb215cb-59e9-4088-a868-d072cfbdea56
 begin
 	trait_p2_08 = map(mean, sel_p2_08.tm)
-	p2n_08 = plot(trait_p2_08, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid", legend=:bottomright)
+	p2n_08 = plot(trait_p2_08, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, s=0.8", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_08.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
@@ -231,7 +267,7 @@ end
 # ╔═╡ 3a9601db-1075-48cd-9eec-1e532a0e920a
 begin
 	trait_p2_10 = map(mean, sel_p2_10.tm)
-	p2n_10 = plot(trait_p2_10, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid", legend=:bottomright)
+	p2n_10 = plot(trait_p2_10, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, s=1", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_10.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
@@ -241,20 +277,23 @@ begin
 	ylims!(17,25)
 end
 
+# ╔═╡ 8112574e-1329-4128-b1ba-2caa88548122
+plot(p2n_00, p2n_02, p2n_04, p2n_06, p2n_08, p2n_10, legend=:false)
+
 # ╔═╡ 7c57e021-f347-4900-ace0-1a1c4fbe59f3
 begin
 	pop_p2_00 = map(mean, sel_p2_00.p2)
 	plot(pop_p2_00, grid=false, color=:blue, label="\$pop_p2(t)\$")
 	pop_p2_02 = map(mean, sel_p2_02.p2)
-	plot!(pop_p2_02, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	plot!(pop_p2_02, grid=false, color=:green, label="\$pop_p2(t)\$")
 	pop_p2_04 = map(mean, sel_p2_04.p2)
-	plot!(pop_p2_04, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	plot!(pop_p2_04, grid=false, color=:red, label="\$pop_p2(t)\$")
 	pop_p2_06 = map(mean, sel_p2_06.p2)
-	plot!(pop_p2_06, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	plot!(pop_p2_06, grid=false, color=:black, label="\$pop_p2(t)\$")
 	pop_p2_08 = map(mean, sel_p2_08.p2)
-	plot!(pop_p2_08, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	plot!(pop_p2_08, grid=false, color=:gray, label="\$pop_p2(t)\$")
 	pop_p2_10 = map(mean, sel_p2_10.p2)
-	plot!(pop_p2_10, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	plot!(pop_p2_10, grid=false, color=:purple, label="\$pop_p2(t)\$")
 	xlabel!("\$t\$")
 	#ylims!(145,155)
 	ylabel!("\$pop(t)\$")
@@ -265,22 +304,100 @@ begin
 	pop_p4_00 = map(mean, sel_p2_00.p4)
 	plot(pop_p4_00, grid=false, color=:blue, label="\$pop_p2(t)\$")
 	pop_p4_02 = map(mean, sel_p2_02.p4)
-	plot!(pop_p4_02, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	plot!(pop_p4_02, grid=false, color=:green, label="\$pop_p2(t)\$")
 	pop_p4_04 = map(mean, sel_p2_04.p4)
-	plot!(pop_p4_04, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	plot!(pop_p4_04, grid=false, color=:red, label="\$pop_p2(t)\$")
 	pop_p4_06 = map(mean, sel_p2_06.p4)
-	plot!(pop_p4_06, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	plot!(pop_p4_06, grid=false, color=:black, label="\$pop_p2(t)\$")
 	pop_p4_08 = map(mean, sel_p2_08.p4)
-	plot!(pop_p4_08, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	plot!(pop_p4_08, grid=false, color=:green, label="\$pop_p2(t)\$")
 	pop_p4_10 = map(mean, sel_p2_10.p4)
-	plot!(pop_p4_10, grid=false, color=:blue, label="\$pop_p2(t)\$")
+	plot!(pop_p4_10, grid=false, color=:purple, label="\$pop_p2(t)\$")
 	xlabel!("\$t\$")
 	#ylims!(145,155)
 	ylabel!("\$pop(t)\$")
 end
 
 # ╔═╡ d91ad275-e595-43f7-aebc-103d8adb3787
-md""" Mixed ploidy scenario """
+md""" #### Mixed ploidy in a single deme """
+
+# ╔═╡ 6f9da122-1d82-4121-9725-ea2f82e5f8f1
+function grid_search(t)
+	ploidy = []
+	param = []
+	pop_size = []
+	p2 = []
+	p4 = []
+	for u in range(0, stop=0.5, length=t)
+		for rep in 1:10
+		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
+		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],45), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=50)
+		sim_ploidyvar = evolving_selectiondeme_s(d_p, 0.8, 50)
+		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
+			push!(ploidy,2)
+		else
+			push!(ploidy,4)
+		end
+		push!(param, u)
+		pop = (sim_ploidyvar.p2[end] + sim_ploidyvar.p4[end])
+		push!(pop_size, pop)
+		push!(p2, sim_ploidyvar.p2[end])
+		push!(p4, sim_ploidyvar.p4[end])
+		end
+	end
+	ploidy, param, pop_size, p2, p4
+end
+
+# ╔═╡ 708d9226-0c37-43e9-9430-9e4db4964dfe
+stats_2 = grid_search(100)
+
+# ╔═╡ 28147431-ade0-401f-898f-3b0896d2e4d4
+dp_2 = [(stats_2[2][i],stats_2[1][i],stats_2[3][i]) for i in 1:1000]
+
+# ╔═╡ 2804db5d-74bb-4ac0-9c1c-956d3006c43a
+begin
+function prob(b)
+		c = 0
+		for x in b
+			if x == 4
+				c += 1
+			end
+		end
+		c/length(b)
+	end
+
+function stabprob(a)
+	i = 1
+	j = 10
+	p = []
+	while j <= length(a)
+		push!(p,prob(a[i:j]))
+		i += 10
+		j += 10
+	end
+	p
+	end	
+end		
+
+# ╔═╡ fd3a16b3-3d7d-4256-b94f-b7af800259e5
+begin
+tick1 = stabprob(stats_2[1])
+grid1 = plot([0.005:0.005:0.5...],tick1,label=false, title="s=0.8")
+vline!([0.17],label="u=0.17",linewidth=2,style=:dash)
+hline!([0.50],label=false,linewidth=2,style=:dash)
+xlabel!("u")
+ylabel!("P estab")
+end
+
+# ╔═╡ 021e3b34-69ba-4d81-9633-34e64b06e008
+begin
+p7 = plot(stats_2[2], stats_2[3], grid=false, color=:white, label="Pop size after t generations")
+scatter!(stats_2[2], stats_2[4], grid=false, color=:green, label="Diploids")
+scatter!(stats_2[2], stats_2[5], grid=false, color=:red, label="Tetraploids")
+vline!([0.17], label="u=0.17",linewidth=5)
+xlabel!("\$u\$")
+ylabel!("Number of individuals")
+end
 
 # ╔═╡ Cell order:
 # ╟─e8c1c400-d78f-11eb-2a0b-2914730bafcb
@@ -300,12 +417,19 @@ md""" Mixed ploidy scenario """
 # ╠═d3eac2a7-ff67-418d-b6f1-0fb4e32f7868
 # ╠═7af043fa-36ed-418b-a523-eceee16f9d55
 # ╠═158f286c-7c34-48de-a56d-d7ec177ad64c
-# ╟─5b0f78ca-b778-4219-8d30-2a47fcf1b13b
-# ╟─66d0a754-e4de-4b83-a4b3-6def51d80284
-# ╟─b313d866-28c9-41b7-a765-438bfcc747b6
-# ╟─bb562ff0-b950-4921-8daf-0052d4e7d3ff
-# ╟─5fb215cb-59e9-4088-a868-d072cfbdea56
-# ╟─3a9601db-1075-48cd-9eec-1e532a0e920a
+# ╠═5b0f78ca-b778-4219-8d30-2a47fcf1b13b
+# ╠═66d0a754-e4de-4b83-a4b3-6def51d80284
+# ╠═b313d866-28c9-41b7-a765-438bfcc747b6
+# ╠═bb562ff0-b950-4921-8daf-0052d4e7d3ff
+# ╠═5fb215cb-59e9-4088-a868-d072cfbdea56
+# ╠═3a9601db-1075-48cd-9eec-1e532a0e920a
+# ╠═8112574e-1329-4128-b1ba-2caa88548122
 # ╠═7c57e021-f347-4900-ace0-1a1c4fbe59f3
 # ╠═b733ac9a-a34b-4301-9da8-a9c4acf09b46
-# ╠═d91ad275-e595-43f7-aebc-103d8adb3787
+# ╟─d91ad275-e595-43f7-aebc-103d8adb3787
+# ╠═6f9da122-1d82-4121-9725-ea2f82e5f8f1
+# ╠═708d9226-0c37-43e9-9430-9e4db4964dfe
+# ╠═28147431-ade0-401f-898f-3b0896d2e4d4
+# ╠═2804db5d-74bb-4ac0-9c1c-956d3006c43a
+# ╠═fd3a16b3-3d7d-4256-b94f-b7af800259e5
+# ╠═021e3b34-69ba-4d81-9633-34e64b06e008
