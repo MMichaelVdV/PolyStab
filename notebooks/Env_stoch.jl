@@ -69,7 +69,8 @@ end
 end
 
 # ╔═╡ 3ac3447f-0fa3-4beb-8662-8635d822fd7f
-env = 0.5 .* sin.(1/50 .* (1:500)) .+ 20
+#env = 0.5 .* sin.(1/50 .* (1:500)) .+ 20
+env = 19 .+ [exp(i/250) for i in 1:500]
 
 # ╔═╡ fdd86050-c74c-461e-af13-3296500021c3
 envs = [20. for in in 1:500]
@@ -79,8 +80,8 @@ penv = plot(env, label=:false, title=:"a=0.5")
 
 # ╔═╡ 1a6d7b53-7e51-483a-aca5-4616a86c3ba1
 begin
-	d_p2env = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 1., 0., 0.], 100), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1, α = 0.4)
-	d_p4env = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 0., 0., 1.], 100), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1, α = 0.4)
+	d_p2env = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 1., 0., 0.], 100), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.5, α = 0.4)
+	d_p4env = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 0., 0., 1.], 100), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.5, α = 0.4)
 end
 
 # ╔═╡ ef0b8f99-3f58-46eb-a090-4d23d33be5f1
@@ -106,6 +107,7 @@ begin
 	for (i,t) in enumerate(stabselenv_p2.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(traitmean_p2env, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Diploid")
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
 	hline!([d_p2env.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
@@ -118,6 +120,7 @@ begin
 	for (i,t) in enumerate(stabselenv_p4.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(traitmean_p4env, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Tetraploid")
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
 	hline!([d_p2env.θ],label="Optimal phenotype",colour="black",linestyle=:dash)

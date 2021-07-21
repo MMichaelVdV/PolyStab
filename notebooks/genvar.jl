@@ -392,7 +392,7 @@ begin
 		c1+= 1
 		end
 	end
-	xlabel!("\$t\$")
+	xlabel!("\$k\$")
 	ylabel!("Trait mean")
 end
 
@@ -406,7 +406,7 @@ begin
 		c2+= 1
 		end
 	end
-	xlabel!("\$t\$")
+	xlabel!("\$k\$")
 	ylabel!("Trait mean")
 end
 
@@ -420,7 +420,7 @@ begin
 		c3+= 1
 		end
 	end
-	xlabel!("\$t\$")
+	xlabel!("\$k\$")
 	ylabel!("Trait mean")
 end
 
@@ -434,7 +434,7 @@ begin
 		c4+= 1
 		end
 	end
-	xlabel!("\$t\$")
+	xlabel!("\$k\$")
 	ylabel!("Trait mean")
 end
 
@@ -448,8 +448,8 @@ begin
 		c5+= 1
 		end
 	end
-	xlabel!("\$t\$")
-	ylabel!("Trait mean")
+	xlabel!("\$k\$")
+	ylabel!("Phenotype")
 end
 
 # ╔═╡ 556426ae-e1f2-4987-beec-6a42490a5ce3
@@ -462,8 +462,8 @@ begin
 		c6+= 1
 		end
 	end
-	xlabel!("\$t\$")
-	ylabel!("Trait mean")
+	xlabel!("\$k\$")
+	ylabel!("Phenotype")
 end
 
 # ╔═╡ 1467a6ea-ea7e-47cb-af3a-bf64824750e9
@@ -476,8 +476,8 @@ begin
 		c7+= 1
 		end
 	end
-	xlabel!("\$t\$")
-	ylabel!("Trait mean")
+	xlabel!("\$k\$")
+	ylabel!("Phenotype")
 end
 
 # ╔═╡ 16fb1f40-a966-4920-952b-c5d366b7108f
@@ -490,8 +490,8 @@ begin
 		c8+= 1
 		end
 	end
-	xlabel!("\$t\$")
-	ylabel!("Trait mean")
+	xlabel!("\$k\$")
+	ylabel!("Phenotype")
 end
 
 # ╔═╡ fa082dbf-dbb9-4dda-b34b-0b4ed56c5082
@@ -504,8 +504,8 @@ begin
 		c10+= 1
 		end
 	end
-	xlabel!("\$t\$")
-	ylabel!("Trait mean")
+	xlabel!("\$k\$")
+	ylabel!("Phenotype")
 end
 
 # ╔═╡ 81f637a0-c81f-4733-b3a5-f43482dff943
@@ -531,6 +531,9 @@ trait_dom(t)
 
 # ╔═╡ 525af8b0-c1ab-46b5-bb4d-608fb5001dc3
 trait_rec(t)
+
+# ╔═╡ 671e7783-258f-4ac8-854c-c74abb4e7c65
+trait_exp(a::Agent) = (sum(a))*(ploidy(a)^(-a.d))
 
 # ╔═╡ 7d5350c9-8e87-4488-9832-27de32f3fb97
 begin
@@ -639,15 +642,10 @@ begin
 	ylabel!("Population size")
 end
 
-# ╔═╡ c54aa97e-b3d8-4d21-9248-e2c90da421d3
-"""
-    trait_exp(a::Agent)
-"""
-trait_exp(a::Agent) = sum(a)
-
-
 # ╔═╡ e40a4e8e-d06f-423a-bd7d-d9758cbfec48
 begin
+lin_p2 = evolving_selectiondeme(td2,trait_add,500)
+lin_p4 = evolving_selectiondeme(td4,trait_add,500)
 exp_p2 = evolving_selectiondeme(td2,trait_exp,500)
 exp_p4 = evolving_selectiondeme(td4,trait_exp,500)
 end
@@ -660,11 +658,73 @@ plot(Normal(mean(exp_p2.fta[1]), std(exp_p2.fta[1])), color=:blue, label="exp2")
 plot!(Normal(mean(exp_p4.fta[1]), std(exp_p4.fta[1])), color=:red, label="exp4")
 end
 
+# ╔═╡ 9515122f-382b-4ffe-962a-be1d7e40526b
+begin
+plot(Normal(mean(lin_p2.fta[1]), std(lin_p2.fta[1])), color=:green, label="lin2")
+plot!(Normal(mean(lin_p4.fta[1]), std(lin_p4.fta[1])), color=:pink, label="lin4")
+end
+
 # ╔═╡ 65b6bbe9-da25-4e77-a21d-196dd4d60df9
 std(exp_p2.fta[1]), std(exp_p4.fta[1])
 
 # ╔═╡ 6764af4b-03f1-4522-a29e-c707547774c2
 
+
+# ╔═╡ cb9a459b-e6c1-4aaf-98c4-075ad8e79cc9
+begin
+td002 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 1., 0., 0.], 200, d=0.0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td022 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 1., 0., 0.], 200, d=0.2), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td042 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 1., 0., 0.], 200, d=0.4), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td062 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 1., 0., 0.], 200, d=0.6), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td082 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 1., 0., 0.], 200, d=0.8), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td102 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td004 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 0., 0., 1.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td024 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 0., 0., 1.], 200, d=0.2), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td044 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 0., 0., 1.], 200, d=0.4), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td064 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 0., 0., 1.], 200, d=0.6), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td084 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 0., 0., 1.], 200, d=0.8), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+td104 = MixedPloidyDeme(agents = randagent_p(0.1, 1., 100, [0., 0., 0., 1.], 200, d=1.0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.)
+end
+
+# ╔═╡ 0bfb7600-2649-49e9-a5f3-bef66dbf3659
+begin
+exp_p002 = evolving_selectiondeme(td002,trait_exp,500)
+exp_p102 = evolving_selectiondeme(td102,trait_exp,500)
+exp_p004 = evolving_selectiondeme(td004,trait_exp,500)
+exp_p024 = evolving_selectiondeme(td024,trait_exp,500)
+exp_p044 = evolving_selectiondeme(td044,trait_exp,500)
+exp_p064 = evolving_selectiondeme(td064,trait_exp,500)
+exp_p084 = evolving_selectiondeme(td084,trait_exp,500)
+exp_p104 = evolving_selectiondeme(td104,trait_exp,500)
+end
+
+# ╔═╡ 6b178069-09d4-42e8-85bc-8c36b81eb762
+begin
+plot(Normal(mean(exp_p002.fta[1]), std(exp_p002.fta[1])), color=:blue, label="exp002")
+plot!(Normal(mean(exp_p102.fta[1]), std(exp_p102.fta[1])), color=:blue, label="exp102")
+plot!(Normal(mean(exp_p004.fta[1]), std(exp_p004.fta[1])), color=:red, label="exp004")
+plot!(Normal(mean(exp_p024.fta[1]), std(exp_p024.fta[1])), color=:red, label="exp024")
+plot!(Normal(mean(exp_p044.fta[1]), std(exp_p044.fta[1])), color=:red, label="exp044")
+plot!(Normal(mean(exp_p064.fta[1]), std(exp_p064.fta[1])), color=:red, label="exp064")
+plot!(Normal(mean(exp_p084.fta[1]), std(exp_p084.fta[1])), color=:red, label="exp084")
+plot!(Normal(mean(exp_p104.fta[1]), std(exp_p104.fta[1])), color=:red, label="exp104")
+
+end
+
+# ╔═╡ aa08d942-7a5c-40c5-ab08-bb3d9193f632
+traitmean_p104 = map(mean, exp_p104.tm)
+
+# ╔═╡ c1b4d088-5bc7-44f2-bc8b-f7dc34b5a61f
+begin
+	p104 = plot(traitmean_p104, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Tetraploid")
+	for (i,t) in enumerate(exp_p104.fta)
+	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
+	end
+	xlabel!("\$t\$")
+	ylabel!("Trait mean")
+	#hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+	#ylims!(18,22)
+end
 
 # ╔═╡ b1d74108-092a-448e-9154-7cee90312ae9
 md""" #### Environmental stochasticity """
@@ -783,21 +843,21 @@ end
 # ╠═c9b2b8d0-9879-11eb-294a-952184f8bf9c
 # ╠═9cdac49e-9884-11eb-2be7-832739ca5d66
 # ╟─fe5aa0f0-9939-11eb-1416-91041276c925
-# ╟─5ca18050-9955-11eb-2703-47174bc221a8
-# ╟─5ab3ba10-9955-11eb-1a12-7522af278a81
-# ╟─96ed7e30-998c-11eb-2a78-0b90cc4522c6
+# ╠═5ca18050-9955-11eb-2703-47174bc221a8
+# ╠═5ab3ba10-9955-11eb-1a12-7522af278a81
+# ╠═96ed7e30-998c-11eb-2a78-0b90cc4522c6
 # ╠═64f75740-998a-11eb-2b32-3be7ffc3b2c6
 # ╠═24d80f30-998d-11eb-3ae4-1fb8cf59a7db
-# ╟─d6951824-f8e2-494a-91fa-4171aa017508
-# ╟─9ea6ebb0-998d-11eb-26ba-eb12b920bf01
-# ╟─a091a4b0-998d-11eb-1d55-3f0288c81feb
-# ╟─a1e044c0-998d-11eb-0053-cb74ee4562da
-# ╟─308c314e-998b-11eb-0e06-6765aa9acd7d
-# ╟─5050db7e-2b37-4d9c-ae07-4836409eefe0
-# ╟─556426ae-e1f2-4987-beec-6a42490a5ce3
-# ╟─1467a6ea-ea7e-47cb-af3a-bf64824750e9
-# ╟─16fb1f40-a966-4920-952b-c5d366b7108f
-# ╟─fa082dbf-dbb9-4dda-b34b-0b4ed56c5082
+# ╠═d6951824-f8e2-494a-91fa-4171aa017508
+# ╠═9ea6ebb0-998d-11eb-26ba-eb12b920bf01
+# ╠═a091a4b0-998d-11eb-1d55-3f0288c81feb
+# ╠═a1e044c0-998d-11eb-0053-cb74ee4562da
+# ╠═308c314e-998b-11eb-0e06-6765aa9acd7d
+# ╠═5050db7e-2b37-4d9c-ae07-4836409eefe0
+# ╠═556426ae-e1f2-4987-beec-6a42490a5ce3
+# ╠═1467a6ea-ea7e-47cb-af3a-bf64824750e9
+# ╠═16fb1f40-a966-4920-952b-c5d366b7108f
+# ╠═fa082dbf-dbb9-4dda-b34b-0b4ed56c5082
 # ╠═81f637a0-c81f-4733-b3a5-f43482dff943
 # ╠═1999d7bc-844c-4c83-88b0-a9f080d591ba
 # ╟─21c69f40-9876-11eb-0f98-cf5c73410b72
@@ -807,6 +867,7 @@ end
 # ╠═eb3861f9-82c8-42f5-96f0-8a5835dd2fea
 # ╠═abe2c5fa-66c3-4596-8597-1e0f631ac9fa
 # ╠═525af8b0-c1ab-46b5-bb4d-608fb5001dc3
+# ╠═671e7783-258f-4ac8-854c-c74abb4e7c65
 # ╠═7d5350c9-8e87-4488-9832-27de32f3fb97
 # ╠═268eb9a9-57e2-4a42-9b3f-f5866fbbfb2f
 # ╠═b5de9dfd-b875-4189-880e-d3b49a14d299
@@ -816,11 +877,16 @@ end
 # ╟─440b6029-d2f8-4f36-866e-9a79f68266bf
 # ╠═6030f17d-1ce9-42fe-9c90-44a4101f7312
 # ╠═79b23d8f-18b3-416f-8a44-0d4baf3d9cec
-# ╠═c54aa97e-b3d8-4d21-9248-e2c90da421d3
 # ╠═e40a4e8e-d06f-423a-bd7d-d9758cbfec48
 # ╠═6a699fb2-48fc-4218-aab4-df4b9ff24149
+# ╠═9515122f-382b-4ffe-962a-be1d7e40526b
 # ╠═65b6bbe9-da25-4e77-a21d-196dd4d60df9
 # ╠═6764af4b-03f1-4522-a29e-c707547774c2
+# ╠═cb9a459b-e6c1-4aaf-98c4-075ad8e79cc9
+# ╠═0bfb7600-2649-49e9-a5f3-bef66dbf3659
+# ╠═6b178069-09d4-42e8-85bc-8c36b81eb762
+# ╠═aa08d942-7a5c-40c5-ab08-bb3d9193f632
+# ╠═c1b4d088-5bc7-44f2-bc8b-f7dc34b5a61f
 # ╠═b1d74108-092a-448e-9154-7cee90312ae9
 # ╠═7747be96-6a81-42f6-b9ff-c69ef44b4648
 # ╠═1572237c-8151-4a73-b89c-696841a0b620

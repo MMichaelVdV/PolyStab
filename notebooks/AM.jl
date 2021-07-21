@@ -10,8 +10,14 @@ using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
 # ╔═╡ dcb3fcf0-8769-4335-8bb8-6801f68e7b57
 using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, evolving_neutraldeme, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy, trait_mean, randagent, evolving_haploiddeme, mate_p, evolving_selectiondemeh, malthusian_fitness, number_of_offspring, ismock, ploidy_freq, f_trait_agents, mutate
 
+# ╔═╡ e4f18c5c-ffae-42ca-b7b5-afbbd5bb1470
+begin
+using GLM
+using CSV
+end
+
 # ╔═╡ e8c1c400-d78f-11eb-2a0b-2914730bafcb
-md"""### Assortative mating"""
+md"""### Life cycle additions: Assortative mating and selfing"""
 
 # ╔═╡ b4eabf0b-c15d-4e02-8bf0-cf7afe3c6a45
 md""" H: Assortative mating can help to overcome minority cytotype exclusion. Effects on inbreeding depression, effects in finite population size (drift?), ...""" 
@@ -24,10 +30,10 @@ ploidy.(d_p1.agents)
 
 # ╔═╡ c63bb0d3-b881-4d1e-9766-1f41991aceba
 """
-	mating_PnB_s(d::MixedPloidyDeme{A})
+	mating_PnB_a(d::MixedPloidyDeme{A})
 
 Mating in a mixed ploidy deme with unreduced gamete formation and partner
-choice weighted by malthusian fitness.
+choice weighted by malthusian fitness. Assortative mating.
 """
 function mating_PnB_a(d::AbstractDeme{A}, a::Float64) where A
 	new_agents = A[]
@@ -54,7 +60,7 @@ end
 	mating_PnB_s(d::MixedPloidyDeme{A})
 
 Mating in a mixed ploidy deme with unreduced gamete formation and partner
-choice weighted by malthusian fitness.
+choice weighted by malthusian fitness. Selfing.
 """
 function mating_PnB_s(d::AbstractDeme{A}, s::Float64) where A
 	new_agents = A[]
@@ -331,8 +337,8 @@ function grid_search(t)
 	for u in range(0, stop=0.5, length=t)
 		for rep in 1:10
 		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
-		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],45), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=50)
-		sim_ploidyvar = evolving_selectiondeme_s(d_p, 0.8, 50)
+		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=200)
+		sim_ploidyvar = evolving_selectiondeme_s(d_p, 0., 50)
 		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
 			push!(ploidy,2)
 		else
@@ -379,16 +385,6 @@ function stabprob(a)
 	end	
 end		
 
-# ╔═╡ fd3a16b3-3d7d-4256-b94f-b7af800259e5
-begin
-tick1 = stabprob(stats_2[1])
-grid1 = plot([0.005:0.005:0.5...],tick1,label=false, title="s=0.8")
-vline!([0.17],label="u=0.17",linewidth=2,style=:dash)
-hline!([0.50],label=false,linewidth=2,style=:dash)
-xlabel!("u")
-ylabel!("P estab")
-end
-
 # ╔═╡ 021e3b34-69ba-4d81-9633-34e64b06e008
 begin
 p7 = plot(stats_2[2], stats_2[3], grid=false, color=:white, label="Pop size after t generations")
@@ -399,8 +395,59 @@ xlabel!("\$u\$")
 ylabel!("Number of individuals")
 end
 
+# ╔═╡ b6b1ac9d-1e8e-458d-be1e-6b574632da76
+begin
+df = DataFrame([stats_2[1] stats_2[2]])
+rename!(df,:x1 => :Ploidy)
+rename!(df,:x2 => :u)
+Y = Int.((df[1]./2).-1) 
+df[1] = Y
+end
+
+# ╔═╡ b0956693-0af1-4e06-900a-8841219cc09a
+fm = @formula(Ploidy ~ u)
+
+# ╔═╡ 0f627b24-971c-48bf-93d5-3e9df639d469
+logit = glm(fm, df, Binomial(), LogitLink())
+
+# ╔═╡ fd3a16b3-3d7d-4256-b94f-b7af800259e5
+begin
+tick1 = stabprob(stats_2[1])
+grid1 = plot([0.005:0.005:0.5...],tick1,label=false, title="a=0")
+vline!([0.17],label=false,linewidth=2,style=:dash)
+hline!([0.50],label=false,linewidth=2,style=:dash)
+xlabel!("u")
+ylabel!("P estab")
+	
+it(x) = 1/(1+exp(-(21.1192*x-3.34918)))
+vline!([4.10262/25.6393], linewidth=2,style=:dash, label="u_crit")
+plot!(df[2],it.(df[2]), colour =:black, label=false)
+end
+
+# ╔═╡ f8175360-ca56-4d81-801b-fb4a2e92a5bf
+a_crit=[(1., 0.047428903), (0.9, 0.0520837), (0.8, 0.061110092), (0.7, 0.072411945), (0.6, 0.080394045), (0.5, 0.097187368), (0.4, 0.108525674), (0.3, 0.124613728), (0.2, 0.13525845), (0.1, 0.151884335), (0., 0.160012949)]
+
+# ╔═╡ fd34a977-0ccd-492d-bce6-f372fd79b75c
+begin
+	scatter(a_crit, label=false, color=:black)
+	xlabel!("Assortative mating")
+	ylabel!("U crit")
+	ylims!((0,0.2))
+end
+
+# ╔═╡ bbb2bca5-9305-44b9-9f64-4597f119c17a
+s_crit=[(1., 0.051232746), (0.9, 0.064890291), (0.8, 0.080446615), (0.7, 0.087833175), (0.6, 0.092615158), (0.5, 0.101443239), (0.4, 0.116019646), (0.3, 0.123815215), (0.2, 0.132404401), (0.1, 0.144475038), (0., 0.158584605)]
+
+# ╔═╡ 3d69fd9e-0a3c-44ff-915b-6c417d5d9798
+begin
+	scatter(s_crit, label=false, color=:black)
+	xlabel!("Selfing")
+	ylabel!("U crit")
+	ylims!((0,0.2))
+end
+
 # ╔═╡ Cell order:
-# ╟─e8c1c400-d78f-11eb-2a0b-2914730bafcb
+# ╠═e8c1c400-d78f-11eb-2a0b-2914730bafcb
 # ╟─b4eabf0b-c15d-4e02-8bf0-cf7afe3c6a45
 # ╠═88d20712-ab37-49d7-9baf-5065697aac64
 # ╠═dcb3fcf0-8769-4335-8bb8-6801f68e7b57
@@ -414,7 +461,7 @@ end
 # ╠═4f56ee9b-d8f8-4c1a-b7fd-5036509e5e8f
 # ╠═14e77135-bd00-4818-acbc-75d2c48cf980
 # ╠═f1f4216d-cd11-41d6-a4cd-36a292958167
-# ╠═d3eac2a7-ff67-418d-b6f1-0fb4e32f7868
+# ╟─d3eac2a7-ff67-418d-b6f1-0fb4e32f7868
 # ╠═7af043fa-36ed-418b-a523-eceee16f9d55
 # ╠═158f286c-7c34-48de-a56d-d7ec177ad64c
 # ╠═5b0f78ca-b778-4219-8d30-2a47fcf1b13b
@@ -430,6 +477,14 @@ end
 # ╠═6f9da122-1d82-4121-9725-ea2f82e5f8f1
 # ╠═708d9226-0c37-43e9-9430-9e4db4964dfe
 # ╠═28147431-ade0-401f-898f-3b0896d2e4d4
-# ╠═2804db5d-74bb-4ac0-9c1c-956d3006c43a
+# ╟─2804db5d-74bb-4ac0-9c1c-956d3006c43a
+# ╟─021e3b34-69ba-4d81-9633-34e64b06e008
+# ╠═b6b1ac9d-1e8e-458d-be1e-6b574632da76
+# ╠═e4f18c5c-ffae-42ca-b7b5-afbbd5bb1470
+# ╠═b0956693-0af1-4e06-900a-8841219cc09a
+# ╠═0f627b24-971c-48bf-93d5-3e9df639d469
 # ╠═fd3a16b3-3d7d-4256-b94f-b7af800259e5
-# ╠═021e3b34-69ba-4d81-9633-34e64b06e008
+# ╠═f8175360-ca56-4d81-801b-fb4a2e92a5bf
+# ╠═fd34a977-0ccd-492d-bce6-f372fd79b75c
+# ╠═bbb2bca5-9305-44b9-9f64-4597f119c17a
+# ╠═3d69fd9e-0a3c-44ff-915b-6c417d5d9798

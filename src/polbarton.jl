@@ -970,6 +970,12 @@ function trait_rec(a::Agent)
 end
 
 """
+	trait_exp(a::Agent)
+This function allows for proper scaling of parameter `d`.
+"""
+trait_exp(a::Agent) = (sum(a))*(ploidy(a)^(-a.d))
+
+"""
 	malthusian_fitness(d::AbstractDeme)
 
 Return the Malthusian fitness (density dependence and stabilizing selection) of each agent in a deme.

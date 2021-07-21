@@ -95,7 +95,7 @@ function evolving_islandwbreak_a(d::IslandDeme, M, L, s, ngen;
 			migrant = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]
 			push!(d.agents,migrant)
 		end
-		d = mating_PnB_s(d,s)
+		d = mating_PnB_a(d,s)
 		#d = mutate(d) 
 		push!(het, heterozygosities_p(d))
 		push!(pop, length(d))
@@ -113,13 +113,13 @@ function evolving_islandwbreak_a(d::IslandDeme, M, L, s, ngen;
 end
 
 # ╔═╡ 9d92f46e-a780-4e64-9846-4ab761cd84d3
-us = 0.05
+us = 0.2
 
 # ╔═╡ 8e760999-921a-41ef-8114-97501c0e46e7
 UGs = [0. 0. 0. 0. ; 1-us us 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
 
 # ╔═╡ d552fb3d-0107-4a6e-b6e4-bdf966e81d87
-a = .0
+a = .5
 
 # ╔═╡ 475064f2-b2f1-4dba-976b-d4b75cf40547
 #dz1, m=[0.01,0.1,1,10], u=0.01
@@ -205,7 +205,7 @@ end
 
 # ╔═╡ 02c3be6a-32f8-4cca-8397-b779899938bb
 begin
-estab2_01 = plot([1,2,3,4],[p1_001,p1_01,p1_1,p1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.1, a=.0", yerror=[sep1_001, sep1_01, sep1_1, sep1_10])
+estab2_01 = plot([1,2,3,4],[p1_001,p1_01,p1_1,p1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.2, a=0.5", yerror=[sep1_001, sep1_01, sep1_1, sep1_10])
 plot!([1,2,3,4],[p2_001,p2_01,p2_1,p2_10], label="△z=2", marker = ([:hex :d]), color=:blue, yerror=[sep2_001, sep2_01, sep2_1, sep2_10])
 plot!([1,2,3,4],[p3_001,p3_01,p3_1,p3_10], label="△z=3", marker = ([:hex :d]), color=:red, yerror=[sep3_001, sep3_01, sep3_1, sep3_10])
 plot!([1,2,3,4],[p4_001,p4_01,p4_1,p4_10], label="△z=4", marker = ([:hex :d]), color=:black, yerror=[sep4_001, sep4_01, sep4_1, sep4_10])
@@ -257,7 +257,7 @@ end
 
 # ╔═╡ abbca9c1-f65b-4f88-9ebb-713436e70314
 begin
-estab1_01 = plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.1, a=.0", yerror=[se1_001, se1_01, se1_1, se1_10])
+estab1_01 = plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.2, a=.5", yerror=[se1_001, se1_01, se1_1, se1_10])
 plot!([1,2,3,4],[st2_001, st2_01, st2_1, st2_10], label="△z=2", marker = ([:hex :d]), color=:blue, yerror=[se2_001, se2_01, se2_1, se2_10])
 plot!([1,2,3,4],[st3_001, st3_01, st3_1, st3_10], label="△z=3", marker = ([:hex :d]), color=:red, yerror=[se3_001, se3_01, se3_1, se3_10])
 plot!([1,2,3,4],[st4_001, st4_01, st4_1, st4_10], label="△z=4", marker = ([:hex :d]), color=:black, yerror=[se4_001, se4_01, se4_1, se4_10])

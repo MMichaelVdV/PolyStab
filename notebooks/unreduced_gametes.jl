@@ -4,6 +4,14 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ d4f68ac6-3953-4040-8eff-d80fdc865ee6
+begin
+using GLM
+end
+
+# ╔═╡ 56b649a2-d21d-43d0-81ae-46e1d4c5f288
+using CSV
+
 # ╔═╡ cc1dcf70-7c6c-11eb-3664-b7e70e49723a
 using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
 
@@ -113,38 +121,35 @@ end
 # ╔═╡ 39c92860-7c7e-11eb-1efe-13bf99e99d1e
 stats_2 = grid_search(100)
 
-# ╔═╡ ec061ade-8801-11eb-2449-f3788b4ffa9b
-#logistic regression 
-
-begin
-M = [stats_2[1] stats_2[2]];
-data = DataFrame(M, ["Ploidy","u"]);
-using CSV
-CSV.write("./model_1.csv", data)
-
-Y = Int.((stats_2[1]./2).-1) 
-X = stats_2[2]
-@model logreg(data, X) = begin
-    n = 200
-	m = 1
-    σ ~ truncated(Cauchy(0, 1), 0., Inf)
-	#intercept ~ Normal(0, σ)
-    β ~ MvNormal(zeros(m), σ)
-    Z = logistic.(X.*β) #intercept .+ 
-    for i=1:n
-        data[i] ~ Bernoulli(Z[i])
-    end 
-end
-chain = sample(logreg(Y, X), NUTS(), 500) 	
-plot(chain)
-β = hcat(get(chain, :β).β...)
-βmean = vec(mean(β, dims=1))
-
-logistic.(X.*βmean)
-end
-
 # ╔═╡ c88e13d0-7c7e-11eb-0119-731f7ddc65ce
 dp_2 = [(stats_2[2][i],stats_2[1][i],stats_2[3][i]) for i in 1:1000]
+
+# ╔═╡ f3d8c63c-2ae3-4fa1-91e1-48b08d71599b
+df = DataFrame([stats_2[1] stats_2[2]])
+
+# ╔═╡ 0c2f3f6f-9d62-4353-b69e-a117f4c73397
+rename!(df,:x1 => :Ploidy)
+
+# ╔═╡ e18f844a-dfa7-411d-aa3e-f2395ed7cbbe
+rename!(df,:x2 => :u)
+
+# ╔═╡ 5aa68d72-3533-4451-b2a0-c144cd287321
+#begin
+#	df = DataFrame(CSV.File("./model_1.csv"))
+#	first(df,5)
+#end
+
+# ╔═╡ 876c4cba-eedc-4477-8e4c-3e94a1360d48
+Y = Int.((df[1]./2).-1) 
+
+# ╔═╡ b7874cc0-ca2a-4e3a-a926-8add52f71b54
+df[1] = Y
+
+# ╔═╡ a78d1849-f9b6-46b8-936b-9e9cfdfc56ce
+4.35138/28.7974
+
+# ╔═╡ 8cc51342-7989-4a01-93e4-00e22d09c0f9
+vu = Real.([0.005:0.005:0.5...])
 
 # ╔═╡ 37231930-7c7f-11eb-2524-9115fc85d926
 begin
@@ -198,6 +203,38 @@ vline!([0.17], label="u=0.17",linewidth=5)
 xlabel!("\$u\$")
 ylabel!("Number of individuals")
 end
+
+# ╔═╡ ec061ade-8801-11eb-2449-f3788b4ffa9b
+md"""
+#logistic regression 
+
+begin
+M = [stats_2[1] stats_2[2]];
+data = DataFrame(M, ["Ploidy","u"]);
+using CSV
+CSV.write("./model_1.csv", data)
+
+Yz = Int.((stats_2[1]./2).-1) 
+X = stats_2[2]
+@model logreg(data, X) = begin
+    n = 200
+	m = 1
+    σ ~ truncated(Cauchy(0, 1), 0., Inf)
+	#intercept ~ Normal(0, σ)
+    β ~ MvNormal(zeros(m), σ)
+    Z = logistic.(X.*β) #intercept .+ 
+    for i=1:n
+        data[i] ~ Bernoulli(Z[i])
+    end 
+end
+chain = sample(logreg(Y, X), NUTS(), 500) 	
+plot(chain)
+β = hcat(get(chain, :β).β...)
+βmean = vec(mean(β, dims=1))
+
+logistic.(X.*βmean)
+end
+"""
 
 # ╔═╡ a478224e-7c70-11eb-133b-03e027bf81c8
 md""" ### Case 2 (Felber, 1991)"""
@@ -372,6 +409,12 @@ plot(pf, size=(750,750))
 # necessarily increase, but somehow I never checked this for the Felber model.
 end
 
+# ╔═╡ c164fb61-7701-452b-8b8d-d6af89f7c091
+fm = @formula(Ploidy ~ u)
+
+# ╔═╡ 9cc7a396-fff2-4c50-85bf-ef75c574d975
+logit = glm(fm, df, Binomial(), LogitLink())
+
 # ╔═╡ 8a935580-85ad-11eb-1c01-fbfe6528c0e2
 (evolve(w, u, 1., 30))
 
@@ -435,7 +478,32 @@ vline!([0.17],label="u=0.17",linewidth=2,style=:dash)
 hline!([0.50],label=false,linewidth=2,style=:dash)
 xlabel!("u")
 ylabel!("P estab")
+
+it(x) = 1/(1+exp(-(28.7974*x-4.35138)))
+vline!([4.35138/28.7974], linewidth=2,style=:dash, label="u_crit")
+plot!(df[2],it.(df[2]), colour =:black, label=false)
 end
+
+# ╔═╡ 65a181e2-3c2c-4152-867e-4af7e038b40d
+t1 = Real.(tick1)
+
+# ╔═╡ 0ed6ebb3-1ddb-44bf-b686-b836f06ec85e
+[t1 vu]
+
+# ╔═╡ 0600222a-4e6d-428d-a99f-d0d4a71781f1
+M1 = [t1 vu]
+
+# ╔═╡ c83a7c73-1ca7-4dd6-9904-27c7a2bdeca2
+data1 = DataFrame(M1)
+
+# ╔═╡ 22af94b9-f9d0-46c0-86a9-099ee34fa616
+rename!(data1,:x1 => :Pestab)
+
+# ╔═╡ 4b8c4a68-5081-4dda-a80d-8477932f142d
+rename!(data1,:x2 => :u)
+
+# ╔═╡ e9d79a40-0506-4212-94ab-661c5d8a74d4
+CSV.write("./Probmodel_1.csv", data1)
 
 # ╔═╡ 7f182630-7cc6-11eb-071d-0d22322e64e2
 plot(p1,p2,grid1,p7, legend=false)
@@ -468,7 +536,26 @@ plot(p5,p6,grid2,p8, legend=false)
 # ╠═e315b920-7c7d-11eb-0f34-5782accf7286
 # ╠═39c92860-7c7e-11eb-1efe-13bf99e99d1e
 # ╠═c88e13d0-7c7e-11eb-0119-731f7ddc65ce
+# ╠═f3d8c63c-2ae3-4fa1-91e1-48b08d71599b
+# ╠═0c2f3f6f-9d62-4353-b69e-a117f4c73397
+# ╠═e18f844a-dfa7-411d-aa3e-f2395ed7cbbe
+# ╠═d4f68ac6-3953-4040-8eff-d80fdc865ee6
+# ╠═56b649a2-d21d-43d0-81ae-46e1d4c5f288
+# ╠═5aa68d72-3533-4451-b2a0-c144cd287321
+# ╠═876c4cba-eedc-4477-8e4c-3e94a1360d48
+# ╠═b7874cc0-ca2a-4e3a-a926-8add52f71b54
+# ╠═c164fb61-7701-452b-8b8d-d6af89f7c091
+# ╠═9cc7a396-fff2-4c50-85bf-ef75c574d975
 # ╠═a352f65e-98c3-11eb-2048-d3e731947c4b
+# ╠═a78d1849-f9b6-46b8-936b-9e9cfdfc56ce
+# ╠═65a181e2-3c2c-4152-867e-4af7e038b40d
+# ╠═8cc51342-7989-4a01-93e4-00e22d09c0f9
+# ╠═0ed6ebb3-1ddb-44bf-b686-b836f06ec85e
+# ╠═0600222a-4e6d-428d-a99f-d0d4a71781f1
+# ╠═c83a7c73-1ca7-4dd6-9904-27c7a2bdeca2
+# ╠═22af94b9-f9d0-46c0-86a9-099ee34fa616
+# ╠═4b8c4a68-5081-4dda-a80d-8477932f142d
+# ╠═e9d79a40-0506-4212-94ab-661c5d8a74d4
 # ╠═37231930-7c7f-11eb-2524-9115fc85d926
 # ╟─d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
 # ╠═41392210-7c85-11eb-19bf-675f7a929063
