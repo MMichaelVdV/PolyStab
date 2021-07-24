@@ -17,7 +17,7 @@ md""" ### Scaling of phenotype and additive genetic variance for different ploid
 md""" We can introduce a parameter `d` to scale the phenotypes for different ploidy levels. Then the genotypic value over all loci can be calculated as follows: $k^{-d}\sum{a}$."""
 
 # ╔═╡ fa93b7f4-3bbf-4085-b473-a123c7e6c900
-trait_exp(a::Agent) = (ploidy(a)^(-a.d))*(sum(a))
+trait_exp(a::Agent) = ((ploidy(a)^(-a.d))*(sum(a)))
 
 # ╔═╡ 3fd40211-3c7b-46fd-9040-d41525345558
 md""" With this implmentation additive genetic variance ($V_{A}$) scales with a factor $(k/2)^{(1-2d)}$, where `k` is the ploidy level. When we compare the genetic variance of tetraploids to diploids at HWLE with this model for the extreme cases `d`=0 and `d`=1, we get for `d`=0 that the genetic variance is double for tetraploids compared to diploids ($V_{A}$ = $k/2)$ (but note that also the mean phenotypic value shifts). For `d`=1 this is the other way around ($V_{A}$ = $2/k$) (mean phenotypic value is the same of diploids and tetraploids). This is also already evident from the following plots limited to one bi-allelic locus, where the darkness of the dot corresponds to the frequency of the phenotype."""

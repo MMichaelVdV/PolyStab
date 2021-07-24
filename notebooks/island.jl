@@ -27,14 +27,15 @@ md""" ### Island model
 md""" ###### cfr. Establishment in a new habitat by polygenic adaptation (Barton and Etheridge, 2017)"""
 
 # ╔═╡ baffcaf2-8b5c-11eb-1479-e110e25be9d5
-md""" Representation: large abstract mainland population (assumes: infinite population size in HWLE), migration from mainland to (different smaller) island(s) with finite population size (can be respresented as demes).
+md""" Representation: large abstract mainland population (assumes: infinite population size in HWLE), migration from mainland to (different smaller) island(s) with finite population size (can be respresented as demes with carrying capacity 
+`K` and some phenotypic optimum `θ`).
 
 Some quick thoughts:
 - mainland -> island: establishment of polyploid in a diploid island population
-- migration between islands (demes) or only from mainland to island?
-- starting population mainland (Gv), island
+- migration between islands (demes, this would represent more of a metapopulation model) or only from mainland to island (black-hole sink)
+- properties of starting population mainland (additive genetic variance), island
 - colonization event (selfing versus non-selfing, i.e. with nonselfing you need at least two individuals to succesfully colonize an island). 
-- stochasticity < dispersal (phenotype - island optimum mismatch), i.e. do all islands have the same optimum as mainland (agents will already be adapted) or is there variation in island optima (different islands with different parameters versus all islands same parameters and different simulation runs).
+- If multiple islands there can be variation in island optima (different islands with different parameters versus all islands same parameters).
 """
 
 # ╔═╡ 164cbf80-8b5d-11eb-129c-2fd4863912df
@@ -44,13 +45,13 @@ md""" ###### Some simulations"""
 md""" First we can look a the case with a single migrant migrating to a single island. Simulations start with an idealized infinite mainland population in HWLE. There is migration from this population to the island with migration rate M. Selfing is allowed so a single migrant can establish a new population on an island. The source is assumed to be poorly adapted to conditions on the island with selection gradient β."""
 
 # ╔═╡ d97a6a70-8b5d-11eb-0ed6-056d834ce9bb
-md""" The island can be modelled as a single deme:"""
+md""" The island can be modelled as a single deme. Here I compared the deme with stabilizing selection (MixedPloidyDeme) to a deme with directional selection implemented as in the reference paper from Barton and Etheridge (IslandDeme)."""
 
 # ╔═╡ 2625fd72-8b5f-11eb-1e69-adf12cbd84c9
-island = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=13.)
+island = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.)
 
 # ╔═╡ c4067530-8fcc-11eb-322e-bdeba99f75a4
-islanddeme = IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], β=.25, θ=13.)
+islanddeme = IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], β=.20, θ=15.)
 
 # ╔═╡ bfc7fa55-15a7-4690-9c33-7cfffedc975c
 islanddeme_UG = IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.9 0.1 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], β=.25, θ=13.)
@@ -70,8 +71,8 @@ xlabel!("\$phenotype\$")
 ylabel!("\$\$")
 end
 
-# ╔═╡ 09247474-d2d7-4a19-b3b6-dccf77fcd7f0
-sort(distro)
+# ╔═╡ a4f755ee-b1c0-4a61-bbe9-56e642bfffa7
+md""" Since these first simulations are with a single migrant, I generated empty demes (Islands) in the previous step, and now just generate a random agent to push to the deme to simulate a single colonization attempt."""
 
 # ╔═╡ 8272fcde-8b5f-11eb-1c13-b591229f902f
 migrant = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]
@@ -113,10 +114,20 @@ island
 islanddeme
 
 # ╔═╡ 58605950-8b61-11eb-16d9-0ff9be46d489
-island_p = evolving_selectiondeme(island,30)
+begin
+	island_p = evolving_selectiondeme(island,30)
+	while island_p.pop[30] == 0 
+		island_p = evolving_selectiondeme(island,30)
+	end
+end
 
 # ╔═╡ 145aba50-8fcd-11eb-081d-4ffe44449e3f
-island_p2 = evolving_islanddeme(islanddeme,30)
+begin
+	island_p2 = evolving_islanddeme(islanddeme,30)
+	while island_p2.pop[30] == 0 
+		island_p2 = evolving_islanddeme(islanddeme,30)
+	end
+end
 
 # ╔═╡ 6df662b0-8b6a-11eb-0e74-611b7747413e
 begin
@@ -213,7 +224,7 @@ plot(p21,p22,p23)
  md""" ### Black-hole sink dynamics"""
 
 # ╔═╡ e87406ec-2deb-4fda-9e49-5f95676b32c3
-md""" A black-hole sink a metaphor for a deme with one-way immigration from a source population and without emigration."""
+md""" A black-hole sink is a deme with one-way immigration from a source population and without emigration."""
 
 # ╔═╡ 602cebcc-46bf-48fe-a3d3-163318796b98
  md""" ### Simulations with a single migrant"""
@@ -235,7 +246,7 @@ sort(s2i)
 
 # ╔═╡ b3f9e34a-2a82-4223-ac2a-6c9e8442b0ab
 begin
-	histogram(s2, bins = 25, fillalpha = 0.4, title="Estab of diploid migrant")
+	histogram(s2, bins = 25, fillalpha = 0.4, title="Estab of diploid migrant (stabsel)")
 	xlabel!("\$popsize\$")
 	ylabel!("\$n\$")
 end
@@ -245,7 +256,7 @@ length(s2[s2 .> 0])/1000
 
 # ╔═╡ 84c68f37-fc5a-4383-a142-61aa55df437b
 begin
-	histogram(s2i, bins = 25, fillalpha = 0.4, title="Estab of diploid migrant")
+	histogram(s2i, bins = 25, fillalpha = 0.4, title="Estab of diploid migrant (dirsel)")
 	xlabel!("\$popsize\$")
 	ylabel!("\$n\$")
 end
@@ -270,7 +281,7 @@ sort(s4i)
 
 # ╔═╡ 091ec75c-9d54-4b3d-bc45-dbb748ca447a
 begin
-	histogram(s4, bins = 25, fillalpha = 0.4, title="Estab of tetraploid migrant")
+	histogram(s4, bins = 25, fillalpha = 0.4, title="Estab of tetraploid migrant (stabsel)")
 	xlabel!("\$popsize\$")
 	ylabel!("\$n\$")
 end
@@ -280,7 +291,7 @@ length(s4[s4 .> 0])/1000
 
 # ╔═╡ 637464b6-fe68-4abc-8306-1e784f0352e5
 begin
-	histogram(s4i, bins = 25, fillalpha = 0.4, title="Estab of tetraploid migrant")
+	histogram(s4i, bins = 25, fillalpha = 0.4, title="Estab of tetraploid migrant (dirsel)")
 	xlabel!("\$popsize\$")
 	ylabel!("\$n\$")
 end
@@ -292,13 +303,18 @@ length(s4i[s4i .> 0])/1000
 md""" IMPORTANT REMARK: The starting phenotypic variance of the island simulated this way for 4N is only half of that of 2N, i.e. there will be less migrants with extreme phenotypes. """
 
 # ╔═╡ 22f70e65-e0b2-4188-91bb-b39c0a74c7a0
-md""" ### Single migrant with reduced gamete formation"""
+md""" ### Single migrant with unreduced gamete formation"""
 
 # ╔═╡ 5cdf4ed0-5140-416c-8549-a07cdeaf20e0
 island_s2i_UG = IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.8)
 
 # ╔═╡ 6abce643-05ba-4635-9f96-c57e981773af
-island_p2UG = evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25), 20)
+begin
+	island_p2UG = evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25), 20)
+	while island_p2UG.pop[20] == 0 
+		island_p2UG = evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25), 20)
+	end
+end
 
 # ╔═╡ 5c9319b3-158c-4ffc-903a-374ffd4c8cdd
 begin
@@ -366,6 +382,9 @@ length(s2i_UG[s2i_UG .> 0])/1000
 
 # ╔═╡ 318e6c52-4a13-40af-bc12-af9b1185e6f7
 md""" ### Continuous migration """
+
+# ╔═╡ 374fad9a-a76b-4b23-a5f6-09faf5d0d596
+md""" Each generation a number of migrants is drawn from a poisson distribution with mean value `M` (~ migration rate). """
 
 # ╔═╡ 95ee86cd-14df-42da-b7b6-e094551c298e
 function evolving_islandwmigration(d::MixedPloidyDeme, M, ngen; 
@@ -450,7 +469,7 @@ function evolving_islandwbreak(d::IslandDeme, M, L, ngen;
 	c = 0
 	
 	for t=1:ngen
-		if popsize(d) < L
+		if popsize(d) < L #limits max pop size to decrease computation load of the simulations
 		migrants = rand(Poisson(M))
 		for m in 1:migrants
 			migrant = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]
@@ -474,17 +493,17 @@ function evolving_islandwbreak(d::IslandDeme, M, L, ngen;
 end
 
 # ╔═╡ 5645c34b-5049-49e7-ab47-c0cb33e3e6a8
-sim_mig = evolving_islandwmigration(MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=17.5), 1, 20)
+sim_mig = evolving_islandwmigration(MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5), 1, 20)
 
 # ╔═╡ 6619c52f-5072-42dc-aaa5-1c916e6d040f
-sim_migi= evolving_islanddememigration(IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=14.5, β=0.25), 1, 20)
+sim_migi= evolving_islanddememigration(IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.5, β=0.25), 1, 20)
 
 # ╔═╡ f1595c57-e039-41aa-b8e9-9997cdc19641
 begin
 	pf2_p2m = sim_mig.p2
 	pf3_p2m = sim_mig.p3
 	pf4_p2m = sim_mig.p4
-	p21m = plot(pf2_p2m, grid=false, color=:blue, label="diploids", legend=:bottomright)
+	p21m = plot(pf2_p2m, grid=false, color=:blue, label="diploids", legend=:bottomright, title=:"Continuous migration with stabsel")
 	#plot!(pf3_p1, grid=false, color=:green, label="triploids")
 	plot!(pf4_p2m, grid=false, color=:red, label="tetraploids")
 	hline!([island.K],label ="K",colour = "black",linestyle=:dash)
@@ -498,7 +517,7 @@ exp(-1)
 # ╔═╡ ce63121d-7c50-49d2-a60c-1771bcd01ae9
 begin
 	traitmean_mig = map(mean, sim_mig.tm)
-	p2m = plot(traitmean_mig, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright) #title="Stabilizing selection"
+	p2m = plot(traitmean_mig, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title=:"Continuous migration with stabsel") #title="Stabilizing selection"
 	for (i,t) in enumerate(sim_mig.fta)
 	scatter!([i for x in 1:length(t)],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
@@ -511,7 +530,7 @@ end
 begin
 	Hₒ_ploidyhet2m = map(mean, 2 .*sim_mig.het)
 	#expected_heterozygosity(H₀, t, N) = ((1.0-1.0/(2*N))^t)*H₀
-	p23m = plot(Hₒ_ploidyhet2m, grid=false, color=:black, label="\$H_o(t)\$", title = "LOH")
+	p23m = plot(Hₒ_ploidyhet2m, grid=false, color=:black, label="\$H_o(t)\$", title = "LOH, Continuous migration with stabsel")
 	plot!(1:sim_mig.ngen, 
 		t->expected_heterozygosity(Hₒ_ploidyhet2m[1], t, 50),
 		linestyle=:dash, color=:black, 
@@ -527,7 +546,7 @@ begin
 	pf2_p2mi = sim_migi.p2
 	pf3_p2mi = sim_migi.p3
 	pf4_p2mi = sim_migi.p4
-	p21mi = plot(pf2_p2mi, grid=false, color=:blue, label="diploids", legend=:topright)
+	p21mi = plot(pf2_p2mi, grid=false, color=:blue, label="diploids", legend=:topright, title=:"Continuous migration with dirsel")
 	#plot!(pf3_p1, grid=false, color=:green, label="triploids")
 	plot!(pf4_p2mi, grid=false, color=:red, label="tetraploids")
 	hline!([island.K],label ="K",colour = "black",linestyle=:dash)
@@ -538,8 +557,8 @@ end
 # ╔═╡ bab28060-5865-4693-8ade-ecfd52a3c7c1
 begin
 	traitmean_migi = map(mean, sim_migi.tm)
-	p2mi = plot(traitmean_migi, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright) #title="Stabilizing selection"
-	for (i,t) in enumerate(sim_mig.fta)
+	p2mi = plot(traitmean_migi, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title=:"Continuous migration with dirsel") #title="Directed selection"
+	for (i,t) in enumerate(sim_migi.fta)
 	scatter!([i for x in 1:length(t)],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
 	xlabel!("\$t\$")
@@ -551,7 +570,7 @@ end
 begin
 	Hₒ_ploidyhet2mi = map(mean, 2 .*sim_migi.het)
 	#expected_heterozygosity(H₀, t, N) = ((1.0-1.0/(2*N))^t)*H₀
-	p23mi = plot(Hₒ_ploidyhet2mi, grid=false, color=:black, label="\$H_o(t)\$", title = "LOH")
+	p23mi = plot(Hₒ_ploidyhet2mi, grid=false, color=:black, label="\$H_o(t)\$", title = "LOH, Continuous migration with dirsel")
 	plot!(1:sim_migi.ngen, 
 		t->expected_heterozygosity(Hₒ_ploidyhet2mi[1], t, 50),
 		linestyle=:dash, color=:black, 
@@ -572,6 +591,9 @@ begin
 	plot!(Poisson(25.), label="M=25")
 	plot!(Poisson(50.), label="M=50")
 end
+
+# ╔═╡ 4bc8434c-22db-487d-9b1a-1042c68a115e
+md""" ##### Is there a difference in time to establishment between single ploidy diploid and tetraploid populations? """
 
 # ╔═╡ 02b516d4-6a80-43d3-8b05-30f56a1459f0
 begin
@@ -632,13 +654,13 @@ end
 
 # ╔═╡ 96e50f72-39c4-4fa6-9fe3-bb03a202450c
 begin
-	p2nsim = plot([1,2,3,4,5],[mean(i_00_001b), mean(i_00_01b), mean(i_00_1b), mean(i_00_10b), mean(i_00_100b)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false)
-	plot!([1,2,3,4,5],[mean(i_10_001b), mean(i_10_01b), mean(i_10_1b), mean(i_10_10b), mean(i_10_100b)], label="△z=10", marker = ([:hex :d]), color=:black)
-		plot!([1,2,3,4,5],[mean(i_20_001b), mean(i_20_01b), mean(i_20_1b), mean(i_20_10b), mean(i_20_100b)], label="△z=20", marker = ([:hex :d]), color=:blue)
-		plot!([1,2,3,4,5],[mean(i_30_001b), mean(i_30_01b), mean(i_30_1b), mean(i_30_10b), mean(i_30_100b)], label="△z=30", marker = ([:hex :d]), color=:black)
-		plot!([1,2,3,4,5],[mean(i_40_001b), mean(i_40_01b), mean(i_40_1b), mean(i_40_10b), mean(i_40_100b)], label="△z=40", marker = ([:hex :d]), color=:blue)
-		plot!([1,2,3,4,5],[mean(i_50_001b), mean(i_50_01b), mean(i_50_1b), mean(i_50_10b), mean(i_50_100b)], label="△z=50", marker = ([:hex :d]), color=:black)
-		plot!([1,2,3,4,5],[mean(i_60_001b), mean(i_60_01b), mean(i_60_1b), mean(i_60_10b), mean(i_60_100b)], label="△z=60", marker = ([:hex :d]), color=:blue)
+	p2nsim = plot([1,2,3,4],[mean(i_00_001b), mean(i_00_01b), mean(i_00_1b), mean(i_00_10b)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false, title=:"Diploid population")
+	plot!([1,2,3,4],[mean(i_10_001b), mean(i_10_01b), mean(i_10_1b), mean(i_10_10b)], label="△z=10", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4],[mean(i_20_001b), mean(i_20_01b), mean(i_20_1b), mean(i_20_10b)], label="△z=20", marker = ([:hex :d]), color=:blue)
+		plot!([1,2,3,4],[mean(i_30_001b), mean(i_30_01b), mean(i_30_1b), mean(i_30_10b)], label="△z=30", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4],[mean(i_40_001b), mean(i_40_01b), mean(i_40_1b), mean(i_40_10b)], label="△z=40", marker = ([:hex :d]), color=:blue)
+		plot!([1,2,3,4],[mean(i_50_001b), mean(i_50_01b), mean(i_50_1b), mean(i_50_10b)], label="△z=50", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4],[mean(i_60_001b), mean(i_60_01b), mean(i_60_1b), mean(i_60_10b)], label="△z=60", marker = ([:hex :d]), color=:blue)
 	xlabel!("Migration rate")
 	ylabel!("Time to establish")
 #savefig(p2nsim, "Estab_2n_2")
@@ -703,13 +725,13 @@ end
 
 # ╔═╡ abf94ddb-4440-4059-b4b4-88b52b0a6f08
 begin
-	p4nsim = plot([1,2,3,4,5],[mean(i4_00_001b), mean(i4_00_01b), mean(i4_00_1b), mean(i4_00_10b), mean(i4_00_100b)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false)
-	plot!([1,2,3,4,5],[mean(i4_10_001b), mean(i4_10_01b), mean(i4_10_1b), mean(i4_10_10b), mean(i4_10_100b)], label="△z=10", marker = ([:hex :d]), color=:black)
-		plot!([1,2,3,4,5],[mean(i4_20_001b), mean(i4_20_01b), mean(i4_20_1b), mean(i4_20_10b), mean(i4_20_100b)], label="△z=20", marker = ([:hex :d]), color=:blue)
-		plot!([1,2,3,4,5],[mean(i4_30_001b), mean(i4_30_01b), mean(i4_30_1b), mean(i4_30_10b), mean(i4_30_100b)], label="△z=30", marker = ([:hex :d]), color=:black)
-		plot!([1,2,3,4,5],[mean(i4_40_001b), mean(i4_40_01b), mean(i4_40_1b), mean(i4_40_10b), mean(i4_40_100b)], label="△z=40", marker = ([:hex :d]), color=:blue)
-		plot!([1,2,3,4,5],[mean(i4_50_001b), mean(i4_50_01b), mean(i4_50_1b), mean(i4_50_10b), mean(i4_50_100b)], label="△z=50", marker = ([:hex :d]), color=:black)
-	plot!([1,2,3,4,5],[mean(i4_60_001b), mean(i4_60_01b), mean(i4_60_1b), mean(i4_60_10b), mean(i4_60_100b)], label="△z=50", marker = ([:hex :d]), color=:blue)
+	p4nsim = plot([1,2,3,4],[mean(i4_00_001b), mean(i4_00_01b), mean(i4_00_1b), mean(i4_00_10b)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false, title=:"Tetraploid population")
+	plot!([1,2,3,4],[mean(i4_10_001b), mean(i4_10_01b), mean(i4_10_1b), mean(i4_10_10b)], label="△z=10", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4],[mean(i4_20_001b), mean(i4_20_01b), mean(i4_20_1b), mean(i4_20_10b)], label="△z=20", marker = ([:hex :d]), color=:blue)
+		plot!([1,2,3,4],[mean(i4_30_001b), mean(i4_30_01b), mean(i4_30_1b), mean(i4_30_10b)], label="△z=30", marker = ([:hex :d]), color=:black)
+		plot!([1,2,3,4],[mean(i4_40_001b), mean(i4_40_01b), mean(i4_40_1b), mean(i4_40_10b)], label="△z=40", marker = ([:hex :d]), color=:blue)
+		plot!([1,2,3,4],[mean(i4_50_001b), mean(i4_50_01b), mean(i4_50_1b), mean(i4_50_10b)], label="△z=50", marker = ([:hex :d]), color=:black)
+	plot!([1,2,3,4],[mean(i4_60_001b), mean(i4_60_01b), mean(i4_60_1b), mean(i4_60_10b)], label="△z=50", marker = ([:hex :d]), color=:blue)
 	xlabel!("Migration rate")
 	ylabel!("Time to establish")
 #savefig(p4nsim, "Estab_4n_2")
@@ -717,6 +739,9 @@ end
 
 # ╔═╡ 12bd4301-7a63-482a-be63-bf5f7c78bb90
 md""" ### Cytotype load"""
+
+# ╔═╡ 6fde4a90-3657-4ee7-b4ba-5a2e19667347
+md""" Increasing the value for `u` will result on average in a longer time to establishment. """
 
 # ╔═╡ 5452b1f1-78f9-4ed4-9050-c2867881872f
 u = 0.1
@@ -811,6 +836,9 @@ begin
 	ylabel!("Population size")
 #savefig(p2nsimUG, "Estab_2n_UG020020")
 end
+
+# ╔═╡ a7903dc6-07cb-43d1-a34c-6bca1b306a47
+md""" ##### Polyploid establishment with island migration simulations for different values of `u`. """
 
 # ╔═╡ ae97a439-2eb8-43c8-a983-8cc4eaff3d9b
 function grid_search(t)
@@ -948,9 +976,9 @@ md""" Is this only for pops that estab >100? effect + effect of dir sel vs stab 
 # ╟─d97a6a70-8b5d-11eb-0ed6-056d834ce9bb
 # ╠═2625fd72-8b5f-11eb-1e69-adf12cbd84c9
 # ╠═c4067530-8fcc-11eb-322e-bdeba99f75a4
-# ╠═bfc7fa55-15a7-4690-9c33-7cfffedc975c
+# ╟─bfc7fa55-15a7-4690-9c33-7cfffedc975c
 # ╠═6c24a8d9-7ecd-471a-b3d8-7b7ab6ef32d2
-# ╠═09247474-d2d7-4a19-b3b6-dccf77fcd7f0
+# ╟─a4f755ee-b1c0-4a61-bbe9-56e642bfffa7
 # ╠═8272fcde-8b5f-11eb-1c13-b591229f902f
 # ╠═93754ff5-0428-4188-bf46-49137ee1fc4f
 # ╠═faa45f90-8b6b-11eb-2826-776161a15a58
@@ -1008,6 +1036,7 @@ md""" Is this only for pops that estab >100? effect + effect of dir sel vs stab 
 # ╠═43105e05-0e7e-40f0-b631-6c68ed1b8c3b
 # ╠═425c53b6-d7f4-4af6-8051-7bb0baa6cd18
 # ╟─318e6c52-4a13-40af-bc12-af9b1185e6f7
+# ╠═374fad9a-a76b-4b23-a5f6-09faf5d0d596
 # ╠═44771223-a589-4de3-9fea-321b70138d80
 # ╠═c0a08e7f-dca4-4107-b2b3-d18d7dae77a8
 # ╠═95ee86cd-14df-42da-b7b6-e094551c298e
@@ -1019,36 +1048,39 @@ md""" Is this only for pops that estab >100? effect + effect of dir sel vs stab 
 # ╠═57b440b4-b07b-4875-90e8-7fabae68970e
 # ╠═ce63121d-7c50-49d2-a60c-1771bcd01ae9
 # ╠═f51ad793-1dc2-4515-8b7c-627904bc016e
-# ╟─52129db9-cc6b-4bd9-b3a4-3308a4dfe5f8
-# ╟─bab28060-5865-4693-8ade-ecfd52a3c7c1
+# ╠═52129db9-cc6b-4bd9-b3a4-3308a4dfe5f8
+# ╠═bab28060-5865-4693-8ade-ecfd52a3c7c1
 # ╠═72fa64a3-3253-42b9-a8bf-5d47b8fdaa52
 # ╠═6efa7a7e-0806-4bde-b519-4753d62fb699
-# ╟─02b516d4-6a80-43d3-8b05-30f56a1459f0
+# ╟─4bc8434c-22db-487d-9b1a-1042c68a115e
+# ╠═02b516d4-6a80-43d3-8b05-30f56a1459f0
 # ╟─4278d8d1-8634-4be2-be12-0bfe80b67baf
 # ╟─e0399c8e-5d34-484d-854b-11fae2c9ee59
 # ╟─ce9051fd-2fc7-429a-882d-86fe8f8fc765
 # ╟─3117b134-1168-4318-b845-1bf7f1cbfc4b
-# ╟─96e50f72-39c4-4fa6-9fe3-bb03a202450c
+# ╠═96e50f72-39c4-4fa6-9fe3-bb03a202450c
 # ╟─04b7b74f-5971-432e-a630-10a67c7f0c3a
 # ╟─9456b032-7a9b-45bb-bfcc-3cad3e23ab7b
 # ╟─e6f3ec85-47e2-40cb-913f-3c746975b7e4
 # ╟─c03cf01a-6741-4d57-a105-3f7bb8a03715
 # ╟─8100b6d0-14d9-4c79-9cfd-d3c9e73fe9bc
-# ╟─abf94ddb-4440-4059-b4b4-88b52b0a6f08
+# ╠═abf94ddb-4440-4059-b4b4-88b52b0a6f08
 # ╟─12bd4301-7a63-482a-be63-bf5f7c78bb90
+# ╟─6fde4a90-3657-4ee7-b4ba-5a2e19667347
 # ╠═5452b1f1-78f9-4ed4-9050-c2867881872f
-# ╠═599b73d6-b3df-4e0e-b227-1594f062ecc1
-# ╠═da88070d-da7a-45b7-a756-f85bd1a63dda
-# ╠═ce586b06-6a17-4360-8ab1-be60b90087a0
-# ╠═70f024ed-0a5a-4630-a087-1e2ae0c9627e
+# ╟─599b73d6-b3df-4e0e-b227-1594f062ecc1
+# ╟─da88070d-da7a-45b7-a756-f85bd1a63dda
+# ╟─ce586b06-6a17-4360-8ab1-be60b90087a0
+# ╟─70f024ed-0a5a-4630-a087-1e2ae0c9627e
 # ╠═15a60434-8fac-4f55-a98a-958de300ce3c
-# ╠═093d6970-741f-4a02-a15d-e7fa6d44833a
-# ╠═94bc5982-14b2-406a-aa4d-9fcc41cbd7c2
+# ╟─093d6970-741f-4a02-a15d-e7fa6d44833a
+# ╟─94bc5982-14b2-406a-aa4d-9fcc41cbd7c2
 # ╠═55776bc3-55a3-4890-bb4c-49e988a26da3
+# ╟─a7903dc6-07cb-43d1-a34c-6bca1b306a47
 # ╠═ae97a439-2eb8-43c8-a983-8cc4eaff3d9b
 # ╠═b330afb1-a2be-4f6d-9395-93b2ff931031
 # ╠═ab1bb2e8-2317-45b0-a62d-b640526d96ff
-# ╠═13f6f773-5dd4-421b-9b35-7ae09bd0c3d7
+# ╟─13f6f773-5dd4-421b-9b35-7ae09bd0c3d7
 # ╠═810211aa-0fbf-41e9-b0c8-c01fce34adcb
 # ╠═43560e72-ad13-4efe-9f03-30d19a2ddf25
 # ╠═3a8cbad9-f3d6-4e34-afd2-783774c00af1

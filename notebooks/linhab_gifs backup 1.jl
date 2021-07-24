@@ -10,9 +10,6 @@ using Statistics, Plots
 # ╔═╡ ddff89b0-8e58-11eb-2fef-5b94ca17af89
 using PolyStab: randagent_p, MixedPloidyDeme, Habitat, linear_gradient, initiate_habitat, evolving_habitat, ploidy_freq, heterozygosities_p, trait_mean, trait
 
-# ╔═╡ 2f0e9dcb-c6b1-43c3-8512-736e92f45ece
-md""" ##### Simulations with mixed ploidy populations along a linear gradient."""
-
 # ╔═╡ 381b957c-e4d7-46bd-b164-c26ce9f3bf7c
 d = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.], 0), K=25,  OV = [1.0 0.1 0.0 0.0; 0.1 1.0 0.0 0.0; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0], UG = [0.0 0.0 0.0 0.0; 0.92 0.08 0.0 0.0; 0.5 0.5 0. 0.; 0. 1. 0.0 0.], Vs=1.2)
 
@@ -169,7 +166,6 @@ begin
 end
 
 # ╔═╡ Cell order:
-# ╟─2f0e9dcb-c6b1-43c3-8512-736e92f45ece
 # ╠═80bd1070-8e89-11eb-2348-954f56cd5b7b
 # ╠═ddff89b0-8e58-11eb-2fef-5b94ca17af89
 # ╠═381b957c-e4d7-46bd-b164-c26ce9f3bf7c

@@ -419,8 +419,8 @@ hline!([0.50],label=false,linewidth=2,style=:dash)
 xlabel!("u")
 ylabel!("P estab")
 	
-it(x) = 1/(1+exp(-(21.1192*x-3.34918)))
-vline!([4.10262/25.6393], linewidth=2,style=:dash, label="u_crit")
+it(x) = 1/(1+exp(-(127.23*x-17.3506)))
+vline!([17.3506/127.23], linewidth=2,style=:dash, label="u_crit")
 plot!(df[2],it.(df[2]), colour =:black, label=false)
 end
 
@@ -484,7 +484,7 @@ end
 # ╠═b0956693-0af1-4e06-900a-8841219cc09a
 # ╠═0f627b24-971c-48bf-93d5-3e9df639d469
 # ╠═fd3a16b3-3d7d-4256-b94f-b7af800259e5
-# ╠═f8175360-ca56-4d81-801b-fb4a2e92a5bf
+# ╟─f8175360-ca56-4d81-801b-fb4a2e92a5bf
 # ╠═fd34a977-0ccd-492d-bce6-f372fd79b75c
-# ╠═bbb2bca5-9305-44b9-9f64-4597f119c17a
+# ╟─bbb2bca5-9305-44b9-9f64-4597f119c17a
 # ╠═3d69fd9e-0a3c-44ff-915b-6c417d5d9798

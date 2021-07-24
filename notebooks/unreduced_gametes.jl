@@ -7,10 +7,8 @@ using InteractiveUtils
 # ╔═╡ d4f68ac6-3953-4040-8eff-d80fdc865ee6
 begin
 using GLM
-end
-
-# ╔═╡ 56b649a2-d21d-43d0-81ae-46e1d4c5f288
 using CSV
+end
 
 # ╔═╡ cc1dcf70-7c6c-11eb-3664-b7e70e49723a
 using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
@@ -121,17 +119,18 @@ end
 # ╔═╡ 39c92860-7c7e-11eb-1efe-13bf99e99d1e
 stats_2 = grid_search(100)
 
+# ╔═╡ 9e59d2ef-7ced-497b-b938-52d20ac0a186
+md""" ###### Fitting logit model"""
+
 # ╔═╡ c88e13d0-7c7e-11eb-0119-731f7ddc65ce
 dp_2 = [(stats_2[2][i],stats_2[1][i],stats_2[3][i]) for i in 1:1000]
 
 # ╔═╡ f3d8c63c-2ae3-4fa1-91e1-48b08d71599b
+begin
 df = DataFrame([stats_2[1] stats_2[2]])
-
-# ╔═╡ 0c2f3f6f-9d62-4353-b69e-a117f4c73397
 rename!(df,:x1 => :Ploidy)
-
-# ╔═╡ e18f844a-dfa7-411d-aa3e-f2395ed7cbbe
 rename!(df,:x2 => :u)
+end
 
 # ╔═╡ 5aa68d72-3533-4451-b2a0-c144cd287321
 #begin
@@ -145,53 +144,12 @@ Y = Int.((df[1]./2).-1)
 # ╔═╡ b7874cc0-ca2a-4e3a-a926-8add52f71b54
 df[1] = Y
 
-# ╔═╡ a78d1849-f9b6-46b8-936b-9e9cfdfc56ce
-4.35138/28.7974
-
-# ╔═╡ 8cc51342-7989-4a01-93e4-00e22d09c0f9
-vu = Real.([0.005:0.005:0.5...])
-
 # ╔═╡ 37231930-7c7f-11eb-2524-9115fc85d926
 begin
 p3 = scatter(dp_2, label=false, title="UG for 2n only")
 vline!([0.17], label="u=0.17",linewidth=5)
-xlabel!("u (unreduced gamete formation 2n)")
+xlabel!("u")
 ylabel!("Ploidy")
-end
-
-# ╔═╡ d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
-function bin(data)
-	up2 = []
-	up4 = []
-	for i in data
-		if i[3] != 0
-			if i[2] == 2
-				push!(up2,i[1])
-			else
-				push!(up4,i[1])
-			end
-		end
-	end
-	up2,up4
-end
-
-# ╔═╡ 41392210-7c85-11eb-19bf-675f7a929063
-binz = bin(dp_2)
-
-# ╔═╡ b7e83d6e-7c84-11eb-0e72-7b4c25184221
-begin
-	p1 = histogram(binz[1], bins=50, label=false, title="Diploid > Tetraploid")
-	vline!([0.17], label="u=0.17",linewidth=5)
-	xlabel!("u")
-	ylabel!("Count")
-end
-
-# ╔═╡ 616389e0-7c85-11eb-13c9-fbf0587d3ccc
-begin
-	p2 = histogram(binz[2], bins=50, label=false, title="Tetraploid > Diploid")
-	vline!([0.17], label="u=0.17",linewidth=5)
-	xlabel!("u")
-	ylabel!("Count")
 end
 
 # ╔═╡ ff0cb820-7ff9-11eb-00e7-cf90fe869537
@@ -206,7 +164,7 @@ end
 
 # ╔═╡ ec061ade-8801-11eb-2449-f3788b4ffa9b
 md"""
-#logistic regression 
+#Bayesian logistic regression 
 
 begin
 M = [stats_2[1] stats_2[2]];
@@ -295,6 +253,9 @@ end
 # ╔═╡ 52fc8ae0-7cd6-11eb-1731-f3c71b08b7a9
 stats_3 = grid_search_2(200)
 
+# ╔═╡ 5d85451e-f189-44eb-9a24-463b865b0e97
+md""" Remark: Probability of tetraploid establishment is here caclulated as ratio of simulations where a majority of the individuals of the population are tetraploids after 50 generation to the total number all simulations, and not conditional on a certain population size. This is why P estab starts to drop from a certain value of `u`, since populations will no longer be sustainable due to cytotype load and the total number of established populations will drop (both 2n and 4n). (Could also plot the ratio of 4n to 2n conditional on a certain population size higher than 0)"""
+
 # ╔═╡ 99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
 dp_3 = [(stats_3[2][i],stats_3[1][i],stats_3[3][i]) for i in 1:2000]
 
@@ -302,7 +263,7 @@ dp_3 = [(stats_3[2][i],stats_3[1][i],stats_3[3][i]) for i in 1:2000]
 begin
 p4 = scatter(dp_3, label=false, title="UG for both 2n and 4n")
 vline!([0.2], label="u=0.2",linewidth=5)
-xlabel!("u=v (unreduced gamete formation 2n and 4n)")
+xlabel!("u")
 ylabel!("Ploidy")
 end
 
@@ -314,25 +275,6 @@ scatter!(stats_3[2], stats_3[5], grid=false, color=:red, label="Tetraploids")
 vline!([0.17], label="u=0.17",linewidth=5)
 xlabel!("\$u\$")
 ylabel!("Number of individuals")
-end
-
-# ╔═╡ fb49b790-7cd6-11eb-3043-3563217174e9
-binz2 = bin(dp_3)
-
-# ╔═╡ 08b7378e-7cd7-11eb-0120-edc0d8f9dbb8
-begin
-	p5 = histogram(binz2[1], bins=50, label=false, title="Diploid > Tetraploid")
-	vline!([0.2], label="u=0.2",linewidth=5)
-	xlabel!("u=v")
-	ylabel!("Count")
-end
-
-# ╔═╡ 38ef6cc0-7cd7-11eb-26e6-1767c49d50de
-begin
-	p6 = histogram(binz2[2], bins=50, label=false, title="Tetraploid > Diploid")
-	vline!([0.2], label="u=0.2",linewidth=5)
-	xlabel!("u=v")
-	ylabel!("Count")
 end
 
 # ╔═╡ 1abbabe0-87fb-11eb-271e-53e02f1ec547
@@ -479,34 +421,10 @@ hline!([0.50],label=false,linewidth=2,style=:dash)
 xlabel!("u")
 ylabel!("P estab")
 
-it(x) = 1/(1+exp(-(28.7974*x-4.35138)))
-vline!([4.35138/28.7974], linewidth=2,style=:dash, label="u_crit")
+it(x) = 1/(1+exp(-(25.0438*x-4.01829)))
+vline!([4.01829/25.0438], linewidth=2,style=:dash, label="u_crit")
 plot!(df[2],it.(df[2]), colour =:black, label=false)
 end
-
-# ╔═╡ 65a181e2-3c2c-4152-867e-4af7e038b40d
-t1 = Real.(tick1)
-
-# ╔═╡ 0ed6ebb3-1ddb-44bf-b686-b836f06ec85e
-[t1 vu]
-
-# ╔═╡ 0600222a-4e6d-428d-a99f-d0d4a71781f1
-M1 = [t1 vu]
-
-# ╔═╡ c83a7c73-1ca7-4dd6-9904-27c7a2bdeca2
-data1 = DataFrame(M1)
-
-# ╔═╡ 22af94b9-f9d0-46c0-86a9-099ee34fa616
-rename!(data1,:x1 => :Pestab)
-
-# ╔═╡ 4b8c4a68-5081-4dda-a80d-8477932f142d
-rename!(data1,:x2 => :u)
-
-# ╔═╡ e9d79a40-0506-4212-94ab-661c5d8a74d4
-CSV.write("./Probmodel_1.csv", data1)
-
-# ╔═╡ 7f182630-7cc6-11eb-071d-0d22322e64e2
-plot(p1,p2,grid1,p7, legend=false)
 
 # ╔═╡ f5064130-98c1-11eb-1d9c-bbe9ff236b23
 begin
@@ -516,6 +434,63 @@ vline!([0.20],label="u=0.20",linewidth=2,style=:dash)
 hline!([0.50],label=false,linewidth=2,style=:dash)
 xlabel!("u")
 ylabel!("P estab")
+end
+
+# ╔═╡ d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
+function bin(data)
+	up2 = []
+	up4 = []
+	for i in data
+		if i[3] != 0
+			if i[2] == 2
+				push!(up2,i[1])
+			else
+				push!(up4,i[1])
+			end
+		end
+	end
+	up2, up4
+end
+
+# ╔═╡ 41392210-7c85-11eb-19bf-675f7a929063
+binz = bin(dp_2)
+
+# ╔═╡ b7e83d6e-7c84-11eb-0e72-7b4c25184221
+begin
+	p1 = histogram(binz[1], bins=50, label=false, title="Diploid > Tetraploid")
+	vline!([0.17], label="u=0.17",linewidth=5)
+	xlabel!("u")
+	ylabel!("Count")
+end
+
+# ╔═╡ 616389e0-7c85-11eb-13c9-fbf0587d3ccc
+begin
+	p2 = histogram(binz[2], bins=50, label=false, title="Tetraploid > Diploid")
+	vline!([0.17], label="u=0.17",linewidth=5)
+	xlabel!("u")
+	ylabel!("Count")
+end
+
+# ╔═╡ 7f182630-7cc6-11eb-071d-0d22322e64e2
+plot(p1,p2,grid1,p7, legend=false)
+
+# ╔═╡ fb49b790-7cd6-11eb-3043-3563217174e9
+binz2 = bin(dp_3)
+
+# ╔═╡ 08b7378e-7cd7-11eb-0120-edc0d8f9dbb8
+begin
+	p5 = histogram(binz2[1], bins=50, label=false, title="Diploid > Tetraploid")
+	vline!([0.2], label="u=0.2",linewidth=5)
+	xlabel!("u=v")
+	ylabel!("Count")
+end
+
+# ╔═╡ 38ef6cc0-7cd7-11eb-26e6-1767c49d50de
+begin
+	p6 = histogram(binz2[2], bins=50, label=false, title="Tetraploid > Diploid")
+	vline!([0.2], label="u=0.2",linewidth=5)
+	xlabel!("u=v")
+	ylabel!("Count")
 end
 
 # ╔═╡ c5025790-7cd7-11eb-24f8-51d85dc4b968
@@ -535,29 +510,17 @@ plot(p5,p6,grid2,p8, legend=false)
 # ╟─1f6a4e72-7d48-11eb-0933-eb25e7a5b568
 # ╠═e315b920-7c7d-11eb-0f34-5782accf7286
 # ╠═39c92860-7c7e-11eb-1efe-13bf99e99d1e
+# ╟─9e59d2ef-7ced-497b-b938-52d20ac0a186
 # ╠═c88e13d0-7c7e-11eb-0119-731f7ddc65ce
 # ╠═f3d8c63c-2ae3-4fa1-91e1-48b08d71599b
-# ╠═0c2f3f6f-9d62-4353-b69e-a117f4c73397
-# ╠═e18f844a-dfa7-411d-aa3e-f2395ed7cbbe
 # ╠═d4f68ac6-3953-4040-8eff-d80fdc865ee6
-# ╠═56b649a2-d21d-43d0-81ae-46e1d4c5f288
 # ╠═5aa68d72-3533-4451-b2a0-c144cd287321
 # ╠═876c4cba-eedc-4477-8e4c-3e94a1360d48
 # ╠═b7874cc0-ca2a-4e3a-a926-8add52f71b54
 # ╠═c164fb61-7701-452b-8b8d-d6af89f7c091
 # ╠═9cc7a396-fff2-4c50-85bf-ef75c574d975
 # ╠═a352f65e-98c3-11eb-2048-d3e731947c4b
-# ╠═a78d1849-f9b6-46b8-936b-9e9cfdfc56ce
-# ╠═65a181e2-3c2c-4152-867e-4af7e038b40d
-# ╠═8cc51342-7989-4a01-93e4-00e22d09c0f9
-# ╠═0ed6ebb3-1ddb-44bf-b686-b836f06ec85e
-# ╠═0600222a-4e6d-428d-a99f-d0d4a71781f1
-# ╠═c83a7c73-1ca7-4dd6-9904-27c7a2bdeca2
-# ╠═22af94b9-f9d0-46c0-86a9-099ee34fa616
-# ╠═4b8c4a68-5081-4dda-a80d-8477932f142d
-# ╠═e9d79a40-0506-4212-94ab-661c5d8a74d4
 # ╠═37231930-7c7f-11eb-2524-9115fc85d926
-# ╟─d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
 # ╠═41392210-7c85-11eb-19bf-675f7a929063
 # ╠═b7e83d6e-7c84-11eb-0e72-7b4c25184221
 # ╠═616389e0-7c85-11eb-13c9-fbf0587d3ccc
@@ -569,9 +532,10 @@ plot(p5,p6,grid2,p8, legend=false)
 # ╠═0cdd11b0-97ed-11eb-1862-a1c728804ef5
 # ╠═f89b70d0-7c70-11eb-2d9c-d9abf241dd17
 # ╟─28e30f50-7c71-11eb-072c-dffe12b4b437
-# ╟─ed0024e0-7cd5-11eb-1548-f70db6fdda06
+# ╠═ed0024e0-7cd5-11eb-1548-f70db6fdda06
 # ╠═52fc8ae0-7cd6-11eb-1731-f3c71b08b7a9
 # ╠═f5064130-98c1-11eb-1d9c-bbe9ff236b23
+# ╟─5d85451e-f189-44eb-9a24-463b865b0e97
 # ╠═99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
 # ╠═c0370950-7cd6-11eb-1113-9b2c9104da16
 # ╠═55373330-7ff8-11eb-351c-9df644942e4d
@@ -592,3 +556,4 @@ plot(p5,p6,grid2,p8, legend=false)
 # ╠═0144f6d0-87fb-11eb-0fa7-7149bfb316db
 # ╠═47183362-97e7-11eb-2573-99a97f304e99
 # ╠═b54e9160-98c0-11eb-0f5a-f1216dc4f615
+# ╠═d75aee00-7c84-11eb-2d5a-b3ca3c4bd625

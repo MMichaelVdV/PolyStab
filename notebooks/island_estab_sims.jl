@@ -300,4 +300,4 @@ plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:hex
 # ╟─b690a6ed-5e38-40b4-ac80-e2f9ed3882c4
 # ╠═f6f9d8d9-e253-4431-9690-802511aa869f
 # ╠═d4c6dd9e-b993-49cc-910b-7d408c5fe500
-# ╟─adbeed31-db8c-46ce-9c84-ee48d2173c9c
+# ╠═adbeed31-db8c-46ce-9c84-ee48d2173c9c

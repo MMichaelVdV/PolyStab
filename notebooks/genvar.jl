@@ -766,13 +766,13 @@ end
 end
 
 # ╔═╡ 1572237c-8151-4a73-b89c-696841a0b620
-env = 0.75 .* sin.(1/50 .* (1:500)) .+ 20
+env = 0.25 .* sin.(1/50 .* (1:500)) .+ 20
 
 # ╔═╡ 8b9268c8-e570-45c0-9fae-dc5c3dbd113e
 plot(env)
 
 # ╔═╡ 3b67e761-38ef-45ab-8ad3-76db4681bdd3
-d_p2env = MixedPloidyDeme(agents = randagent_p(0.5, 0.1, 200, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1)
+d_p2env = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 1., 0., 0.], 200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1)
 
 # ╔═╡ 922118f6-2492-438a-b5c7-e0824b9ed0dd
 stabselenv_p2 = evolving_selectiondemeenv(d_p2env, trait_exp, env, 500)
