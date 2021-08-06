@@ -575,7 +575,7 @@ are adapted, meaning their clines take the form and spacing as assumed for the
 deterministic model under linkage equilibrium.
 - `d` : Empty deme
 - `gradient` : Linear gradient
-- `p` : 
+- `p` : Allele frequency of A1
 - `α` : Allelic effect size
 - `L` : Number of loci
 - `N` : Number of starting individuals in central deme
@@ -849,15 +849,15 @@ formation.
 function evolving_habitat(h::Habitat{D}, ngen) where D
 	data = []
 	for n = 1:ngen
-		h = random_walk(h,0.5)
-		#ih = Gaussian_dispersal(h,σ)
+		h = random_walk(h,h.σ)
+		#ih = Gaussian_dispersal(h,h.σ)
 		new_h = Vector{D}(undef, length(h))
 		for (i, d) in enumerate(h.demes)
 			d = mating_PnB(d)
 			d = mutate(d)
 			new_h[i] = d
 		end
-		h = Habitat(demes=new_h)
+		h = Habitat(demes=new_h, σ=h.σ, b=h.b, θ=h.θ, Dm=h.Dm)
 		push!(data, h)
 	end
 	(h=h, ngen=ngen, data=data)

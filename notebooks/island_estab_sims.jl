@@ -14,10 +14,13 @@ using PolyStab: Agent, randagent_p, MixedPloidyDeme, IslandDeme, trait, evolving
 md""" ### The effect of migration load on polyploid establishment"""
 
 # ╔═╡ e9d83c94-d3c4-41ca-b4d8-30ee1eda413d
-us = 0.15
+us = 0.05
 
 # ╔═╡ fb6945a6-5c05-474d-b8f8-2749fd304a30
 UGs = [0. 0. 0. 0. ; 1-us us 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
+
+# ╔═╡ 594bb385-73a1-48ad-9d2f-43834fd80c62
+b = 0.01
 
 # ╔═╡ 3609e21d-da26-4cb6-93fe-d3632d19d3d7
 #dz4, m=[0.01,0.1,1,10], u=0.01
@@ -81,10 +84,10 @@ end
 # ╔═╡ 5cfb3522-997e-42c3-8156-26fe6bf615c0
 #dz1, m=[0.01,0.1,1,10], u=0.01
 begin
-est_1_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=0.25), 0.01, 100, 10000)), 1:20)
-est_1_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=0.25), 0.1, 100, 10000)), 1:20)
-est_1_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=0.25), 1., 100, 10000)), 1:20)
-est_1_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=0.25), 10., 100, 10000)), 1:20)
+est_1_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=b), 0.01, 100, 10000)), 1:20)
+est_1_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=b), 0.1, 100, 10000)), 1:20)
+est_1_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=b), 1., 100, 10000)), 1:20)
+est_1_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=13.5, β=b), 10., 100, 10000)), 1:20)
 end
 
 # ╔═╡ 5e04a741-c863-4689-95f0-e55370e53d7d
@@ -93,19 +96,19 @@ end
 # ╔═╡ 41ffb48d-ffdf-4b24-bbf6-4c3194295d71
 #dz2, m=[0.01,0.1,1,10], u=0.01
 begin
-est_2_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=14.5, β=0.25), 0.01, 100, 10000)), 1:20)
-est_2_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=14.5, β=0.25), 0.1, 100, 10000)), 1:20)
-est_2_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG =UGs, μ=0., θ=14.5, β=0.25), 1., 100, 10000)), 1:20)
-est_2_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=14.5, β=0.25), 10., 100, 10000)), 1:20)
+est_2_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=14.5, β=b), 0.01, 100, 10000)), 1:20)
+est_2_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=14.5, β=b), 0.1, 100, 10000)), 1:20)
+est_2_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG =UGs, μ=0., θ=14.5, β=b), 1., 100, 10000)), 1:20)
+est_2_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=14.5, β=b), 10., 100, 10000)), 1:20)
 end
 
 # ╔═╡ e9f6f6c5-875d-4e3a-915e-67294abacc52
 #dz3, m=[0.01,0.1,1,10], u=0.01
 begin
-est_3_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=0.25), 0.01, 100, 10000)), 1:20)
-est_3_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=0.25), 0.1, 100, 10000)), 1:20)
-est_3_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=0.25), 1., 100, 10000)), 1:20)
-est_3_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=0.25), 10., 100, 10000)), 1:20)
+est_3_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=b), 0.01, 100, 10000)), 1:20)
+est_3_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=b), 0.1, 100, 10000)), 1:20)
+est_3_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=b), 1., 100, 10000)), 1:20)
+est_3_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=15.5, β=b), 10., 100, 10000)), 1:20)
 end
 
 # ╔═╡ cab261fd-e335-4127-8872-642729aa17d3
@@ -114,10 +117,10 @@ est_3_10_001
 # ╔═╡ 9eedb414-9aa1-4c64-bee6-553033e90b03
 #dz4, m=[0.01,0.1,1,10], u=0.01
 begin
-est_4_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=0.25), 0.01, 100, 10000)), 1:20)
-est_4_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=0.25), 0.1, 100, 10000)), 1:20)
-est_4_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=0.25), 1., 100, 10000)), 1:20)
-est_4_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=0.25), 10., 100, 10000)), 1:20)
+est_4_001_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=b), 0.01, 100, 10000)), 1:20)
+est_4_01_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=b), 0.1, 100, 10000)), 1:20)
+est_4_1_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=b), 1., 100, 10000)), 1:20)
+est_4_10_001 = map(x->(evolving_islandwbreak(IslandDeme(agents = randagent_p(0.5, 0.1, 250, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UGs, μ=0., θ=16.5, β=b), 10., 100, 10000)), 1:20)
 end
 
 # ╔═╡ 78f588b5-8e37-4e8d-834a-0d96310717dd
@@ -258,7 +261,7 @@ end
 
 # ╔═╡ 82adacc5-8539-44e6-a688-98fd4735e691
 begin
-estab1_01 = plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.15", yerror=[se1_001, se1_01, se1_1, se1_10])
+estab1_01 = plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="β=0.95, u=0.05", yerror=[se1_001, se1_01, se1_1, se1_10])
 plot!([1,2,3,4],[st2_001, st2_01, st2_1, st2_10], label="△z=2", marker = ([:hex :d]), color=:blue, yerror=[se2_001, se2_01, se2_1, se2_10])
 plot!([1,2,3,4],[st3_001, st3_01, st3_1, st3_10], label="△z=3", marker = ([:hex :d]), color=:red, yerror=[se3_001, se3_01, se3_1, se3_10])
 plot!([1,2,3,4],[st4_001, st4_01, st4_1, st4_10], label="△z=4", marker = ([:hex :d]), color=:black, yerror=[se4_001, se4_01, se4_1, se4_10])
@@ -282,6 +285,7 @@ plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:hex
 # ╟─9aa821e0-a906-11eb-10e2-89580ee28b2c
 # ╠═fb6945a6-5c05-474d-b8f8-2749fd304a30
 # ╠═e9d83c94-d3c4-41ca-b4d8-30ee1eda413d
+# ╠═594bb385-73a1-48ad-9d2f-43834fd80c62
 # ╠═5cfb3522-997e-42c3-8156-26fe6bf615c0
 # ╠═41ffb48d-ffdf-4b24-bbf6-4c3194295d71
 # ╠═e9f6f6c5-875d-4e3a-915e-67294abacc52

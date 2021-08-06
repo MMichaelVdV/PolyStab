@@ -24,11 +24,11 @@ using PolyStab: trait_mean
 
 # ╔═╡ a449125a-0d09-41c2-ab28-1afd40065747
 begin
-d0 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.90 0.10 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
-d0p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.90 0.10 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=13.5)
-d10 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],10), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.90 0.10 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
-d50 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.90 0.10 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
-d500 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],500), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.90 0.10 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0. ], K=50)
+d0 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
+d0p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=13.5)
+d10 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],10), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
+d50 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
+d500 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],500), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0. ], K=50)
 end
 
 # ╔═╡ 45aa806a-c591-4c27-a5e6-c8cb412561f7
@@ -36,16 +36,16 @@ h_2D = [d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p d0p 
 
 # ╔═╡ a7433596-a76b-405c-a8cb-7ee15ee3ab55
 begin
-	da = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
-	db = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=13.)
-	dc = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=13.5)
-	dd = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=14.)
-	de = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=14.5)
-	df = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=15.)
+	da = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50)
+	db = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=13.)
+	dc = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=14.)
+	dd = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=15.)
+	de = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=16.)
+	df = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ;  0. 1. 0. 0. ], K=50, θ=17.)
 end
 
 # ╔═╡ 330a734f-7e8f-415f-9997-ef24b3d4b654
-h_2D_rainbow = [d50 da da da da da da da da da da da da da da da da da; da da da da da da da da da da da da da da da da da da; db db db db db db db db db db db db db db db db db db; db db db db db db db db db db db db db db db db db db; dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc; dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc; dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd; dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd; de de de de de de de de de de de de de de de de de de; de de de de de de de de de de de de de de de de de de; df df df df df df df df df df df df df df df df df df; df df df df df df df df df df df df df df df df df df]
+h_2D_rainbow = [da da da da da da da da d50 d50 da da da da da da da da; da da da da da da da da da da da da da da da da da da; db db db db db db db db db db db db db db db db db db; db db db db db db db db db db db db db db db db db db; dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc; dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc dc; dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd; dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd dd; de de de de de de de de de de de de de de de de de de; de de de de de de de de de de de de de de de de de de; df df df df df df df df df df df df df df df df df df; df df df df df df df df df df df df df df df df df df]
 
 # ╔═╡ f5e391cc-92a2-4918-ab33-61e1b70a0e2b
 begin
@@ -64,7 +64,7 @@ end
 
 # ╔═╡ b1f0127f-1d83-45bb-90aa-5e1934d6f634
 begin
-hab2D = Habitat2D(demes=h_2D_rainbow)
+hab2D = Habitat2D(demes=h_2D_rainbow, σ=.1)
 popsize.(hab2D.demes)
 heatmap(popsize.(h_2D), c=cgrad([:white,:red,:yellow]))
 end
@@ -165,7 +165,7 @@ heatmap(popsize.(hab2Dwt.demes), c=cgrad([:white,:red,:yellow]))
 end
 
 # ╔═╡ bacec843-9f78-4360-bd65-c181c3aa88ef
-sim2Dgaus = gaussian_dispersal2D(hab2D,0.5,200)
+sim2Dgaus = gaussian_dispersal2D(hab2D,0.1,200)
 
 # ╔═╡ 306daeac-8648-4ac4-a2d5-ccae385f517b
 begin

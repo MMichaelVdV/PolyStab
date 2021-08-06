@@ -16,8 +16,28 @@ md""" ### Scaling of phenotype and additive genetic variance for different ploid
 # ╔═╡ 93b286e5-6a06-4026-992c-e1dae2f38b96
 md""" We can introduce a parameter `d` to scale the phenotypes for different ploidy levels. Then the genotypic value over all loci can be calculated as follows: $k^{-d}\sum{a}$."""
 
+# ╔═╡ 3265e73d-d2e8-45e1-9f1e-f65c342bd43f
+begin
+	α=0.1
+	L=100
+	p=0.5
+end
+
 # ╔═╡ fa93b7f4-3bbf-4085-b473-a123c7e6c900
-trait_exp(a::Agent) = ((ploidy(a)^(-a.d))*(sum(a)))
+function trait_exp(a::Agent)
+	if ploidy(a) == 2
+		return (((0.5*(ploidy(a)))^(-a.d))*(sum(a)))
+	elseif (ploidy(a) == 4 && a.d == 0.)
+		return (((0.5*(ploidy(a)))^(-a.d))*(sum(a)))-(2*(α*L*p))
+	elseif (ploidy(a) == 4 && a.d == 0.5)
+		return (((0.5*(ploidy(a)))^(-a.d))*(sum(a)))-((2*sqrt(2)-2)*(α*L*p))
+	elseif (ploidy(a) == 4 && a.d == 1.)
+		return (((0.5*(ploidy(a)))^(-a.d))*(sum(a)))
+	end
+end	
+
+# ╔═╡ 088dee40-d2e3-4f05-bf5b-26506a406692
+#+((sum(a))*((((0.5^a.d)-(0.25^a.d)))*(-0.5*(2-ploidy(a)))))
 
 # ╔═╡ 3fd40211-3c7b-46fd-9040-d41525345558
 md""" With this implmentation additive genetic variance ($V_{A}$) scales with a factor $(k/2)^{(1-2d)}$, where `k` is the ploidy level. When we compare the genetic variance of tetraploids to diploids at HWLE with this model for the extreme cases `d`=0 and `d`=1, we get for `d`=0 that the genetic variance is double for tetraploids compared to diploids ($V_{A}$ = $k/2)$ (but note that also the mean phenotypic value shifts). For `d`=1 this is the other way around ($V_{A}$ = $2/k$) (mean phenotypic value is the same of diploids and tetraploids). This is also already evident from the following plots limited to one bi-allelic locus, where the darkness of the dot corresponds to the frequency of the phenotype."""
@@ -30,14 +50,14 @@ md""" #### Simulations for d=0"""
 
 # ╔═╡ 18b2bd9f-2702-4c80-93ca-0e637324479b
 begin
-diploid_d0 = MixedPloidyDeme(agents = randagent_p(0.5, 0.1, 50, [0., 1., 0., 0.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 5., Vs = .2)
-tetraploid_d0 = MixedPloidyDeme(agents = randagent_p(0.5, 0.1, 50, [0., 0., 0., 1.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = .2)
+diploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
+tetraploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
 end
 
 # ╔═╡ 45aceacc-aa61-4e2d-a7e3-859866c400c2
 begin
-Sim_diploid_d0 = evolving_selectiondeme(diploid_d0,trait_exp,1000)
-Sim_tetraploid_d0 = evolving_selectiondeme(tetraploid_d0,trait_exp,1000)
+Sim_diploid_d0 = evolving_selectiondeme(diploid_d0,trait_exp,50)
+Sim_tetraploid_d0 = evolving_selectiondeme(tetraploid_d0,trait_exp,50)
 end
 
 # ╔═╡ 1927b5f2-fedb-45b7-82b4-2164c0c5e65e
@@ -81,14 +101,20 @@ md""" #### Simulations for d=0.5"""
 
 # ╔═╡ 53f14f64-8b2d-470c-826a-468adb874a81
 begin
-diploid_d05 = MixedPloidyDeme(agents = randagent_p(0.5, 0.1, 50, [0., 1., 0., 0.], 200, d=0.5), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 3.5, Vs = .2)
-tetraploid_d05 = MixedPloidyDeme(agents = randagent_p(0.5, 0.1, 50, [0., 0., 0., 1.], 200, d=0.5), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 5., Vs = .2)
+diploid_d05 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=0.5), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = .2)
+tetraploid_d05 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 200, d=0.5), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = .2)
 end
+
+# ╔═╡ d83e9e3b-8122-4a01-96d7-38bef868b6d7
+trait_exp(diploid_d05.agents[1])
+
+# ╔═╡ 263bb1a6-cb06-4863-b6d0-04963b3eb6bb
+trait_exp(tetraploid_d05.agents[1])
 
 # ╔═╡ 50439e5c-e61c-49e1-a373-792f4a9423f4
 begin
-Sim_diploid_d05 = evolving_selectiondeme(diploid_d05,trait_exp,1000)
-Sim_tetraploid_d05 = evolving_selectiondeme(tetraploid_d05,trait_exp,1000)
+Sim_diploid_d05 = evolving_selectiondeme(diploid_d05,trait_exp,50)
+Sim_tetraploid_d05 = evolving_selectiondeme(tetraploid_d05,trait_exp,50)
 end
 
 # ╔═╡ 223c011f-5f52-4f77-8f17-932fdaf96318
@@ -132,14 +158,14 @@ md""" #### Simulations for d=1"""
 
 # ╔═╡ 9d55b2e6-9335-4894-99b8-6c4fd19e73c6
 begin
-diploid_d1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 12.5, Vs = 0.2)
-tetraploid_d1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 12.5, Vs = 0.2)
+diploid_d1 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
+tetraploid_d1 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
 end
 
 # ╔═╡ 5919b4da-04ae-439e-a899-65b0f71a440e
 begin
-Sim_diploid_d1 = evolving_selectiondeme(diploid_d1,trait_exp,1000)
-Sim_tetraploid_d1 = evolving_selectiondeme(tetraploid_d1,trait_exp,1000)
+Sim_diploid_d1 = evolving_selectiondeme(diploid_d1,trait_exp,50)
+Sim_tetraploid_d1 = evolving_selectiondeme(tetraploid_d1,trait_exp,50)
 end
 
 # ╔═╡ 30489570-43c4-4f8a-bd9d-b7718939d57c
@@ -281,12 +307,16 @@ plot(pHWE0e,pHWE25e,pHWE50e,pHWE75e,pHWE100e)
 # ╔═╡ Cell order:
 # ╟─9822f850-ea1a-11eb-2866-9f74ea8160ca
 # ╟─93b286e5-6a06-4026-992c-e1dae2f38b96
-# ╠═fa93b7f4-3bbf-4085-b473-a123c7e6c900
+# ╠═3265e73d-d2e8-45e1-9f1e-f65c342bd43f
+# ╟─fa93b7f4-3bbf-4085-b473-a123c7e6c900
+# ╠═088dee40-d2e3-4f05-bf5b-26506a406692
 # ╟─3fd40211-3c7b-46fd-9040-d41525345558
 # ╠═9bfb5a50-cea5-4589-b2d2-01d333caed6e
 # ╟─20ccef7d-6a08-4bbe-ae2f-70c23d7ada83
 # ╟─3c055079-b69f-4de7-85ea-13283c8d37ac
 # ╠═18b2bd9f-2702-4c80-93ca-0e637324479b
+# ╠═d83e9e3b-8122-4a01-96d7-38bef868b6d7
+# ╠═263bb1a6-cb06-4863-b6d0-04963b3eb6bb
 # ╠═45aceacc-aa61-4e2d-a7e3-859866c400c2
 # ╟─1927b5f2-fedb-45b7-82b4-2164c0c5e65e
 # ╠═c4d1336c-ba1e-40a1-a1e4-0354ef020f2f
@@ -312,7 +342,7 @@ plot(pHWE0e,pHWE25e,pHWE50e,pHWE75e,pHWE100e)
 # ╟─10f262cb-f717-46a3-9c1b-592661b46781
 # ╟─54a62bb2-99d5-4a39-a589-d4306b0d8199
 # ╟─729785c1-ba1d-4a21-b2b6-91a0382ba506
-# ╟─345bdcf6-f9a6-47b9-bb15-2c6d7b99e7ee
+# ╠═345bdcf6-f9a6-47b9-bb15-2c6d7b99e7ee
 # ╟─d3e22239-6f63-4ace-80a4-d6727cab9671
 # ╟─3f606c7b-c801-46d1-ac3b-64a3cb317c4d
 # ╟─d04e8bff-4d74-4dd1-8820-1999f4aeca37

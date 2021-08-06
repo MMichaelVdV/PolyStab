@@ -99,7 +99,7 @@ function grid_search(t)
 	for u in range(0, stop=0.5, length=t)
 		for rep in 1:10
 		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
-		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],45), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=50)
+		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],45), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=50, Vs=1.2)
 		sim_ploidyvar = evolving_selectiondeme(d_p,50)
 		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
 			push!(ploidy,2)
@@ -421,8 +421,8 @@ hline!([0.50],label=false,linewidth=2,style=:dash)
 xlabel!("u")
 ylabel!("P estab")
 
-it(x) = 1/(1+exp(-(25.0438*x-4.01829)))
-vline!([4.01829/25.0438], linewidth=2,style=:dash, label="u_crit")
+it(x) = 1/(1+exp(-(73.1085*x-10.4124)))
+vline!([10.4124/73.1085], linewidth=2,style=:dash, label="u_crit")
 plot!(df[2],it.(df[2]), colour =:black, label=false)
 end
 
