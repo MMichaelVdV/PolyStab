@@ -417,9 +417,9 @@ function grid_search(t)
 	p4 = []
 	for u in range(0, stop=0.5, length=t)
 		for rep in 1:10
-		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
-		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=200)
-		sim_ploidyvar = evolving_neutraldeme(d_p, 50)
+		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1-u 0. u]
+		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=50)
+		sim_ploidyvar = evolving_selectiondeme(d_p, 0.50, 50)
 		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
 			push!(ploidy,2)
 		else
@@ -457,7 +457,7 @@ fm = @formula(Ploidy ~ u)
 logit = glm(fm, df, Binomial(), LogitLink())
 
 # ╔═╡ 7dcc4b4c-701f-42b6-96ff-ec56c46d4316
-55.1459/326.913
+12.1112/109.499
 
 # ╔═╡ bef53db8-a19a-4a9a-a540-a7eaaa910b69
 begin
@@ -487,15 +487,16 @@ end
 # ╔═╡ a9182dce-e5a5-45d7-95e6-cb4e6d896b3d
 begin
 tick1 = stabprob(stats_2[1])
-grid1 = plot([0.005:0.005:0.5...],tick1,label=false, title="neutral")
-vline!([0.17],label=false,linewidth=2,style=:dash)
-hline!([0.50],label=false,linewidth=2,style=:dash)
+grid1 = plot([0.005:0.005:0.5...],tick1,label=false, title="T=0.5",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12, grid=false, linewidth=3)
+vline!([0.20],label=false,linewidth=2,style=:dash)
+hline!([0.50],label=false,linewidth=2,style=:dash, colour=:black)
 xlabel!("u")
 ylabel!("P estab")
 	
-it(x) = 1/(1+exp(-(326.913*x-55.1459)))
-vline!([55.1459/326.913], linewidth=2,style=:dash, label="u_crit")
-plot!(df[2],it.(df[2]), colour =:black, label=false)
+it(x) = 1/(1+exp(-(109.499 *x-12.1112)))
+vline!([12.1112/109.499], linewidth=2,style=:dash, label=false)
+plot!(df[2],it.(df[2]), colour =:black, label=false, linewidth=2)
+savefig("T050")
 end
 
 # ╔═╡ Cell order:

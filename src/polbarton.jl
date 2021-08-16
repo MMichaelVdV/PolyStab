@@ -580,13 +580,13 @@ deterministic model under linkage equilibrium.
 - `L` : Number of loci
 - `N` : Number of starting individuals in central deme
 """
-function initiate_habitat(d::MixedPloidyDeme, gradient, p, α, L, N)
+function initiate_habitat(d::MixedPloidyDeme, gradient, p, α, L, N, k)
     #ag = randagent_p(p, α, L, [0., 1., 0., 0.], 0)
 	#had to change some things back here:
 	#it wasn't giving the expeted output somehow but filling all the demes with agents instead of just the middle one
 	#also has to initialize every deme with different θ so not sure if it works with the object syntax
-    hab = Habitat(demes=[MixedPloidyDeme(agents=randagent_p(p, α, L, [0., 1., 0., 0.], 0),K=d.K,θ=i,rm=d.rm,Vs=d.Vs,α=d.α,μ=d.μ,OV=d.OV,UG=d.UG) for i in gradient])
-	for a in randagent_p(p, α, L, [0., 1., 0., 0.], N)
+    hab = Habitat(demes=[MixedPloidyDeme(agents=randagent_p(p, α, L, k, 0),K=d.K,θ=i,rm=d.rm,Vs=d.Vs,α=d.α,μ=d.μ,OV=d.OV,UG=d.UG) for i in gradient])
+	for a in randagent_p(p, α, L, k, N)
         push!(hab.demes[Int(hab.Dm/2)].agents, a)
 	end
 	return hab
@@ -970,12 +970,6 @@ function trait_rec(a::Agent)
 end
 
 """
-	trait_exp(a::Agent)
-This function allows for proper scaling of parameter `d`.
-"""
-trait_exp(a::Agent) = (sum(a))*(ploidy(a)^(-a.d))
-
-"""
 	malthusian_fitness(d::AbstractDeme)
 
 Return the Malthusian fitness (density dependence and stabilizing selection) of each agent in a deme.
@@ -1080,3 +1074,20 @@ end
 
 #pollen <-> seed migration
 #assortative mating
+
+"""
+	trait_exp(a::Agent)
+
+Proper phenotypic scaling based on Agent parameter `d`.
+"""
+function trait_exp(a::Agent)
+	if ploidy(a) == 2
+		return (((0.5*(ploidy(a)))^(-a.d))*(sum(a)))
+	elseif (ploidy(a) == 4 && a.d == 0.)
+		return (((0.5*(ploidy(a)))^(-a.d))*(sum(a)))-(2*(α*L*p))
+	elseif (ploidy(a) == 4 && a.d == 0.5)
+		return (((0.5*(ploidy(a)))^(-a.d))*(sum(a)))-((2*sqrt(2)-2)*(α*L*p))
+	elseif (ploidy(a) == 4 && a.d == 1.)
+		return (((0.5*(ploidy(a)))^(-a.d))*(sum(a)))
+	end
+end	

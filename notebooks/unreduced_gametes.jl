@@ -10,6 +10,9 @@ using GLM
 using CSV
 end
 
+# ╔═╡ 802c76a5-e3cf-48a3-899b-6b4840d8023d
+using Measures
+
 # ╔═╡ cc1dcf70-7c6c-11eb-3664-b7e70e49723a
 using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
 
@@ -21,6 +24,12 @@ using StatsFuns: logistic
 
 # ╔═╡ 47183362-97e7-11eb-2573-99a97f304e99
 using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, evolving_neutraldeme, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy
+
+# ╔═╡ 0df3cd69-7c87-4148-8b9d-222b227aa684
+begin
+Using Plots, Measures
+default(markersize=1.5, legend=false, title_loc=:left, titlefont=12, grid=false)
+end
 
 # ╔═╡ bd2ab750-7c60-11eb-3cc5-6d57dd448dfd
 md"""##### Minority Cytotype Exclusion in Local Plant Populations (Levin, 1995)"""
@@ -60,10 +69,11 @@ sim_popvar = evolving_selectiondeme(d_p,150)
 begin
 	pf1_var = sim_popvar.p2
 	pf2_var = sim_popvar.p4
-	plot(pf1_var, grid=false, color=:blue, label="diploid", title="u=0.17")
-	plot!(pf2_var, grid=false, color=:red, label="tetraploid")
+	plot(pf1_var, grid=false, color=:blue, label="Diploid", title="u=0.17,v=0",legend=:bottomright, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12, linewidth=3)
+	plot!(pf2_var, grid=false, color=:red, label="Tetraploid", linewidth=3)
 	xlabel!("\$t\$")
-	ylabel!("Number of individuals")
+	ylabel!("Population size")
+savefig("pop17.png")
 end
 
 # ╔═╡ 4cde5ba0-7c79-11eb-23e1-d1ac938c0e6b
@@ -99,7 +109,7 @@ function grid_search(t)
 	for u in range(0, stop=0.5, length=t)
 		for rep in 1:10
 		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
-		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],45), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=50, Vs=1.2)
+		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=50)
 		sim_ploidyvar = evolving_selectiondeme(d_p,50)
 		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
 			push!(ploidy,2)
@@ -144,6 +154,9 @@ Y = Int.((df[1]./2).-1)
 # ╔═╡ b7874cc0-ca2a-4e3a-a926-8add52f71b54
 df[1] = Y
 
+# ╔═╡ 775fcd8f-8ad1-450f-8e28-c5deb577e47d
+10.4124/73.1085
+
 # ╔═╡ 37231930-7c7f-11eb-2524-9115fc85d926
 begin
 p3 = scatter(dp_2, label=false, title="UG for 2n only")
@@ -154,13 +167,18 @@ end
 
 # ╔═╡ ff0cb820-7ff9-11eb-00e7-cf90fe869537
 begin
-p7 = plot(stats_2[2], stats_2[3], grid=false, color=:white, label="Pop size after t generations")
-scatter!(stats_2[2], stats_2[4], grid=false, color=:green, label="Diploids")
-scatter!(stats_2[2], stats_2[5], grid=false, color=:red, label="Tetraploids")
-vline!([0.17], label="u=0.17",linewidth=5)
-xlabel!("\$u\$")
-ylabel!("Number of individuals")
+p7 = plot(stats_2[2], stats_2[3], grid=false, color=:white, label=:false, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10, legend=:bottomright)
+scatter!(stats_2[2], stats_2[4], grid=false, color=:black, label="Diploids")
+scatter!(stats_2[2], stats_2[5], grid=false, color=:white, label="Tetraploids")
+vline!([0.17], label=:false,linewidth=3, color=:red, style=:dash)
+hline!([50],label=false,linewidth=2,style=:dash, colour=:black)
+xlabel!("u")
+ylabel!("Population size")
+ylims!(2.5,60)
 end
+
+# ╔═╡ a401dcf0-2d3d-45cf-81a1-6177ab4cacc8
+plot(sort(rand(1:100, 50), rev=true), line=:steppost, color=:black)
 
 # ╔═╡ ec061ade-8801-11eb-2449-f3788b4ffa9b
 md"""
@@ -206,21 +224,22 @@ Starting from a population of only diploid individuals, according to this model,
 """
 
 # ╔═╡ 0cdd11b0-97ed-11eb-1862-a1c728804ef5
-d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],175), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.80 0.20 0. 0. ; 0. 0. 0. 0. ; 0. 0.8 0. 0.2], K=200)
+d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.80 0.20 0. 0. ; 0. 0. 0. 0. ; 0. 0.8 0. 0.2], K=50)
 
 # ╔═╡ f89b70d0-7c70-11eb-2d9c-d9abf241dd17
-sim_ploidyvar2 = evolving_selectiondeme(d_p2,500)
+sim_ploidyvar2 = evolving_selectiondeme(d_p2,150)
 
 # ╔═╡ 28e30f50-7c71-11eb-072c-dffe12b4b437
 begin
 	pf2_p2 = sim_ploidyvar2.p2
 	pf3_p2 = sim_ploidyvar2.p3
 	pf4_p2 = sim_ploidyvar2.p4
-	plot(pf2_p2, grid=false, color=:blue, label="diploid", title="u=v=0.1")
+	plot(pf2_p2, grid=false, color=:blue, label="Diploid", title="u=v=0.2",legend=:bottomright, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12, linewidth=3)
 	#plot!(pf3_p2, grid=false, color=:green, label="triploid")
-	plot!(pf4_p2, grid=false, color=:red, label="tetraploid")
+	plot!(pf4_p2, grid=false, color=:red, label="Tetraploid",linewidth=3)
 	xlabel!("\$t\$")
-	ylabel!("Number of individuals")
+	ylabel!("Population size")
+savefig("pop20.png")
 end
 
 # ╔═╡ ed0024e0-7cd5-11eb-1548-f70db6fdda06
@@ -233,7 +252,7 @@ function grid_search_2(t)
 	for u in range(0, stop=0.5, length=t)
 		for rep in 1:10
 		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1-u 0. u ]
-		d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],175), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=200)
+		d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=50)
 		sim_ploidyvar = evolving_selectiondeme(d_p2,50)
 		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
 			push!(ploidy,2)
@@ -269,12 +288,14 @@ end
 
 # ╔═╡ 55373330-7ff8-11eb-351c-9df644942e4d
 begin
-p8 = plot(stats_3[2], stats_3[3], grid=false, color=:white, label="Pop size after t generations")
-scatter!(stats_3[2], stats_3[4], grid=false, color=:green, label="Diploids")
-scatter!(stats_3[2], stats_3[5], grid=false, color=:red, label="Tetraploids")
-vline!([0.17], label="u=0.17",linewidth=5)
-xlabel!("\$u\$")
-ylabel!("Number of individuals")
+p8 = plot(stats_3[2], stats_3[3], grid=false, color=:white, label=false, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10)
+scatter!(stats_3[2], stats_3[4], grid=false, color=:black, label="Diploids")
+scatter!(stats_3[2], stats_3[5], grid=false, color=:white, label="Tetraploids")
+vline!([0.2], label=false,linewidth=3, style=:dash, color=:red)
+hline!([50],label=false,linewidth=2,style=:dash, colour=:black)
+xlabel!("u")
+ylabel!("Population size")
+ylims!(2.5,60)
 end
 
 # ╔═╡ 1abbabe0-87fb-11eb-271e-53e02f1ec547
@@ -320,8 +341,8 @@ for u=0.05:0.01:0.45
     mw = last.(evolve(w, u, 1., 30))
     plot!(p, mw, color=cols[u], linewidth=2, alpha=0.5)
 end
-plot(p, size=(750,750))
-#savefig("felber-wbar.pdf")
+plot(p, size=(500,400))
+savefig("felber-wbar.png")
 # Interestingly, mean fitness decreases in this system. Of course it is well
 # known that in systems with frequency dependence mean fitness does not
 # necessarily increase, but somehow I never checked this for the Felber model.
@@ -415,9 +436,9 @@ end
 # ╔═╡ a352f65e-98c3-11eb-2048-d3e731947c4b
 begin
 tick1 = stabprob(stats_2[1])
-grid1 = plot([0.005:0.005:0.5...],tick1,label=false)
+grid1 = plot([0.005:0.005:0.5...],tick1,label=false, legend=false, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 vline!([0.17],label="u=0.17",linewidth=2,style=:dash)
-hline!([0.50],label=false,linewidth=2,style=:dash)
+hline!([0.50],label=false,linewidth=2,style=:dash, color=:black)
 xlabel!("u")
 ylabel!("P estab")
 
@@ -426,14 +447,27 @@ vline!([10.4124/73.1085], linewidth=2,style=:dash, label="u_crit")
 plot!(df[2],it.(df[2]), colour =:black, label=false)
 end
 
+# ╔═╡ 7f182630-7cc6-11eb-071d-0d22322e64e2
+begin
+plot(grid1,p7, layout=(1,2), size=(850,400), xlabel="u", margin=5mm)
+savefig("estabvis0.png")
+end
+
 # ╔═╡ f5064130-98c1-11eb-1d9c-bbe9ff236b23
 begin
 tick2 = stabprob(stats_3[1])
-grid2 = plot([0.0025:0.0025:0.5...],tick2, label=false)
-vline!([0.20],label="u=0.20",linewidth=2,style=:dash)
-hline!([0.50],label=false,linewidth=2,style=:dash)
+grid2 = plot([0.0025:0.0025:0.5...],tick2, label=false, colour=:black, legend=false, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
+vline!([0.20],label="u=0.20",linewidth=2,style=:dash, colour=:red)
+hline!([0.50],label=false,linewidth=2,style=:dash, colour=:black)
 xlabel!("u")
 ylabel!("P estab")
+ylims!(0.,1.)
+end
+
+# ╔═╡ c5025790-7cd7-11eb-24f8-51d85dc4b968
+begin
+plot(grid2,p8, layout=(1,2), size=(850,400), xlabel="u", margin=5mm)
+savefig("estabuisv.png")
 end
 
 # ╔═╡ d75aee00-7c84-11eb-2d5a-b3ca3c4bd625
@@ -441,13 +475,13 @@ function bin(data)
 	up2 = []
 	up4 = []
 	for i in data
-		if i[3] != 0
+		#if i[3] != 0
 			if i[2] == 2
 				push!(up2,i[1])
-			else
+			elseif i[2] ==4 #else
 				push!(up4,i[1])
 			end
-		end
+		#end
 	end
 	up2, up4
 end
@@ -457,46 +491,46 @@ binz = bin(dp_2)
 
 # ╔═╡ b7e83d6e-7c84-11eb-0e72-7b4c25184221
 begin
-	p1 = histogram(binz[1], bins=50, label=false, title="Diploid > Tetraploid")
-	vline!([0.17], label="u=0.17",linewidth=5)
+	p1 = plot(binz[1],[1:length(binz[1])], label=false, title="Diploid > Tetraploid", color=:gray)
+	vline!([0.17], label=false,linewidth=3, color=:red, style=:dash)
 	xlabel!("u")
 	ylabel!("Count")
+	
 end
+
+# ╔═╡ a30eb89d-1157-42ff-a071-6d1d77409720
+[1:length(binz[1])]
 
 # ╔═╡ 616389e0-7c85-11eb-13c9-fbf0587d3ccc
 begin
-	p2 = histogram(binz[2], bins=50, label=false, title="Tetraploid > Diploid")
-	vline!([0.17], label="u=0.17",linewidth=5)
+	p2 = plot(binz[2], [1:length(binz[2])], label=false, title="Tetraploid > Diploid",color=:gray)
+	vline!([0.17], label=false,linewidth=3, color=:red, style=:dash)
 	xlabel!("u")
 	ylabel!("Count")
-end
 
-# ╔═╡ 7f182630-7cc6-11eb-071d-0d22322e64e2
-plot(p1,p2,grid1,p7, legend=false)
+end
 
 # ╔═╡ fb49b790-7cd6-11eb-3043-3563217174e9
 binz2 = bin(dp_3)
 
 # ╔═╡ 08b7378e-7cd7-11eb-0120-edc0d8f9dbb8
 begin
-	p5 = histogram(binz2[1], bins=50, label=false, title="Diploid > Tetraploid")
-	vline!([0.2], label="u=0.2",linewidth=5)
+	p5 = plot(binz2[1], [1:length(binz2[1])], label=false, title="Diploid > Tetraploid",color=:grey)
+	vline!([0.2], label=false,linewidth=3, style=:dash, color=:red)
 	xlabel!("u=v")
 	ylabel!("Count")
 end
 
 # ╔═╡ 38ef6cc0-7cd7-11eb-26e6-1767c49d50de
 begin
-	p6 = histogram(binz2[2], bins=50, label=false, title="Tetraploid > Diploid")
-	vline!([0.2], label="u=0.2",linewidth=5)
+	p6 = plot(binz2[2], [1:length(binz2[2])], label=false, title="Tetraploid > Diploid",color=:grey)
+	vline!([0.2], label=false,linewidth=3,style=:dash,color=:red)
 	xlabel!("u=v")
 	ylabel!("Count")
 end
 
-# ╔═╡ c5025790-7cd7-11eb-24f8-51d85dc4b968
-plot(p5,p6,grid2,p8, legend=false)
-
 # ╔═╡ Cell order:
+# ╠═0df3cd69-7c87-4148-8b9d-222b227aa684
 # ╟─bd2ab750-7c60-11eb-3cc5-6d57dd448dfd
 # ╠═98180cf0-7c6b-11eb-0da9-c55b3cf2a066
 # ╟─2dadbbf0-7c5f-11eb-3d09-1fcf2b82ead9
@@ -520,18 +554,21 @@ plot(p5,p6,grid2,p8, legend=false)
 # ╠═c164fb61-7701-452b-8b8d-d6af89f7c091
 # ╠═9cc7a396-fff2-4c50-85bf-ef75c574d975
 # ╠═a352f65e-98c3-11eb-2048-d3e731947c4b
+# ╠═775fcd8f-8ad1-450f-8e28-c5deb577e47d
 # ╠═37231930-7c7f-11eb-2524-9115fc85d926
 # ╠═41392210-7c85-11eb-19bf-675f7a929063
 # ╠═b7e83d6e-7c84-11eb-0e72-7b4c25184221
+# ╠═a30eb89d-1157-42ff-a071-6d1d77409720
 # ╠═616389e0-7c85-11eb-13c9-fbf0587d3ccc
 # ╠═ff0cb820-7ff9-11eb-00e7-cf90fe869537
+# ╠═a401dcf0-2d3d-45cf-81a1-6177ab4cacc8
 # ╠═7f182630-7cc6-11eb-071d-0d22322e64e2
 # ╠═ec061ade-8801-11eb-2449-f3788b4ffa9b
 # ╟─a478224e-7c70-11eb-133b-03e027bf81c8
 # ╟─57d84bf0-7c6b-11eb-0e68-f99c717f46e4
 # ╠═0cdd11b0-97ed-11eb-1862-a1c728804ef5
 # ╠═f89b70d0-7c70-11eb-2d9c-d9abf241dd17
-# ╟─28e30f50-7c71-11eb-072c-dffe12b4b437
+# ╠═28e30f50-7c71-11eb-072c-dffe12b4b437
 # ╠═ed0024e0-7cd5-11eb-1548-f70db6fdda06
 # ╠═52fc8ae0-7cd6-11eb-1731-f3c71b08b7a9
 # ╠═f5064130-98c1-11eb-1d9c-bbe9ff236b23
@@ -540,8 +577,9 @@ plot(p5,p6,grid2,p8, legend=false)
 # ╠═c0370950-7cd6-11eb-1113-9b2c9104da16
 # ╠═55373330-7ff8-11eb-351c-9df644942e4d
 # ╠═fb49b790-7cd6-11eb-3043-3563217174e9
-# ╟─08b7378e-7cd7-11eb-0120-edc0d8f9dbb8
-# ╟─38ef6cc0-7cd7-11eb-26e6-1767c49d50de
+# ╠═08b7378e-7cd7-11eb-0120-edc0d8f9dbb8
+# ╠═38ef6cc0-7cd7-11eb-26e6-1767c49d50de
+# ╠═802c76a5-e3cf-48a3-899b-6b4840d8023d
 # ╠═c5025790-7cd7-11eb-24f8-51d85dc4b968
 # ╟─1abbabe0-87fb-11eb-271e-53e02f1ec547
 # ╠═86be28f0-84ad-11eb-2ccf-6f60ad079d75

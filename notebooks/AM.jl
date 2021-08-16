@@ -16,6 +16,9 @@ using GLM
 using CSV
 end
 
+# ╔═╡ 1f8e5887-373f-4561-909a-8c6e219ea19d
+using Measures
+
 # ╔═╡ e8c1c400-d78f-11eb-2a0b-2914730bafcb
 md"""### Life cycle additions: Assortative mating and selfing"""
 
@@ -23,7 +26,7 @@ md"""### Life cycle additions: Assortative mating and selfing"""
 md""" H: Assortative mating can help to overcome minority cytotype exclusion. Effects on inbreeding depression, effects in finite population size (drift?), ...""" 
 
 # ╔═╡ 5b99efb0-ab9b-42e7-bf84-c1fb1787669a
-d_p1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 0., 0., 1.], 150), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1)
+d_p1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.], 200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 12.5, Vs = 1.)
 
 # ╔═╡ 2dcaedf3-c1f6-4170-a848-bf1c9e3d89ce
 ploidy.(d_p1.agents)
@@ -193,12 +196,12 @@ begin
 
 
 	
-	plot(Hₒ_sel_p2_00, grid=false, color=:blue, label="\$H_op1(t)\$", title="LOH")
+	plot(Hₒ_sel_p2_00, grid=false, color=:blue, label="\$H_{sim}op1(t)\$", title="Loss of heterozygosity", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	plot!(Hₒ_sel_p2_02, grid=false, color=:green, label="\$H_op2(t)\$")
 	plot!(Hₒ_sel_p2_04, grid=false, color=:red, label="\$H_op2(t)\$")
 	plot!(Hₒ_sel_p2_06, grid=false, color=:black, label="\$H_op2(t)\$")
 	plot!(Hₒ_sel_p2_08, grid=false, color=:gray, label="\$H_op2(t)\$")
-	plot!(Hₒ_sel_p2_10, grid=false, color=:purple, label="\$H_op2(t)\$")	
+	#plot!(Hₒ_sel_p2_10, grid=false, color=:purple, label="\$H_op2(t)\$")	
 	
 
 	xlabel!("\$t\$")
@@ -208,83 +211,92 @@ end
 # ╔═╡ 5b0f78ca-b778-4219-8d30-2a47fcf1b13b
 begin
 	trait_p2_00 = map(mean, sel_p2_00.tm)
-	p2n_00 = plot(trait_p2_00, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, s=0", legend=:bottomright)
+	p2n_00 = plot(trait_p2_00, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid, s=0", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_00.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_p2_00, grid=false, color=:red, label=false, linewidth=3)
 	xlabel!("\$t\$")
-	ylabel!("Phenotype")
+	ylabel!("phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(17,25)
+	ylims!(7,19)
 end
 
 # ╔═╡ 66d0a754-e4de-4b83-a4b3-6def51d80284
 begin
 	trait_p2_02 = map(mean, sel_p2_02.tm)
-	p2n_02 = plot(trait_p2_02, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, s=0.2", legend=:bottomright)
+	p2n_02 = plot(trait_p2_02, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="s=0.2", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_02.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_p2_02, grid=false, color=:red, label=false, linewidth=3)
 	xlabel!("\$t\$")
-	ylabel!("Phenotype")
+	ylabel!("phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(17,25)
+	ylims!(7,19)
 end
 
 # ╔═╡ b313d866-28c9-41b7-a765-438bfcc747b6
 begin
 	trait_p2_04 = map(mean, sel_p2_04.tm)
-	p2n_04 = plot(trait_p2_04, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, s=0.4", legend=:bottomright)
+	p2n_04 = plot(trait_p2_04, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="s=0.4", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_04.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_p2_04, grid=false, color=:red, label=false, linewidth=3)
 	xlabel!("\$t\$")
-	ylabel!("Phenotype")
+	ylabel!("phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(17,25)
+	ylims!(7,19)
 end
 
 # ╔═╡ bb562ff0-b950-4921-8daf-0052d4e7d3ff
 begin
 	trait_p2_06 = map(mean, sel_p2_06.tm)
-	p2n_06 = plot(trait_p2_06, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid,s=0.6", legend=:bottomright)
+	p2n_06 = plot(trait_p2_06, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="s=0.6", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_06.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_p2_06, grid=false, color=:red, label=false, linewidth=3)
 	xlabel!("\$t\$")
-	ylabel!("Phenotype")
+	ylabel!("phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(17,25)
+	ylims!(7,19)
 end
 
 # ╔═╡ 5fb215cb-59e9-4088-a868-d072cfbdea56
 begin
 	trait_p2_08 = map(mean, sel_p2_08.tm)
-	p2n_08 = plot(trait_p2_08, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, s=0.8", legend=:bottomright)
+	p2n_08 = plot(trait_p2_08, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="s=0.8", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_08.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_p2_08, grid=false, color=:red, label=false, linewidth=3)
 	xlabel!("\$t\$")
-	ylabel!("Phenotype")
+	ylabel!("phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(17,25)
+	ylims!(7,19)
 end
 
 # ╔═╡ 3a9601db-1075-48cd-9eec-1e532a0e920a
 begin
 	trait_p2_10 = map(mean, sel_p2_10.tm)
-	p2n_10 = plot(trait_p2_10, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, s=1", legend=:bottomright)
+	p2n_10 = plot(trait_p2_10, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="s=1", legend=:bottomright)
 	for (i,t) in enumerate(sel_p2_10.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_p2_10, grid=false, color=:red, label=false, linewidth=3)
 	xlabel!("\$t\$")
-	ylabel!("Phenotype")
+	ylabel!("phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(17,25)
+	ylims!(7,19)
 end
 
 # ╔═╡ 8112574e-1329-4128-b1ba-2caa88548122
+begin
 plot(p2n_00, p2n_02, p2n_04, p2n_06, p2n_08, p2n_10, legend=:false)
+savefig("diploidinbreeding.png")
+end
 
 # ╔═╡ 7c57e021-f347-4900-ace0-1a1c4fbe59f3
 begin
@@ -338,7 +350,7 @@ function grid_search(t)
 		for rep in 1:10
 		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
 		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=200)
-		sim_ploidyvar = evolving_selectiondeme_s(d_p, 0., 50)
+		sim_ploidyvar = evolving_selectiondeme_s(d_p, 1., 50)
 		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
 			push!(ploidy,2)
 		else
@@ -413,37 +425,89 @@ logit = glm(fm, df, Binomial(), LogitLink())
 # ╔═╡ fd3a16b3-3d7d-4256-b94f-b7af800259e5
 begin
 tick1 = stabprob(stats_2[1])
-grid1 = plot([0.005:0.005:0.5...],tick1,label=false, title="a=0")
+grid1 = plot([0.005:0.005:0.5...],tick1,label=false, title="s=1",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12, grid=false, linewidth=3)
 vline!([0.17],label=false,linewidth=2,style=:dash)
-hline!([0.50],label=false,linewidth=2,style=:dash)
+hline!([0.50],label=false,linewidth=2,style=:dash, colour =:black)
 xlabel!("u")
 ylabel!("P estab")
 	
-it(x) = 1/(1+exp(-(127.23*x-17.3506)))
-vline!([17.3506/127.23], linewidth=2,style=:dash, label="u_crit")
-plot!(df[2],it.(df[2]), colour =:black, label=false)
+it(x) = 1/(1+exp(-(225.921*x-10.4973)))
+vline!([10.4973/225.921], linewidth=2,style=:dash, label=false)
+plot!(df[2],it.(df[2]), colour =:black, label=false, linewidth=2)
+savefig("s1.png")
 end
 
 # ╔═╡ f8175360-ca56-4d81-801b-fb4a2e92a5bf
 a_crit=[(1., 0.047428903), (0.9, 0.0520837), (0.8, 0.061110092), (0.7, 0.072411945), (0.6, 0.080394045), (0.5, 0.097187368), (0.4, 0.108525674), (0.3, 0.124613728), (0.2, 0.13525845), (0.1, 0.151884335), (0., 0.160012949)]
 
+# ╔═╡ 35caaa63-c1d6-41d4-b368-4c7025caf9b9
+begin
+AM=[0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
+crit_AM=[0.160012949,0.151884335,0.13525845,0.124613728,0.108525674,0.097187368,0.080394045,0.072411945,0.061110092, 0.0520837,0.047428903]             
+df_AM=DataFrame([AM crit_AM])
+rename!(df_AM,:x1 => :AM)
+rename!(df_AM,:x2 => :crit_AM)
+end
+
+# ╔═╡ 46de9d5d-2982-4258-9787-d28d858f2a31
+fit_AM = @formula(crit_AM ~ AM)
+
+# ╔═╡ b4fb7c8f-e07f-4b94-b7ad-283cf0cd81a0
+reg_AM = lm(fit_AM, df_AM)
+
+# ╔═╡ 3feeec52-dfdd-421b-9c6d-a76d64127c28
+r2(reg_AM)
+
+# ╔═╡ 2ac5bc63-967b-4fc3-968b-58afc393931f
+df_AM
+
 # ╔═╡ fd34a977-0ccd-492d-bce6-f372fd79b75c
 begin
-	scatter(a_crit, label=false, color=:black)
+	AMplot=scatter(a_crit, label=false, color=:black, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	xlabel!("Assortative mating")
 	ylabel!("U crit")
 	ylims!((0,0.2))
+	lr(x) = 0.159042 - 0.119737*x
+	plot!([0.:0.005:1. ...],lr.([0.:0.005:1. ...]), colour =:black, linewidth=2, label="\$y=0.159-0.120x, R^2=0.989\$")
+savefig("AMregr.png")
 end
 
 # ╔═╡ bbb2bca5-9305-44b9-9f64-4597f119c17a
 s_crit=[(1., 0.051232746), (0.9, 0.064890291), (0.8, 0.080446615), (0.7, 0.087833175), (0.6, 0.092615158), (0.5, 0.101443239), (0.4, 0.116019646), (0.3, 0.123815215), (0.2, 0.132404401), (0.1, 0.144475038), (0., 0.158584605)]
 
+# ╔═╡ 7b42d984-8a45-4fb2-b2b5-42bc5adca86a
+begin
+SE=[0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
+crit_SE=[0.158584605,0.144475038,0.132404401,0.123815215,0.116019646,0.101443239,0.092615158,0.087833175,0.080446615,0.064890291,0.051232746]             
+df_SE=DataFrame([SE crit_SE])
+rename!(df_SE,:x1 => :SE)
+rename!(df_SE,:x2 => :crit_SE)
+end
+
+# ╔═╡ 95c2a05b-8b2c-4df6-ade0-94637e1656b4
+fit_SE = @formula(crit_SE ~ SE)
+
+# ╔═╡ 05928fad-2eb2-4c00-99c4-0b16edd747ff
+reg_SE = lm(fit_SE, df_SE)
+
+# ╔═╡ 0a2906da-ea45-432e-99b3-c9b10a65faaa
+r2(reg_SE)
+
 # ╔═╡ 3d69fd9e-0a3c-44ff-915b-6c417d5d9798
 begin
-	scatter(s_crit, label=false, color=:black)
+	SEplot=scatter(s_crit, label=false, color=:black, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	xlabel!("Selfing")
 	ylabel!("U crit")
 	ylims!((0,0.2))
+	lr2(x) = 0.155175 -0.100576*x
+	plot!([0.:0.005:1. ...],lr2.([0.:0.005:1. ...]), colour =:black, linewidth=2, label="\$y=0.155-0.101x, R^2=0.992\$")
+savefig("SEregr.png")
+end
+
+# ╔═╡ 94374bd1-b40e-4942-814f-32a20b9c08c3
+begin
+plot(AMplot,SEplot, layout=(1,2), size=(1200,400), margin=5mm)
+#savefig("SEAM.png")
 end
 
 # ╔═╡ Cell order:
@@ -485,6 +549,17 @@ end
 # ╠═0f627b24-971c-48bf-93d5-3e9df639d469
 # ╠═fd3a16b3-3d7d-4256-b94f-b7af800259e5
 # ╠═f8175360-ca56-4d81-801b-fb4a2e92a5bf
+# ╠═35caaa63-c1d6-41d4-b368-4c7025caf9b9
+# ╠═46de9d5d-2982-4258-9787-d28d858f2a31
+# ╠═b4fb7c8f-e07f-4b94-b7ad-283cf0cd81a0
+# ╠═3feeec52-dfdd-421b-9c6d-a76d64127c28
+# ╠═2ac5bc63-967b-4fc3-968b-58afc393931f
 # ╠═fd34a977-0ccd-492d-bce6-f372fd79b75c
 # ╠═bbb2bca5-9305-44b9-9f64-4597f119c17a
+# ╠═7b42d984-8a45-4fb2-b2b5-42bc5adca86a
+# ╠═95c2a05b-8b2c-4df6-ade0-94637e1656b4
+# ╠═05928fad-2eb2-4c00-99c4-0b16edd747ff
+# ╠═0a2906da-ea45-432e-99b3-c9b10a65faaa
 # ╠═3d69fd9e-0a3c-44ff-915b-6c417d5d9798
+# ╠═1f8e5887-373f-4561-909a-8c6e219ea19d
+# ╠═94374bd1-b40e-4942-814f-32a20b9c08c3

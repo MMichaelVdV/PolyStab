@@ -26,7 +26,7 @@ habi = Habitat(demes=[d], Dm=250., b=.5, σ=0.)
 g_lin = linear_gradient(.5,12.5,250)
 
 # ╔═╡ 5c000970-8f3f-11eb-0c5d-ef59668300a9
-hab = initiate_habitat(d, g_lin, 0.5, 0.5, 50, 25)
+hab = initiate_habitat(d, g_lin, 0.5, 0.5, 50, 25, [0., 1., 0., 0.])
 
 # ╔═╡ 675ae674-5132-480d-87c5-2e0ad0c6605b
 habs = Habitat(demes=hab.demes, σ=0., b=.5, θ=12.5, Dm=250.)
@@ -221,11 +221,11 @@ function grid_search(t)
 
 	for bs in range(0.1, stop=1., length=t)
 		for rep in 1:10
-		d = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.], 0), K=25,  OV = [1.0 0. 0.0 0.0; 0. 1.0 0.0 0.0; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0], UG = [0.0 0.0 0.0 0.0; 0.95 0.05 0.0 0.0; 0. 0. 0. 0.; 0. 1. 0.0 0.], Vs=0.5)
-		habi = Habitat(demes=[d], Dm=250., b=bs, σ=0.25)
+		d = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.], 0, d=1.), K=25,  OV = [1.0 0. 0.0 0.0; 0. 1.0 0.0 0.0; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0], UG = [0.0 0.0 0.0 0.0; 0.95 0.05 0.0 0.0; 0. 0. 0. 0.; 0. 1. 0.0 0.], Vs=0.5)
+		habi = Habitat(demes=[d], Dm=250., b=bs, σ=0.5)
 		g_lin = linear_gradient(bs,12.5,250)
-		hab = initiate_habitat(d, g_lin, 0.5, 0.5, 50, 25)
-		habs = Habitat(demes=hab.demes, σ=0.25, b=bs, θ=12.5, Dm=250.)
+		hab = initiate_habitat(d, g_lin, 0.5, 0.5, 50, 25, [0., 0., 0., 1.])
+		habs = Habitat(demes=hab.demes, σ=0.5, b=bs, θ=12.5, Dm=250.)
 		sim_hab = evolving_habitat(habs, 250)
 			
 		#frequency of 4n > 2n demes
@@ -294,7 +294,7 @@ end
 
 # ╔═╡ b073cffa-a256-4c0e-aa06-559e7e43b94d
 begin
-t1 = scatter(g,binned_bm,yerror=binned_be,colour=:black,title=:"u=0.05, σ=0.25",label=:false)
+t1 = scatter(g,binned_bm,yerror=binned_be,colour=:black,title=:"u=0.0, σ=0.5",label=:false)
 xlabel!("b (steepness of gradient)")
 ylabel!("Frequency of demes with tetraploid establishment")
 ylims!((0.0,1.))
@@ -302,10 +302,10 @@ end
 
 # ╔═╡ 3f581fc3-41a7-4a7e-945a-048cbc637d55
 begin
-t2 = scatter(g,binned_dm,yerror=binned_de,colour=:black,title=:"u=0.05, σ=0.25",label=:false)
+t2 = scatter(g,binned_dm,yerror=binned_de,colour=:black,title=:"u=0.0, σ=0.5",label=:false)
 xlabel!("b")
 ylabel!("Number of populated demes")
-ylims!((0.0,60.))
+ylims!((0.0,80.))
 end
 
 # ╔═╡ a7b913f6-9342-4cd6-bbce-1ae9bbfa1922

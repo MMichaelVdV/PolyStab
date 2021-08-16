@@ -638,7 +638,7 @@ end
 g_quad = quadratic_gradient(Dm)
 
 # ╔═╡ dde40220-1659-11eb-04e5-bfbde2b81208
-g_lin = linear_gradient(Dm,0.5)
+g_lin = linear_gradient(Dm,0.1)
 
 # ╔═╡ 04277ec0-2d21-11eb-0a40-c71b3333b788
 begin

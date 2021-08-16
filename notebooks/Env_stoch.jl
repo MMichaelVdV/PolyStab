@@ -69,9 +69,10 @@ end
 end
 
 # ╔═╡ 3ac3447f-0fa3-4beb-8662-8635d822fd7f
-#env = 0.5 .* sin.(1/50 .* (1:500)) .+ 20
+#env = 1.10 .* sin.(1/50 .* (1:500)) .+ 20
+env = 0.015 .* (0:500) .+ 20
 #env = 19 .+ [exp(i/250) for i in 1:500]
-env = 20 .+ [1.5/(1+exp(-i + 150)) for i in 1:500] #effect of popsize!
+#env = 20 .+ [1.5/(1+exp(-i + 150)) for i in 1:500] #effect of popsize!
 
 # ╔═╡ fdd86050-c74c-461e-af13-3296500021c3
 envs = [20. for in in 1:500]
@@ -81,9 +82,9 @@ penv = plot(env, label=:false, title=:"a=0.5")
 
 # ╔═╡ 1a6d7b53-7e51-483a-aca5-4616a86c3ba1
 begin
-	d_p2env = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 1., 0., 0.], 50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.5, α = 0.4, K = 100)
-	d_p4env = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 0., 0., 1.], 50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.5, α = 0.4, K = 100)
-	d_pmixedenv = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 1., 0., 0.], 50), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.5, α = 0.4, K = 100)
+	d_p2env = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 1., 0., 0.], 100), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.5, α = 0.4, K = 100)
+	d_p4env = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 0., 0., 1.], 100), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.5, α = 0.4, K = 100)
+	d_pmixedenv = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 1., 0., 0.], 100), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.5, α = 0.4, K = 100)
 end
 
 # ╔═╡ ef0b8f99-3f58-46eb-a090-4d23d33be5f1
@@ -108,28 +109,28 @@ end
 
 # ╔═╡ c033b4fd-c58f-4010-ad58-f9b728040d5c
 begin
-	p2env = plot(traitmean_p2env, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Diploid")
+	p2env = plot(traitmean_p2env, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Diploid", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	for (i,t) in enumerate(stabselenv_p2.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
 	plot!(traitmean_p2env, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Diploid")
 	xlabel!("\$t\$")
-	ylabel!("Trait mean")
+	ylabel!("Phenotype")
 	hline!([d_p2env.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	#ylims!(18,22)
+	ylims!(17,30)
 end
 
 # ╔═╡ 943f9a31-3689-4254-a857-239c45e6bac2
 begin
-	p4env = plot(traitmean_p4env, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Tetraploid")
+	p4env = plot(traitmean_p4env, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Tetraploid", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	for (i,t) in enumerate(stabselenv_p4.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
 	plot!(traitmean_p4env, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Tetraploid")
 	xlabel!("\$t\$")
-	ylabel!("Trait mean")
+	ylabel!("Phenotype")
 	hline!([d_p2env.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	#ylims!(18,22)
+	ylims!(17,30)
 end
 
 # ╔═╡ da6072ad-fd0f-49bd-bc3c-29d615df3696
@@ -142,25 +143,33 @@ begin
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
 	hline!([d_p2env.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	#ylims!(18,22)
+	ylims!(17,23)
 end
 
 # ╔═╡ 074d4e74-eaf8-4965-aff2-004fb705e650
 begin
-	pop2 = plot(stabselenv_p2.pop, grid=false, color=:black, label=false)
-	plot!(stabselenv_p2.p2, grid=false, color=:red, label=false)
-	plot!(stabselenv_p2.p4, grid=false, color=:blue, label=false)
+	pop2 = plot(stabselenv_p2.pop, grid=false, color=:black, label=false, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
+	plot!(stabselenv_p2.p2, grid=false, color=:black, label=false)
+	#plot!(stabselenv_p2.p4, grid=false, color=:blue, label=false)
 	xlabel!("\$t\$")
 	ylabel!("Population size")
+	ylims!(0,125)
 end
 
 # ╔═╡ ae4423a0-6536-48fa-b87b-991096eb16c7
 begin
-	pop4 = plot(stabselenv_p4.pop, grid=false, color=:black, label=false)
-	plot!(stabselenv_p4.p2, grid=false, color=:red, label=false)
-	plot!(stabselenv_p4.p4, grid=false, color=:blue, label=false)
+	pop4 = plot(stabselenv_p4.pop, grid=false, color=:black, label=false, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
+	#plot!(stabselenv_p4.p2, grid=false, color=:red, label=false)
+	plot!(stabselenv_p4.p4, grid=false, color=:black, label=false)
 	xlabel!("\$t\$")
 	ylabel!("Population size")
+	ylims!(0,125)
+end
+
+# ╔═╡ 425e65c5-72bc-465a-8848-f7fb31524a86
+begin
+plot(p2env, pop2, p4env, pop4, legend=:false, layout = (2, 2), size=(750,500))
+savefig("lin1.png")
 end
 
 # ╔═╡ bf03c845-bedf-4b43-95b4-bd33081daeda
@@ -171,9 +180,6 @@ begin
 	xlabel!("\$t\$")
 	ylabel!("Population size")
 end
-
-# ╔═╡ 425e65c5-72bc-465a-8848-f7fb31524a86
-plot(p2env, pop2, p4env, pop4, pmixedenv, popmixed, legend=:false, layout = (3, 2))
 
 # ╔═╡ 93a1cd1c-a456-4fa1-9b41-65b4b4682c79
 md""" ### Addendum: Diffusion equations"""

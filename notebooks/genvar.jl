@@ -10,6 +10,9 @@ using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes
 # ╔═╡ ded34c80-8699-11eb-33ce-214cb4f59699
 using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, evolving_neutraldeme, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy, trait_mean, randagent, evolving_haploiddeme, mate_p, evolving_selectiondemeh
 
+# ╔═╡ 36f0c9b1-8285-4e5a-900a-02927a2a6e4e
+using Measures
+
 # ╔═╡ 91826552-6b17-491f-ad1b-77e06dfcdeb6
 using PolyStab: malthusian_fitness, trait_add, trait_dom, trait_rec
 
@@ -23,22 +26,22 @@ md"""### Single deme dynamics of a mixed ploidy population"""
 md""" ##### Initialization of demes with different ploidy levels (haploid, diploid, tetraploid)"""
 
 # ╔═╡ 217c5170-8e52-11eb-175c-c9b8476ae81b
-d_p1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [1., 0., 0., 0.],150), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1)
+d_p1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [1., 0., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 12.5, Vs = 1.)
 
 # ╔═╡ 3f70dcc0-8bfd-11eb-3df6-6709900e71ce
-d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 1., 0., 0.],150), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1)
+d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 12.5, Vs = 1.)
 
 # ╔═╡ 39b5e750-8dbd-11eb-3f64-c12fa3fe01d5
-d_p4 = MixedPloidyDeme(agents = randagent_p(0.5, 0.2, 200, [0., 0., 0., 1.],150), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 20., Vs = 0.1)
+d_p4 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 12.5, Vs = 1.)
 
 # ╔═╡ 3106b1d0-9875-11eb-36ac-0d2b98a73fd4
 md""" ##### Dynamics in a neutral deme (random mating, no selection)"""
 
 # ╔═╡ a8d89200-8e52-11eb-1277-b1857f7ea0fe
 begin
-neutral_p1 = evolving_haploiddeme(d_p1, 1000)
-neutral_p2 = evolving_neutraldeme(d_p2, 1000)
-neutral_p4 = evolving_neutraldeme(d_p4, 1000)
+neutral_p1 = evolving_haploiddeme(d_p1, 1500)
+neutral_p2 = evolving_neutraldeme(d_p2, 1500)
+neutral_p4 = evolving_neutraldeme(d_p4, 1500)
 end
 
 # ╔═╡ 66a25c90-8bff-11eb-2a53-09b98728f17c
@@ -50,35 +53,36 @@ begin
 	eh_1(H₀, t, N) = ((1.0-1.0/(N))^t)*H₀
 	eh_2(H₀, t, N) = ((1.0-1.0/(2*N))^t)*H₀
 	eh_4(H₀, t, N) = ((1.0-1.0/(4*N))^t)*H₀
-	plot(Hₒ_p1, grid=false, color=:black, label="\$H_op1(t)\$", title="LOH")
-	plot!(Hₒ_p2, grid=false, color=:blue, label="\$H_op2(t)\$")
-	plot!(Hₒ_p4, grid=false, color=:red, label="\$H_op4(t)\$")
+	plot(Hₒ_p1, grid=false, color=:black, linewidth=:2, label="\$H_{sim}p1(t)\$", title="Loss of heterozygosity", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
+	plot!(Hₒ_p2, grid=false, color=:blue, linewidth=:2, label="\$H_{sim}p2(t)\$")
+	plot!(Hₒ_p4, grid=false, color=:red, linewidth=:2, label="\$H_{sim}p4(t)\$")
 	#plot!(0:sim_p2.ngen+1, 
 		#t->expected_heterozygosity(0.5*(1-0.5), t, 50),
 		#linestyle=:dash, color=:black, 
 		#label = "\$(1-1/N)^t H_o(0)\$")
 	plot!(0:neutral_p1.ngen+1, 
 		t->eh_1(0.5*(1-0.5), t, 150),
-		linestyle=:dash, color=:black, 
-		label = "\$(1-1/N)^t H_o(0)\$")
+		linestyle=:dash, color=:black,linewidth=:2, 
+		label = "\$(1-1/N)^t H_o\$")
 	plot!(0:neutral_p2.ngen+1, 
 		t->eh_2(0.5*(1-0.5), t, 150),
-		linestyle=:dash, color=:blue, 
-		label = "\$(1-1/2N)^t H_o(0)\$")
+		linestyle=:dash, color=:blue, linewidth=:2, 
+		label = "\$(1-1/2N)^t H_o\$")
 	plot!(0:neutral_p4.ngen+1, 
 		t->eh_4(0.5*(1-0.5), t, 150),
-		linestyle=:dash, color=:red, 
-		label = "\$(1-1/4N)^t H_o(0)\$")
+		linestyle=:dash, color=:red, linewidth=:2, 
+		label = "\$(1-1/4N)^t H_o\$")
 	xlabel!("\$t\$")
 	ylabel!("\$H(t)\$")
+	savefig("neutralLOH.png")
 end
 
 # ╔═╡ 621f41a0-9885-11eb-2bf8-a530b5cc7e86
 begin
-n = 200 #number of loci
+n = 50 #number of loci
 k = 2 #ploidy
 #α = 1/√(k*n) 
-α = .2 
+α = .5 
 a2 = randagent(0.5, α, n, 2)
 b2 = randagent(0.5, α, n, 2)
 o2 = map(x->trait(mate_p(a2,b2)), 1:2500) 
@@ -121,38 +125,48 @@ end
 
 # ╔═╡ 3ec21690-992c-11eb-3b9f-4143af21edc5
 begin
-	p1n = plot(traitneutral_p1, grid=false, color=:red,linewidth=3,label="Mean phenotype", title="Haploid", legend=:bottomright)
+	p1n = plot(traitneutral_p1, grid=false, color=:red,linewidth=3,label="Mean phenotype", title="Haploid", legend=:bottomright, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	for (i,t) in enumerate(neutral_p1.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(traitneutral_p1, grid=false, color=:red,linewidth=3, title="Haploid",label=false, legend=:bottomright)
+	
 	xlabel!("\$t\$")
 	ylabel!("Phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(17,25)
+	ylims!(7,19)
 end
 
 # ╔═╡ 415089a2-992c-11eb-24c9-ff5fa01c0273
 begin
-	p2n = plot(traitneutral_p2, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid", legend=:bottomright)
+	p2n = plot(traitneutral_p2, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid", legend=:bottomright, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	for (i,t) in enumerate(neutral_p2.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(traitneutral_p2, grid=false, color=:red, label=false,linewidth=3)
 	xlabel!("\$t\$")
 	ylabel!("Phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(17,25)
+	ylims!(7,19)
 end
 
 # ╔═╡ 42f31610-992c-11eb-03e1-5b5f8ca6a2fc
 begin
-	p4n = plot(traitneutral_p4, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid",legend=:bottomright)
+	p4n = plot(traitneutral_p4, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid",legend=:bottomright, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	for (i,t) in enumerate(neutral_p4.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(traitneutral_p4, grid=false, color=:red, label=false,linewidth=3, title="Tetraploid",legend=:bottomright)
 	xlabel!("\$t\$")
 	ylabel!("Phenotype")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(17,25)
+	ylims!(7,19)
+end
+
+# ╔═╡ 5ba44a08-d911-4bbb-b6e5-f66e8e0ceb08
+begin
+plot(p1n,p2n,p4n, layout=(1,3), size=(1200,400), xlabel="\$t\$", ylabel="phenotype", margin=5mm)
+savefig("neutralTRAIT.png")
 end
 
 # ╔═╡ 1b1541de-8dbf-11eb-041c-815c116efeeb
@@ -174,46 +188,53 @@ md""" ##### Dynamics in a deme with densitiy dependence and stabilizing selectio
 
 # ╔═╡ 47dc60c0-9876-11eb-3d70-cd03509cbad8
 begin
-stabsel_p1 = evolving_selectiondemeh(d_p1,500)
-stabsel_p2 = evolving_selectiondeme(d_p2,500)
-stabsel_p4 = evolving_selectiondeme(d_p4,500)
+stabsel_p1 = evolving_selectiondemeh(d_p1,1500)
+stabsel_p2 = evolving_selectiondeme(d_p2,1500)
+stabsel_p4 = evolving_selectiondeme(d_p4,1500)
 end
 
 # ╔═╡ d6c03b40-9939-11eb-244b-3d747272f440
 begin
-plot(Normal(mean(stabsel_p1.fta[1]), std(stabsel_p1.fta[1])), color=:black, label="Haploid")
-plot!(Normal(mean(stabsel_p2.fta[1]), std(stabsel_p2.fta[1])), color=:blue, label="Diploid")
-plot!(Normal(mean(stabsel_p4.fta[1]), std(stabsel_p4.fta[1])), color=:red, label="Tetraploid")
-xlabel!("Phenotype before selection")
+plot(Normal(mean(stabsel_p1.fta[1]), std(stabsel_p1.fta[1])), color=:black, label="Haploid", linewidth=2, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
+plot!(Normal(mean(stabsel_p2.fta[1]), std(stabsel_p2.fta[1])), color=:blue, label="Diploid", linewidth=2)
+plot!(Normal(mean(stabsel_p4.fta[1]), std(stabsel_p4.fta[1])), color=:red, label="Tetraploid", linewidth=2)
+xlabel!("Phenotype")
+ylabel!("Frequency")
+vline!([d_p1.θ],colour="black",linestyle=:dash, label=false, linewidth=2)
+xlims!(7,19)
+savefig("neutralGENVAR.png")
 end
 
 # ╔═╡ fc96ac10-9884-11eb-1735-d751fd99c805
 begin
+
 	Hₒs_p1 = map(mean, stabsel_p1.het)
 	Hₒs_p2 = map(mean, stabsel_p2.het)
 	Hₒs_p4 = map(mean, stabsel_p4.het)
 
-	plot(Hₒs_p1, grid=false, color=:black, label="\$H_op1(t)\$", title="LOH")
-	plot!(Hₒs_p2, grid=false, color=:blue, label="\$H_op2(t)\$")
-	plot!(Hₒs_p4, grid=false, color=:red, label="\$H_op4(t)\$")
+	plot(Hₒs_p1, grid=false, color=:black, linewidth=:2, label="\$H_{sim}p1(t)\$", title="Loss of heterozygosity", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
+	plot!(Hₒs_p2, grid=false, color=:blue, linewidth=:2, label="\$H_{sim}p2(t)\$")
+	plot!(Hₒs_p4, grid=false, color=:red, linewidth=:2, label="\$H_{sim}p4(t)\$")
 	#plot!(0:sim_p2.ngen+1, 
 		#t->expected_heterozygosity(0.5*(1-0.5), t, 50),
 		#linestyle=:dash, color=:black, 
 		#label = "\$(1-1/N)^t H_o(0)\$")
-	plot!(0:neutral_p1.ngen+1, 
-		t->eh_1(0.5*(1-0.5), t, 100),
-		linestyle=:dash, color=:black, 
-		label = "\$(1-1/N)^t H_o(0)\$")
-	plot!(0:neutral_p2.ngen+1, 
-		t->eh_2(0.5*(1-0.5), t, 100),
-		linestyle=:dash, color=:blue, 
-		label = "\$(1-1/2N)^t H_o(0)\$")
-	plot!(0:neutral_p4.ngen+1, 
-		t->eh_4(0.5*(1-0.5), t, 100),
-		linestyle=:dash, color=:red, 
-		label = "\$(1-1/4N)^t H_o(0)\$")
+	plot!(0:stabsel_p1.ngen+1, 
+		t->eh_1(0.5*(1-0.5), t, 150),
+		linestyle=:dash, color=:black,linewidth=:2, 
+		label = "\$(1-1/N)^t H_o\$")
+	plot!(0:stabsel_p2.ngen+1, 
+		t->eh_2(0.5*(1-0.5), t, 150),
+		linestyle=:dash, color=:blue, linewidth=:2, 
+		label = "\$(1-1/2N)^t H_o\$")
+	plot!(0:stabsel_p4.ngen+1, 
+		t->eh_4(0.5*(1-0.5), t, 150),
+		linestyle=:dash, color=:red, linewidth=:2, 
+		label = "\$(1-1/4N)^t H_o\$")
 	xlabel!("\$t\$")
 	ylabel!("\$H(t)\$")
+	savefig("selectionLOH.png")
+
 end
 
 # ╔═╡ 66257e10-9879-11eb-2367-d706689f326a
@@ -230,38 +251,47 @@ end
 
 # ╔═╡ 0501879e-9928-11eb-01c1-23fdad736664
 begin
-	p1 = plot(traitmean_p1, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Haploid")
+	p1 = plot(traitmean_p1, grid=false, color=:red, label="Mean phenotype",linewidth=3,legend=:bottomright, title="Haploid", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	for (i,t) in enumerate(stabsel_p1.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(traitmean_p1, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Haploid", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(18,22)
+	ylims!(7,19)
 end
 
 # ╔═╡ 70a06c90-992a-11eb-1a39-ff907051a107
 begin
-	p2 = plot(traitmean_p2, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Diploid")
+	p2 = plot(traitmean_p2, grid=false, color=:red, label="Mean phenotype",linewidth=3,legend=:bottomright, title="Diploid",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	for (i,t) in enumerate(stabsel_p2.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(traitmean_p2, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Diploid",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(18,22)
+	ylims!(7,19)
 end
 
 # ╔═╡ 7209e7a0-992a-11eb-0690-159af85e9c8d
 begin
-	p4 = plot(traitmean_p4, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Tetraploid")
+	p4 = plot(traitmean_p4, grid=false, color=:red, label="Mean phenotype",linewidth=3,legend=:bottomright, title="Tetraploid", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	for (i,t) in enumerate(stabsel_p4.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(traitmean_p4, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, title="Tetraploid", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
 	xlabel!("\$t\$")
 	ylabel!("Trait mean")
 	hline!([d_p1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
-	ylims!(18,22)
+	ylims!(7,19)
+end
+
+# ╔═╡ 878e9765-84ce-44e4-9160-151cf0805f7f
+begin
+plot(p1,p2,p4, layout=(1,3), size=(1200,400), xlabel="\$t\$", ylabel="phenotype", margin=5mm)
+savefig("selectTRAIT.png")
 end
 
 # ╔═╡ 63ad1c50-987f-11eb-1512-df6fc858aaca
@@ -346,10 +376,17 @@ end
 
 # ╔═╡ 9cdac49e-9884-11eb-2be7-832739ca5d66
 begin
-	popp1 = plot(popsize_p1, grid=false, color=:black, label=false)
-	popp2 = plot(popsize_p2, grid=false, color=:blue, label=false)
-	popp4 = plot(popsize_p4, grid=false, color=:red, label=false)
-	plot(popp1,popp2,popp4, layout = (3, 1))
+	popp1 = plot(popsize_p1, grid=false, color=:black, label=false, title="Haploid", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
+	ylims!(75,250)
+	hline!([d_p1.K],colour="black",linestyle=:dash, label=false)
+	popp2 = plot(popsize_p2, grid=false, color=:black, label=false, title="Diploid", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
+	ylims!(75,250)
+	hline!([d_p1.K],colour="black",linestyle=:dash, label=false)
+	popp4 = plot(popsize_p4, grid=false, color=:black, label=false, title="Tetraploid", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12)
+	ylims!(75,250)
+	hline!([d_p1.K],colour="black",linestyle=:dash, label=false)
+	plot(popp1,popp2,popp4, layout=(1,3), size=(1200,400), xlabel="\$t\$", ylabel="population size", margin=5mm)
+savefig("selectPOP.png")
 end
 
 # ╔═╡ fe5aa0f0-9939-11eb-1416-91041276c925
@@ -820,6 +857,8 @@ end
 # ╠═3ec21690-992c-11eb-3b9f-4143af21edc5
 # ╠═415089a2-992c-11eb-24c9-ff5fa01c0273
 # ╠═42f31610-992c-11eb-03e1-5b5f8ca6a2fc
+# ╠═36f0c9b1-8285-4e5a-900a-02927a2a6e4e
+# ╠═5ba44a08-d911-4bbb-b6e5-f66e8e0ceb08
 # ╠═1b1541de-8dbf-11eb-041c-815c116efeeb
 # ╟─3fc09382-986b-11eb-29d6-57eeb0eddb77
 # ╠═47dc60c0-9876-11eb-3d70-cd03509cbad8
@@ -829,6 +868,7 @@ end
 # ╠═0501879e-9928-11eb-01c1-23fdad736664
 # ╠═70a06c90-992a-11eb-1a39-ff907051a107
 # ╠═7209e7a0-992a-11eb-0690-159af85e9c8d
+# ╠═878e9765-84ce-44e4-9160-151cf0805f7f
 # ╠═63ad1c50-987f-11eb-1512-df6fc858aaca
 # ╠═44614280-9920-11eb-302b-6f959c8c2b94
 # ╠═809cf8b2-9926-11eb-2b5e-d97d23d44531

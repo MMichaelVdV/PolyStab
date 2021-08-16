@@ -18,8 +18,8 @@ md""" We can introduce a parameter `d` to scale the phenotypes for different plo
 
 # ╔═╡ 3265e73d-d2e8-45e1-9f1e-f65c342bd43f
 begin
-	α=0.1
-	L=100
+	α=0.125
+	L=50
 	p=0.5
 end
 
@@ -50,8 +50,8 @@ md""" #### Simulations for d=0"""
 
 # ╔═╡ 18b2bd9f-2702-4c80-93ca-0e637324479b
 begin
-diploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
-tetraploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
+diploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 500, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
+tetraploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 500, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
 end
 
 # ╔═╡ 45aceacc-aa61-4e2d-a7e3-859866c400c2
