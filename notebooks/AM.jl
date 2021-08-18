@@ -350,7 +350,7 @@ function grid_search(t)
 		for rep in 1:10
 		UG = [0. 0. 0. 0. ; 1-u u 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
 		d_p = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG, K=200)
-		sim_ploidyvar = evolving_selectiondeme_s(d_p, 1., 50)
+		sim_ploidyvar = evolving_selectiondeme_s(d_p, 0.5, 50)
 		if sim_ploidyvar.p2[end] >= sim_ploidyvar.p4[end]
 			push!(ploidy,2)
 		else
@@ -425,16 +425,26 @@ logit = glm(fm, df, Binomial(), LogitLink())
 # ╔═╡ fd3a16b3-3d7d-4256-b94f-b7af800259e5
 begin
 tick1 = stabprob(stats_2[1])
-grid1 = plot([0.005:0.005:0.5...],tick1,label=false, title="s=1",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12, grid=false, linewidth=3)
+grid1 = plot([0.005:0.005:0.5...],tick1,label=false, title="Effect of self-fertilization on establishment",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=12, grid=false, linewidth=3)
 vline!([0.17],label=false,linewidth=2,style=:dash)
 hline!([0.50],label=false,linewidth=2,style=:dash, colour =:black)
 xlabel!("u")
 ylabel!("P estab")
 	
-it(x) = 1/(1+exp(-(225.921*x-10.4973)))
-vline!([10.4973/225.921], linewidth=2,style=:dash, label=false)
-plot!(df[2],it.(df[2]), colour =:black, label=false, linewidth=2)
-savefig("s1.png")
+it1(x) = 1/(1+exp(-(225.921*x-10.4973)))
+vline!([10.4973/225.921], linewidth=2,style=:dash, label=false, colour =:black)
+plot!(df[2],it1.(df[2]), colour =:black, label="s=1", linewidth=4, style=:dot)
+
+it05(x) = 1/(1+exp(-(121.91*x-10.2823)))
+vline!([10.2823/121.91], linewidth=2,style=:dash, label=false, colour =:black)
+plot!(df[2],it05.(df[2]), colour =:black, label="s=0.5", linewidth=3, style=:dashdot)
+	
+it0(x) = 1/(1+exp(-(103.86*x-14.1103)))
+vline!([14.1103/103.86], linewidth=2,style=:dash, label=false, colour =:black)
+plot!(df[2],it0.(df[2]), colour =:black, label="s=0", linewidth=2)
+	
+
+savefig("scompar.png")
 end
 
 # ╔═╡ f8175360-ca56-4d81-801b-fb4a2e92a5bf

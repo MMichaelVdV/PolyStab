@@ -13,6 +13,9 @@ using PolyStab
 # ╔═╡ 423cffe0-8b5f-11eb-1df4-ff7eed10289a
 using PolyStab: Agent, randagent_p, MixedPloidyDeme, IslandDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, random_mating, evolving_neutraldeme, evolving_islanddeme
 
+# ╔═╡ f35c49a4-beac-4442-849d-6b052825d17a
+using Measures
+
 # ╔═╡ 44771223-a589-4de3-9fea-321b70138d80
 using PolyStab: malthusian_fitness, trait_mean, ploidy_freq, f_trait_agents, mating_PnB_x, directional_selection, mating_PnB, mutate
 
@@ -129,6 +132,19 @@ begin
 	end
 end
 
+# ╔═╡ 7473dcf0-8fcd-11eb-16e8-a5371cf5105f
+begin
+	pf2_p2 = island_p2.p2
+	pf3_p2 = island_p2.p3
+	pf4_p2 = island_p2.p4
+	p21 = plot(pf2_p2, grid=false, color=:blue, label="Diploids", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10, linewidth=2, legend=:false)
+	#plot!(pf3_p1, grid=false, color=:green, label="triploids")
+	plot!(pf4_p2, grid=false, color=:red, label="Tetraploid", linewidth=2)
+	hline!([island.K],label =false,colour = "black",linestyle=:dash, linewidth=2)
+	xlabel!("\$t\$")
+	ylabel!("Population size")
+end
+
 # ╔═╡ 6df662b0-8b6a-11eb-0e74-611b7747413e
 begin
 	pf2_p1 = island_p.p2
@@ -157,42 +173,29 @@ end
 # ╔═╡ 84585d6e-8c09-11eb-3c5c-af38eb556b15
 var_add(a::Agent,α) = ploidy(a)*α^2*sum(heterozygosities_p(a))
 
-# ╔═╡ 7473dcf0-8fcd-11eb-16e8-a5371cf5105f
-begin
-	pf2_p2 = island_p2.p2
-	pf3_p2 = island_p2.p3
-	pf4_p2 = island_p2.p4
-	p21 = plot(pf2_p2, grid=false, color=:blue, label="diploids", legend=:bottomright)
-	#plot!(pf3_p1, grid=false, color=:green, label="triploids")
-	plot!(pf4_p2, grid=false, color=:red, label="tetraploids")
-	hline!([island.K],label ="K",colour = "black",linestyle=:dash)
-	xlabel!("\$t\$")
-	ylabel!("Number of individuals")
-end
-
 # ╔═╡ 1bbe42d0-8fd2-11eb-0d53-8be7e42d7722
 begin
 	traitmean_ploidy2 = map(mean, island_p2.tm)
-	p22 = plot(traitmean_ploidy2, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright) #title="Stabilizing selection"
+	p22 = plot(traitmean_ploidy2, grid=false, color=:red, label=false,linewidth=3,legend=:bottomright, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10) #title="Stabilizing selection"
 	for (i,t) in enumerate(island_p2.fta)
 	scatter!([i for x in 1:length(t)],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
 	xlabel!("\$t\$")
-	ylabel!("Trait mean")
-	hline!([island.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+	ylabel!("Phenotype")
+	hline!([island.θ],label=false,colour="black",linestyle=:dash, linewidth=2)
 end
 
 # ╔═╡ 1cd88c70-8fd2-11eb-30bc-a3b3c916b97d
 begin
 	Hₒ_ploidyhet2 = map(mean, 2 .*island_p2.het)
 	expected_heterozygosity(H₀, t, N) = ((1.0-1.0/(2*N))^t)*H₀
-	p23 = plot(Hₒ_ploidyhet2, grid=false, color=:black, label="\$H_o(t)\$", title = "LOH")
+	p23 = plot(Hₒ_ploidyhet2, grid=false, color=:black, label="\$H_{sim}(t)\$", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10, linewidth=2)
 	plot!(1:island_p2.ngen, 
 		t->expected_heterozygosity(Hₒ_ploidyhet2[1], t, 50),
 		linestyle=:dash, color=:black, 
-		label = "\$(1-1/2N)^t H_o(0)\$")
+		label = "\$(1-1/2N)^t H_o(0)\$", linewidth=2)
 	V_A2 = map(sum, 2*(0.1)^2 .*island_p2.het)
-	plot!(V_A2, grid=false, color=:red, label="\$V_A(t)\$")
+	plot!(V_A2, grid=false, color=:red, label="\$V_A(t)\$", linewidth=2)
 	xlabel!("\$t\$")
 	ylabel!("\$H(t)\$")
 end
@@ -218,7 +221,10 @@ begin
 end
 
 # ╔═╡ 4be009d0-8fd2-11eb-2338-15f33ab00a20
-plot(p21,p22,p23)
+begin
+plot(p21,p22,p23,layout=(3,1), size=(350,750), margin=5mm)
+#savefig("islandmigrantp2")
+end
 
 # ╔═╡ 4ce3fdbb-82f2-46da-a226-485306b0d91b
  md""" ### Black-hole sink dynamics"""
@@ -239,7 +245,7 @@ island_s2i = IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],0), 
 s2 = map(x->(evolving_selectiondeme(MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.),20)).pop[end], 1:1000) 
 
 # ╔═╡ 2da9fafc-64c4-4c4c-a0c8-2e248ae84441
-s2i = map(x->(evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25),20)).pop[end], 1:1000) 
+s2i = map(x->(evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.2),20)).pop[end], 1:1000) 
 
 # ╔═╡ ef4e8ee0-828f-478c-ba12-1a555d620019
 sort(s2i)
@@ -256,8 +262,8 @@ length(s2[s2 .> 0])/1000
 
 # ╔═╡ 84c68f37-fc5a-4383-a142-61aa55df437b
 begin
-	histogram(s2i, bins = 25, fillalpha = 0.4, title="Estab of diploid migrant (dirsel)")
-	xlabel!("\$popsize\$")
+	p2estab = histogram(s2i, bins = 30, fillalpha = 0.5, title="Diploid", color=:black, label=false, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10)
+	xlabel!("Population size")
 	ylabel!("\$n\$")
 end
 
@@ -274,14 +280,14 @@ island_s4i = IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],0), 
 s4 = map(x->(evolving_selectiondeme(MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15.),20)).pop[end], 1:1000) 
 
 # ╔═╡ 288e3007-316f-4c1f-9569-b34e6607e1a4
-s4i = map(x->(evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=15., β=0.25),20)).pop[end], 1:1000) 
+s4i = map(x->(evolving_islanddeme(IslandDeme(agents = randagent_p(0.5, 0.5, 50, [0., 0., 0., 1.],1), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], μ=0., θ=12.5, β=0.20),20)).pop[end], 1:1000) 
 
 # ╔═╡ 345540d4-9ead-4433-922e-24f7c33f7d7f
 sort(s4i)
 
 # ╔═╡ 091ec75c-9d54-4b3d-bc45-dbb748ca447a
 begin
-	histogram(s4, bins = 25, fillalpha = 0.4, title="Estab of tetraploid migrant (stabsel)")
+	histogram(s4, bins = 30, fillalpha = 0.5, title="Estab of tetraploid migrant (stabsel)", color=:black, label=:false)
 	xlabel!("\$popsize\$")
 	ylabel!("\$n\$")
 end
@@ -291,9 +297,15 @@ length(s4[s4 .> 0])/1000
 
 # ╔═╡ 637464b6-fe68-4abc-8306-1e784f0352e5
 begin
-	histogram(s4i, bins = 25, fillalpha = 0.4, title="Estab of tetraploid migrant (dirsel)")
-	xlabel!("\$popsize\$")
+	p4estab = histogram(s4i, bins = 30, fillalpha = 0.5, title="Tetraploid", colour=:black, label=:false, xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10)
+	xlabel!("Population size")
 	ylabel!("\$n\$")
+end
+
+# ╔═╡ 7240e165-0822-40c0-a1fd-3f29cf24e372
+begin
+plot(p2estab,p4estab, layout=(1,2), size=(800,350), margin=5mm)
+savefig("islandmigrantp2p4")
 end
 
 # ╔═╡ 45729e96-a64d-46ac-be71-dab33e8e1a9d
@@ -654,13 +666,19 @@ end
 
 # ╔═╡ 96e50f72-39c4-4fa6-9fe3-bb03a202450c
 begin
-	p2nsim = plot([1,2,3,4],[mean(i_00_001b), mean(i_00_01b), mean(i_00_1b), mean(i_00_10b)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false, title=:"Diploid population")
-	plot!([1,2,3,4],[mean(i_10_001b), mean(i_10_01b), mean(i_10_1b), mean(i_10_10b)], label="△z=10", marker = ([:hex :d]), color=:black)
-		plot!([1,2,3,4],[mean(i_20_001b), mean(i_20_01b), mean(i_20_1b), mean(i_20_10b)], label="△z=20", marker = ([:hex :d]), color=:blue)
-		plot!([1,2,3,4],[mean(i_30_001b), mean(i_30_01b), mean(i_30_1b), mean(i_30_10b)], label="△z=30", marker = ([:hex :d]), color=:black)
-		plot!([1,2,3,4],[mean(i_40_001b), mean(i_40_01b), mean(i_40_1b), mean(i_40_10b)], label="△z=40", marker = ([:hex :d]), color=:blue)
-		plot!([1,2,3,4],[mean(i_50_001b), mean(i_50_01b), mean(i_50_1b), mean(i_50_10b)], label="△z=50", marker = ([:hex :d]), color=:black)
-		plot!([1,2,3,4],[mean(i_60_001b), mean(i_60_01b), mean(i_60_1b), mean(i_60_10b)], label="△z=60", marker = ([:hex :d]), color=:blue)
+	p2nsim = plot([1,2,3,4],[mean(i_00_001b), mean(i_00_01b), mean(i_00_1b), mean(i_00_10b)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false, title=:"Diploid", xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10, yerror=[sem(i_00_001b), sem(i_00_01b), sem(i_00_1b), sem(i_00_10b)])
+	
+	plot!([1,2,3,4],[mean(i_10_001b), mean(i_10_01b), mean(i_10_1b), mean(i_10_10b)], label="△z=10", marker = ([:hex :d]), color=:black, yerror=[sem(i_10_001b), sem(i_10_01b), sem(i_10_1b), sem(i_10_10b)])
+		
+	plot!([1,2,3,4],[mean(i_20_001b), mean(i_20_01b), mean(i_20_1b), mean(i_20_10b)], label="△z=20", marker = ([:hex :d]), color=:blue, yerror=[sem(i_20_001b), sem(i_20_01b), sem(i_20_1b), sem(i_20_10b)])
+		
+	plot!([1,2,3,4],[mean(i_30_001b), mean(i_30_01b), mean(i_30_1b), mean(i_30_10b)], label="△z=30", marker = ([:hex :d]), color=:black, yerror=[sem(i_30_001b), sem(i_30_01b), sem(i_30_1b), sem(i_30_10b)])
+		
+	plot!([1,2,3,4],[mean(i_40_001b), mean(i_40_01b), mean(i_40_1b), mean(i_40_10b)], label="△z=40", marker = ([:hex :d]), color=:blue, yerror=[sem(i_40_001b), sem(i_40_01b), sem(i_40_1b), sem(i_40_10b)])
+		
+	plot!([1,2,3,4],[mean(i_50_001b), mean(i_50_01b), mean(i_50_1b), mean(i_50_10b)], label="△z=50", marker = ([:hex :d]), color=:black, yerror=[sem(i_50_001b), sem(i_50_01b), sem(i_50_1b), sem(i_50_10b)])
+		
+	plot!([1,2,3,4],[mean(i_60_001b), mean(i_60_01b), mean(i_60_1b), mean(i_60_10b)], label="△z=60", marker = ([:hex :d]), color=:blue, yerror=[sem(i_60_001b), sem(i_60_01b), sem(i_60_1b), sem(i_60_10b)])
 	xlabel!("Migration rate")
 	ylabel!("Time to establish")
 #savefig(p2nsim, "Estab_2n_2")
@@ -725,16 +743,29 @@ end
 
 # ╔═╡ abf94ddb-4440-4059-b4b4-88b52b0a6f08
 begin
-	p4nsim = plot([1,2,3,4],[mean(i4_00_001b), mean(i4_00_01b), mean(i4_00_1b), mean(i4_00_10b)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false, title=:"Tetraploid population")
-	plot!([1,2,3,4],[mean(i4_10_001b), mean(i4_10_01b), mean(i4_10_1b), mean(i4_10_10b)], label="△z=10", marker = ([:hex :d]), color=:black)
-		plot!([1,2,3,4],[mean(i4_20_001b), mean(i4_20_01b), mean(i4_20_1b), mean(i4_20_10b)], label="△z=20", marker = ([:hex :d]), color=:blue)
-		plot!([1,2,3,4],[mean(i4_30_001b), mean(i4_30_01b), mean(i4_30_1b), mean(i4_30_10b)], label="△z=30", marker = ([:hex :d]), color=:black)
-		plot!([1,2,3,4],[mean(i4_40_001b), mean(i4_40_01b), mean(i4_40_1b), mean(i4_40_10b)], label="△z=40", marker = ([:hex :d]), color=:blue)
-		plot!([1,2,3,4],[mean(i4_50_001b), mean(i4_50_01b), mean(i4_50_1b), mean(i4_50_10b)], label="△z=50", marker = ([:hex :d]), color=:black)
-	plot!([1,2,3,4],[mean(i4_60_001b), mean(i4_60_01b), mean(i4_60_1b), mean(i4_60_10b)], label="△z=50", marker = ([:hex :d]), color=:blue)
+	p4nsim = plot([1,2,3,4],[mean(i4_00_001b), mean(i4_00_01b), mean(i4_00_1b), mean(i4_00_10b)], label="△z=0", marker = ([:hex :d]), color=:blue, legend=false, title=:"Tetraploid",  xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10, yerror=[sem(i4_00_001b), sem(i4_00_01b), sem(i4_00_1b), sem(i4_00_10b)])
+	
+	plot!([1,2,3,4],[mean(i4_10_001b), mean(i4_10_01b), mean(i4_10_1b), mean(i4_10_10b)], label="△z=10", marker = ([:hex :d]), color=:black, yerror=[sem(i4_10_001b), sem(i4_10_01b), sem(i4_10_1b), sem(i4_10_10b)])
+		
+	plot!([1,2,3,4],[mean(i4_20_001b), mean(i4_20_01b), mean(i4_20_1b), mean(i4_20_10b)], label="△z=20", marker = ([:hex :d]), color=:blue, yerror=[sem(i4_20_001b), sem(i4_20_01b), sem(i4_20_1b), sem(i4_20_10b)])
+		
+	plot!([1,2,3,4],[mean(i4_30_001b), mean(i4_30_01b), mean(i4_30_1b), mean(i4_30_10b)], label="△z=30", marker = ([:hex :d]), color=:black, yerror=[sem(i4_30_001b), sem(i4_30_01b), sem(i4_30_1b), sem(i4_30_10b)])
+		
+	plot!([1,2,3,4],[mean(i4_40_001b), mean(i4_40_01b), mean(i4_40_1b), mean(i4_40_10b)], label="△z=40", marker = ([:hex :d]), color=:blue, yerror=[sem(i4_40_001b), sem(i4_40_01b), sem(i4_40_1b), sem(i4_40_10b)])
+		
+	plot!([1,2,3,4],[mean(i4_50_001b), mean(i4_50_01b), mean(i4_50_1b), mean(i4_50_10b)], label="△z=50", marker = ([:hex :d]), color=:black, yerror=[sem(i4_50_001b), sem(i4_50_01b), sem(i4_50_1b), sem(i4_50_10b)])
+	
+	plot!([1,2,3,4],[mean(i4_60_001b), mean(i4_60_01b), mean(i4_60_1b), mean(i4_60_10b)], label="△z=50", marker = ([:hex :d]), color=:blue, yerror=[sem(i4_50_001b), sem(i4_50_01b), sem(i4_50_1b), sem(i4_50_10b)])
+	
 	xlabel!("Migration rate")
 	ylabel!("Time to establish")
 #savefig(p4nsim, "Estab_4n_2")
+end
+
+# ╔═╡ 2384a867-211e-47ad-8328-01735492eb20
+begin
+plot(p2nsim,p4nsim,layout=(1,2), size=(800,400), margin=5mm)
+savefig("islandmigrantcontp2p4")
 end
 
 # ╔═╡ 12bd4301-7a63-482a-be63-bf5f7c78bb90
@@ -994,14 +1025,15 @@ md""" Is this only for pops that estab >100? effect + effect of dir sel vs stab 
 # ╠═08db9cd0-8fcd-11eb-1e0a-fd10a73b4dd0
 # ╠═58605950-8b61-11eb-16d9-0ff9be46d489
 # ╠═145aba50-8fcd-11eb-081d-4ffe44449e3f
-# ╠═6df662b0-8b6a-11eb-0e74-611b7747413e
-# ╠═dc3ad710-8b6a-11eb-3e55-7ba4760f8132
-# ╠═ee422a80-8b6a-11eb-13ce-a7f8ab3de0ef
-# ╠═84585d6e-8c09-11eb-3c5c-af38eb556b15
 # ╠═7473dcf0-8fcd-11eb-16e8-a5371cf5105f
+# ╟─6df662b0-8b6a-11eb-0e74-611b7747413e
+# ╟─dc3ad710-8b6a-11eb-3e55-7ba4760f8132
+# ╟─ee422a80-8b6a-11eb-13ce-a7f8ab3de0ef
+# ╠═84585d6e-8c09-11eb-3c5c-af38eb556b15
 # ╠═1bbe42d0-8fd2-11eb-0d53-8be7e42d7722
 # ╠═1cd88c70-8fd2-11eb-30bc-a3b3c916b97d
 # ╠═5a0f4c50-8c26-11eb-0f10-dfd79a2ff7c5
+# ╠═f35c49a4-beac-4442-849d-6b052825d17a
 # ╠═4be009d0-8fd2-11eb-2338-15f33ab00a20
 # ╟─4ce3fdbb-82f2-46da-a226-485306b0d91b
 # ╟─e87406ec-2deb-4fda-9e49-5f95676b32c3
@@ -1023,6 +1055,7 @@ md""" Is this only for pops that estab >100? effect + effect of dir sel vs stab 
 # ╠═091ec75c-9d54-4b3d-bc45-dbb748ca447a
 # ╠═558da9c6-e3f1-481e-86c2-8b825ae1f75f
 # ╠═637464b6-fe68-4abc-8306-1e784f0352e5
+# ╠═7240e165-0822-40c0-a1fd-3f29cf24e372
 # ╠═45729e96-a64d-46ac-be71-dab33e8e1a9d
 # ╟─71012460-b6af-4282-a78d-692d0a2a9577
 # ╟─22f70e65-e0b2-4188-91bb-b39c0a74c7a0
@@ -1054,17 +1087,18 @@ md""" Is this only for pops that estab >100? effect + effect of dir sel vs stab 
 # ╠═6efa7a7e-0806-4bde-b519-4753d62fb699
 # ╟─4bc8434c-22db-487d-9b1a-1042c68a115e
 # ╠═02b516d4-6a80-43d3-8b05-30f56a1459f0
-# ╟─4278d8d1-8634-4be2-be12-0bfe80b67baf
-# ╟─e0399c8e-5d34-484d-854b-11fae2c9ee59
-# ╟─ce9051fd-2fc7-429a-882d-86fe8f8fc765
+# ╠═4278d8d1-8634-4be2-be12-0bfe80b67baf
+# ╠═e0399c8e-5d34-484d-854b-11fae2c9ee59
+# ╠═ce9051fd-2fc7-429a-882d-86fe8f8fc765
 # ╟─3117b134-1168-4318-b845-1bf7f1cbfc4b
 # ╠═96e50f72-39c4-4fa6-9fe3-bb03a202450c
-# ╟─04b7b74f-5971-432e-a630-10a67c7f0c3a
-# ╟─9456b032-7a9b-45bb-bfcc-3cad3e23ab7b
-# ╟─e6f3ec85-47e2-40cb-913f-3c746975b7e4
-# ╟─c03cf01a-6741-4d57-a105-3f7bb8a03715
+# ╠═04b7b74f-5971-432e-a630-10a67c7f0c3a
+# ╠═9456b032-7a9b-45bb-bfcc-3cad3e23ab7b
+# ╠═e6f3ec85-47e2-40cb-913f-3c746975b7e4
+# ╠═c03cf01a-6741-4d57-a105-3f7bb8a03715
 # ╟─8100b6d0-14d9-4c79-9cfd-d3c9e73fe9bc
 # ╠═abf94ddb-4440-4059-b4b4-88b52b0a6f08
+# ╠═2384a867-211e-47ad-8328-01735492eb20
 # ╟─12bd4301-7a63-482a-be63-bf5f7c78bb90
 # ╟─6fde4a90-3657-4ee7-b4ba-5a2e19667347
 # ╠═5452b1f1-78f9-4ed4-9050-c2867881872f

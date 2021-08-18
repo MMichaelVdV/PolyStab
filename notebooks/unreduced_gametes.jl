@@ -273,7 +273,7 @@ end
 stats_3 = grid_search_2(200)
 
 # ╔═╡ 5d85451e-f189-44eb-9a24-463b865b0e97
-md""" Remark: Probability of tetraploid establishment is here caclulated as ratio of simulations where a majority of the individuals of the population are tetraploids after 50 generation to the total number all simulations, and not conditional on a certain population size. This is why P estab starts to drop from a certain value of `u`, since populations will no longer be sustainable due to cytotype load and the total number of established populations will drop (both 2n and 4n). (Could also plot the ratio of 4n to 2n conditional on a certain population size higher than 0)"""
+Remark: Probability of tetraploid establishment is here caclulated as ratio of simulations where a majority of the individuals of the population are tetraploids after 50 generation to the total number all simulations, and not conditional on a certain population size. This is why P estab starts to drop from a certain value of `u`, since populations will no longer be sustainable due to cytotype load and the total number of established populations will drop (both 2n and 4n). (Could also plot the ratio of 4n to 2n conditional on a certain population size higher than 0)"""md""" 
 
 # ╔═╡ 99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
 dp_3 = [(stats_3[2][i],stats_3[1][i],stats_3[3][i]) for i in 1:2000]

@@ -4,11 +4,14 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ 74d8e4b2-4985-4150-a591-1c58a6907682
+using Measures
+
 # ╔═╡ 41fdfc2c-116e-4272-a8b8-ecbdb4f31525
 using Parameters, Random, Distributions, Plots, StatsBase, PlutoUI, ColorSchemes, DataFrames, StatsPlots
 
 # ╔═╡ 48e0c054-1f38-4517-9afc-558155f24d14
-using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy, trait_mean, randagent
+using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy, trait_mean, randagent, evolving_neutraldeme
 
 # ╔═╡ 9822f850-ea1a-11eb-2866-9f74ea8160ca
 md""" ### Scaling of phenotype and additive genetic variance for different ploidy levels"""
@@ -18,7 +21,7 @@ md""" We can introduce a parameter `d` to scale the phenotypes for different plo
 
 # ╔═╡ 3265e73d-d2e8-45e1-9f1e-f65c342bd43f
 begin
-	α=0.125
+	α=0.5
 	L=50
 	p=0.5
 end
@@ -50,22 +53,23 @@ md""" #### Simulations for d=0"""
 
 # ╔═╡ 18b2bd9f-2702-4c80-93ca-0e637324479b
 begin
-diploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 500, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
-tetraploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 500, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
+diploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
+tetraploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
 end
 
 # ╔═╡ 45aceacc-aa61-4e2d-a7e3-859866c400c2
 begin
-Sim_diploid_d0 = evolving_selectiondeme(diploid_d0,trait_exp,50)
-Sim_tetraploid_d0 = evolving_selectiondeme(tetraploid_d0,trait_exp,50)
+Sim_diploid_d0 = evolving_selectiondeme(diploid_d0,trait_exp,1000)#evolving_neutraldeme(diploid_d0,trait_exp,1000) 
+Sim_tetraploid_d0 = evolving_selectiondeme(tetraploid_d0,trait_exp,1000)#evolving_neutraldeme(tetraploid_d0,trait_exp,1000) 
 end
 
 # ╔═╡ 1927b5f2-fedb-45b7-82b4-2164c0c5e65e
 begin
-plot(Normal(mean(Sim_diploid_d0.fta[1]), std(Sim_diploid_d0.fta[1])), color=:blue, label="Diploid", title="d=0")
+dist0=plot(Normal(mean(Sim_diploid_d0.fta[1]), std(Sim_diploid_d0.fta[1])), color=:blue, label="Diploid", title="d=0",xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 plot!(Normal(mean(Sim_tetraploid_d0.fta[1]), std(Sim_tetraploid_d0.fta[1])), color=:red, label="Tetraploid")
 xlabel!("Phenotype before selection")
 ylabel!("Frequency")
+xlims!(15.,35.)
 end
 
 # ╔═╡ c4d1336c-ba1e-40a1-a1e4-0354ef020f2f
@@ -76,24 +80,28 @@ end
 
 # ╔═╡ 4645f0e8-fa66-4472-a234-b67482ab76c3
 begin
-	plot(trait_diploid_d0, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid, d=0", legend=:bottomright)
+	p2d0=plot(trait_diploid_d0, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid, d=0", legend=:bottomright,xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	for (i,t) in enumerate(Sim_diploid_d0.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_diploid_d0, grid=false, color=:red, label=false,linewidth=3, title="Diploid, d=0", legend=:bottomright,xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	xlabel!("\$t\$")
 	ylabel!("Phenotype")
-	hline!([diploid_d0.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+	hline!([diploid_d0.θ],label=false,colour="black",linestyle=:dash)
+	ylims!(5.,50.)
 end
 
 # ╔═╡ 3bace483-e385-4257-b057-aa518f8a6859
 begin
-	p2n = plot(trait_tetraploid_d0, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, d=0", legend=:bottomright)
+	p4d0 = plot(trait_tetraploid_d0, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, d=0", legend=:bottomright,xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	for (i,t) in enumerate(Sim_tetraploid_d0.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_tetraploid_d0, grid=false, color=:red, label=false,linewidth=3, title="Tetraploid, d=0", legend=:bottomright,xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	xlabel!("\$t\$")
 	ylabel!("Phenotype")
-	hline!([tetraploid_d0.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+	hline!([tetraploid_d0.θ],label=false,colour="black",linestyle=:dash)
+	ylims!(5.,50.)
 end
 
 # ╔═╡ fda5da73-4a68-4f67-a3d3-47b5570c6973
@@ -101,8 +109,8 @@ md""" #### Simulations for d=0.5"""
 
 # ╔═╡ 53f14f64-8b2d-470c-826a-468adb874a81
 begin
-diploid_d05 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=0.5), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = .2)
-tetraploid_d05 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 200, d=0.5), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = .2)
+diploid_d05 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=0.5), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
+tetraploid_d05 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 200, d=0.5), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
 end
 
 # ╔═╡ d83e9e3b-8122-4a01-96d7-38bef868b6d7
@@ -113,16 +121,17 @@ trait_exp(tetraploid_d05.agents[1])
 
 # ╔═╡ 50439e5c-e61c-49e1-a373-792f4a9423f4
 begin
-Sim_diploid_d05 = evolving_selectiondeme(diploid_d05,trait_exp,50)
-Sim_tetraploid_d05 = evolving_selectiondeme(tetraploid_d05,trait_exp,50)
+Sim_diploid_d05 = evolving_selectiondeme(diploid_d05,trait_exp,1000)#evolving_neutraldeme(diploid_d05,trait_exp,1000) 
+Sim_tetraploid_d05 = evolving_selectiondeme(tetraploid_d05,trait_exp,1000)#evolving_neutraldeme(tetraploid_d05,trait_exp,1000)
 end
 
 # ╔═╡ 223c011f-5f52-4f77-8f17-932fdaf96318
 begin
-plot(Normal(mean(Sim_diploid_d05.fta[1]), std(Sim_diploid_d05.fta[1])), color=:blue, label="Diploid", title="d=0.5")
+dist05=plot(Normal(mean(Sim_diploid_d05.fta[1]), std(Sim_diploid_d05.fta[1])), color=:blue, label="Diploid", title="d=0.5",xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 plot!(Normal(mean(Sim_tetraploid_d05.fta[1]), std(Sim_tetraploid_d05.fta[1])), color=:red, label="Tetraploid")
 xlabel!("Phenotype before selection")
 ylabel!("Frequency")
+xlims!(15.,35.)
 end
 
 # ╔═╡ 0dcc986f-4d06-4c40-8f8e-f5e3f173950b
@@ -133,24 +142,28 @@ end
 
 # ╔═╡ 2eba2b3a-3677-4850-b6fd-f88b5ca71d6e
 begin
-	plot(trait_diploid_d05, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid, d=0.5", legend=:bottomright)
+	p2d05=plot(trait_diploid_d05, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid, d=0.5", legend=:bottomright,xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	for (i,t) in enumerate(Sim_diploid_d05.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_diploid_d05, grid=false, color=:red, label=false,linewidth=3, title="Diploid, d=0.5", legend=:bottomright,xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	xlabel!("\$t\$")
 	ylabel!("Phenotype")
-	hline!([diploid_d05.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+	hline!([diploid_d05.θ],label=false,colour="black",linestyle=:dash)
+	ylims!(5.,50.)
 end
 
 # ╔═╡ d0c24e83-e1e8-4ec8-ae30-01495bd67440
 begin
-	plot(trait_tetraploid_d05, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, d=0.5", legend=:bottomright)
+	p4d05=plot(trait_tetraploid_d05, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, d=0.5", legend=:bottomright,xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	for (i,t) in enumerate(Sim_tetraploid_d05.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_tetraploid_d05, grid=false, color=:red, label=false,linewidth=3, title="Tetraploid, d=0.5", legend=:bottomright,xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	xlabel!("\$t\$")
 	ylabel!("Phenotype")
-	hline!([tetraploid_d05.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+	hline!([tetraploid_d05.θ],label=false,colour="black",linestyle=:dash)
+	ylims!(5.,50.)
 end
 
 # ╔═╡ 767d1302-61ca-44b6-a82a-8ecfdcc0fd62
@@ -158,22 +171,23 @@ md""" #### Simulations for d=1"""
 
 # ╔═╡ 9d55b2e6-9335-4894-99b8-6c4fd19e73c6
 begin
-diploid_d1 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
-tetraploid_d1 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 10., Vs = 1.5)
+diploid_d1 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
+tetraploid_d1 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
 end
 
 # ╔═╡ 5919b4da-04ae-439e-a899-65b0f71a440e
 begin
-Sim_diploid_d1 = evolving_selectiondeme(diploid_d1,trait_exp,50)
-Sim_tetraploid_d1 = evolving_selectiondeme(tetraploid_d1,trait_exp,50)
+Sim_diploid_d1 = evolving_selectiondeme(diploid_d1,trait_exp,1000)#evolving_neutraldeme(diploid_d1,trai
+Sim_tetraploid_d1 = evolving_selectiondeme(tetraploid_d1,trait_exp,1000)#evolving_neutraldeme(tetraploid_d1,trait_exp,1000)
 end
 
 # ╔═╡ 30489570-43c4-4f8a-bd9d-b7718939d57c
 begin
-plot(Normal(mean(Sim_diploid_d1.fta[1]), std(Sim_diploid_d1.fta[1])), color=:blue, label="Diploid", title="d=1")
+dist1=plot(Normal(mean(Sim_diploid_d1.fta[1]), std(Sim_diploid_d1.fta[1])), color=:blue, label="Diploid", title="d=1",xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 plot!(Normal(mean(Sim_tetraploid_d1.fta[1]), std(Sim_tetraploid_d1.fta[1])), color=:red, label="Tetraploid")
 xlabel!("Phenotype before selection")
 ylabel!("Frequency")
+xlims!(15.,35.)
 end
 
 # ╔═╡ 32c2aa17-7ba2-45a8-a69f-5cdde2b1ef0b
@@ -184,24 +198,133 @@ end
 
 # ╔═╡ c6f096bc-4ee4-4e26-bc64-660ca910fe42
 begin
-	plot(trait_diploid_d1, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid, d=1", legend=:bottomright)
+	p2d1=plot(trait_diploid_d1, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Diploid, d=1", legend=:bottomright,txtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	for (i,t) in enumerate(Sim_diploid_d1.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_diploid_d1, grid=false, color=:red, label=false,linewidth=3, title="Diploid, d=1", legend=:bottomright,txtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	xlabel!("\$t\$")
 	ylabel!("Phenotype")
-	hline!([diploid_d1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+	hline!([diploid_d1.θ],label=false,colour="black",linestyle=:dash)
+	ylims!(5.,50.)
 end
 
 # ╔═╡ 7f2ad115-a7e5-47f7-8c61-afeae195ef32
 begin
-	plot(trait_tetraploid_d1, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, d=1", legend=:bottomright)
+	p4d1=plot(trait_tetraploid_d1, grid=false, color=:red, label="Mean phenotype",linewidth=3, title="Tetraploid, d=1", legend=:bottomright,xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	for (i,t) in enumerate(Sim_tetraploid_d1.fta)
 	scatter!([i for x in 1:10],t,label=false,colour="black",ma=0.35,ms=2.5)
 	end
+	plot!(trait_tetraploid_d1, grid=false, color=:red, label=false,linewidth=3, title="Tetraploid, d=1", legend=:bottomright,xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
 	xlabel!("\$t\$")
 	ylabel!("Phenotype")
-	hline!([tetraploid_d1.θ],label="Optimal phenotype",colour="black",linestyle=:dash)
+	hline!([tetraploid_d1.θ],label=false,colour="black",linestyle=:dash)
+	ylims!(5.,50.)
+end
+
+# ╔═╡ a3a86212-0766-407e-8be8-b4382b6e1cce
+begin
+plot(dist0,dist05,dist1,p2d0,p2d05,p2d1,p4d0,p4d05,p4d1,layout=(3,3), size=(1200,800), margins=5mm)
+savefig("driftd")
+end
+
+# ╔═╡ 87e18c91-b212-4655-9946-b6f62acb361e
+begin
+	popsize_p2r = map(mean, Sim_diploid_d0.pop)
+	popsize_p4r = map(mean, Sim_tetraploid_d0.pop)
+	pop0 = plot(popsize_p2r, grid=false, color=:blue, label="Diploid",legend=:bottomright, title="Population growth, d=0",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10)
+	plot!(popsize_p4r, grid=false, color=:red, label="Tetraploid")
+	xlabel!("\$t\$")
+	ylabel!("Population size")
+end
+
+# ╔═╡ bec2c142-6531-4159-8d48-4e44a3716cf0
+begin
+popsize_p2d = map(mean, Sim_diploid_d05.pop)
+popsize_p4d = map(mean, Sim_tetraploid_d05.pop)
+pop05 = plot(popsize_p2d, grid=false, color=:blue, label="Diploid", title="Population growth, d=0.5",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10, legend=:bottomright)
+plot!(popsize_p4d, grid=false, color=:red, label="Tetraploid")
+	xlabel!("\$t\$")
+	ylabel!("Population size")
+end
+
+# ╔═╡ 464e9324-0d67-4a1d-9401-6e4108d1ad9c
+begin
+popsize_p2a = map(mean, Sim_diploid_d1.pop)
+popsize_p4a = map(mean, Sim_tetraploid_d1.pop)
+pop1 = plot(popsize_p2a, grid=false, color=:blue, label="Diploid", title="Population growth, d=1",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10, legend=:bottomright)
+plot!(popsize_p4a, grid=false, color=:red, label="Tetraploid")
+	xlabel!("\$t\$")
+	ylabel!("Population size")
+end
+
+# ╔═╡ 68c7fcfc-988a-4233-b3f5-89fd71068220
+begin
+plot(pop0,pop05,pop1, layout=(1,3), size=(1000,300), margins=5mm)
+savefig("popd")
+end
+
+# ╔═╡ bb053860-bd2e-44d1-842e-238201697628
+md""" ##### Cytotype load"""
+
+# ╔═╡ 8764ad8a-ff40-4987-b3ca-5421df3da0b7
+begin
+	diploid_u0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
+	diploid_u05 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
+	diploid_u10 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.90 0.10 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
+end
+
+# ╔═╡ 37d67078-0f39-4210-9598-ed6a9d6199b2
+begin
+Sim_diploid_u0 = evolving_selectiondeme(diploid_u0,trait_exp,1000)
+Sim_diploid_u05 = evolving_selectiondeme(diploid_u05,trait_exp,1000)
+Sim_diploid_u10 = evolving_selectiondeme(diploid_u10,trait_exp,1000)
+end
+
+# ╔═╡ 7414b7d8-950f-48d1-b596-196bf3997f21
+begin
+popsize_u0 = map(mean, Sim_diploid_u0.pop)
+popsize_u05 = map(mean, Sim_diploid_u05.pop)
+popsize_010 = map(mean, Sim_diploid_u10.pop)
+pop1ug = plot(popsize_u0, grid=false, color=:black, label="u=0", title="Population growth, v=0",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10, legend=:bottomright)
+plot!(popsize_u05, grid=false, color=:red, label="u=0.05")
+plot!(popsize_010, grid=false, color=:blue, label="u=0.10")
+hline!([diploid_d1.K],label=false,colour="black",linestyle=:dash, linewidth=2)
+xlabel!("\$t\$")
+ylabel!("Population size")
+end
+
+# ╔═╡ cb27b7ec-f9ec-4306-af4a-f9ad2424a82b
+begin
+	diploid_2u0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 0.90 0. 0.10], θ = 25., Vs = 1.)
+	diploid_2u05 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 0.95 0. 0.05], θ = 25., Vs = 1.)
+	diploid_2u10 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.90 0.10 0. 0. ; 0. 0. 0. 0. ; 0. 0.90 0. 0.10], θ = 25., Vs = 1.)
+end
+
+# ╔═╡ f6b4cbcf-0c46-47b6-859f-4a4012ffa64a
+begin
+Sim_diploid_2u0 = evolving_selectiondeme(diploid_2u0,trait_exp,1000)
+Sim_diploid_2u05 = evolving_selectiondeme(diploid_2u05,trait_exp,1000)
+Sim_diploid_2u10 = evolving_selectiondeme(diploid_2u10,trait_exp,1000)
+end
+
+# ╔═╡ 7114a8a4-a940-419d-90b3-fd8872fbc00d
+begin
+popsize_2u0 = map(mean, Sim_diploid_2u0.pop)
+popsize_2u05 = map(mean, Sim_diploid_2u05.pop)
+popsize_2010 = map(mean, Sim_diploid_2u10.pop)
+pop12ug = plot(popsize_2u0, grid=false, color=:black, label="u=v=0", title="Population growth, u=v",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10, legend=:bottomright)
+plot!(popsize_2u05, grid=false, color=:red, label="u=v=0.05")
+plot!(popsize_2010, grid=false, color=:blue, label="u=v=0.10")
+hline!([diploid_d1.K],label=false,colour="black", linestyle=:dash, linewidth=2)
+xlabel!("\$t\$")
+ylabel!("Population size")
+end
+
+# ╔═╡ 926f6e24-2aea-411d-bf70-f1ddc81f04fc
+begin
+plot(pop1ug,pop12ug, layout=(1,2), size=(1000,300), margins=5mm)
+savefig("cytoloadpopsize")
 end
 
 # ╔═╡ 1ac4f66d-ef4f-4053-bd46-2e385c14c50a
@@ -318,24 +441,38 @@ plot(pHWE0e,pHWE25e,pHWE50e,pHWE75e,pHWE100e)
 # ╠═d83e9e3b-8122-4a01-96d7-38bef868b6d7
 # ╠═263bb1a6-cb06-4863-b6d0-04963b3eb6bb
 # ╠═45aceacc-aa61-4e2d-a7e3-859866c400c2
-# ╟─1927b5f2-fedb-45b7-82b4-2164c0c5e65e
+# ╠═1927b5f2-fedb-45b7-82b4-2164c0c5e65e
 # ╠═c4d1336c-ba1e-40a1-a1e4-0354ef020f2f
 # ╠═4645f0e8-fa66-4472-a234-b67482ab76c3
 # ╠═3bace483-e385-4257-b057-aa518f8a6859
 # ╟─fda5da73-4a68-4f67-a3d3-47b5570c6973
 # ╠═53f14f64-8b2d-470c-826a-468adb874a81
 # ╠═50439e5c-e61c-49e1-a373-792f4a9423f4
-# ╟─223c011f-5f52-4f77-8f17-932fdaf96318
+# ╠═223c011f-5f52-4f77-8f17-932fdaf96318
 # ╠═0dcc986f-4d06-4c40-8f8e-f5e3f173950b
 # ╠═2eba2b3a-3677-4850-b6fd-f88b5ca71d6e
 # ╠═d0c24e83-e1e8-4ec8-ae30-01495bd67440
 # ╟─767d1302-61ca-44b6-a82a-8ecfdcc0fd62
 # ╠═9d55b2e6-9335-4894-99b8-6c4fd19e73c6
 # ╠═5919b4da-04ae-439e-a899-65b0f71a440e
-# ╟─30489570-43c4-4f8a-bd9d-b7718939d57c
+# ╠═30489570-43c4-4f8a-bd9d-b7718939d57c
 # ╠═32c2aa17-7ba2-45a8-a69f-5cdde2b1ef0b
 # ╠═c6f096bc-4ee4-4e26-bc64-660ca910fe42
 # ╠═7f2ad115-a7e5-47f7-8c61-afeae195ef32
+# ╠═74d8e4b2-4985-4150-a591-1c58a6907682
+# ╠═a3a86212-0766-407e-8be8-b4382b6e1cce
+# ╠═87e18c91-b212-4655-9946-b6f62acb361e
+# ╠═bec2c142-6531-4159-8d48-4e44a3716cf0
+# ╠═464e9324-0d67-4a1d-9401-6e4108d1ad9c
+# ╠═68c7fcfc-988a-4233-b3f5-89fd71068220
+# ╟─bb053860-bd2e-44d1-842e-238201697628
+# ╠═8764ad8a-ff40-4987-b3ca-5421df3da0b7
+# ╠═37d67078-0f39-4210-9598-ed6a9d6199b2
+# ╠═7414b7d8-950f-48d1-b596-196bf3997f21
+# ╠═cb27b7ec-f9ec-4306-af4a-f9ad2424a82b
+# ╠═f6b4cbcf-0c46-47b6-859f-4a4012ffa64a
+# ╠═7114a8a4-a940-419d-90b3-fd8872fbc00d
+# ╠═926f6e24-2aea-411d-bf70-f1ddc81f04fc
 # ╟─1ac4f66d-ef4f-4053-bd46-2e385c14c50a
 # ╠═41fdfc2c-116e-4272-a8b8-ecbdb4f31525
 # ╠═48e0c054-1f38-4517-9afc-558155f24d14

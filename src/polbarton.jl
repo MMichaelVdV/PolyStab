@@ -1071,6 +1071,34 @@ end
 (pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, het=het,tm=tm, af=af, fta=fta) 
 end
 
+"""
+	evolving_neutraldeme(d::AbstractDeme, ngen)
+
+Simulate a single random mating deme with mixed ploidy.
+"""
+function evolving_neutraldeme(d::AbstractDeme, ftgmap, ngen; heterozygosities_p = heterozygosities_p, 
+	allelefreqs_p = allelefreqs_p, trait_mean = trait_mean, pf = ploidy_freq, fta = f_trait_agents)
+	het = [heterozygosities_p(d)]
+	af = [allelefreqs_p(d)]
+	tm = [trait_mean(d, ftgmap)]
+	p2 = [ploidy_freq(d)[2]]
+	p3 = [ploidy_freq(d)[3]]
+	p4 = [ploidy_freq(d)[4]]
+	fta = [f_trait_agents(d, ftgmap)]
+	
+	for n=1:ngen
+		d = random_mating(d)
+		#d = unreduced_gamete(d)
+		push!(het, heterozygosities_p(d))
+		push!(af, allelefreqs_p(d))
+		push!(tm, trait_mean(d, ftgmap))
+		push!(p2, ploidy_freq(d)[2])
+		push!(p3, ploidy_freq(d)[3])
+		push!(p4, ploidy_freq(d)[4])
+		push!(fta, f_trait_agents(d, ftgmap))
+	end
+	(het=het, af=af, tm=tm, deme=d, p2=p2, p3=p3, p4=p4, ngen=ngen, fta=fta)
+end
 
 #pollen <-> seed migration
 #assortative mating

@@ -74,6 +74,24 @@ function mating_PnB_a(d::IslandDeme{A}, a::Float64) where A
     d(new_agents)
 end
 
+# ╔═╡ 9d92f46e-a780-4e64-9846-4ab761cd84d3
+us = 0.05
+
+# ╔═╡ 8e760999-921a-41ef-8114-97501c0e46e7
+UGs = [0. 0. 0. 0. ; 1-us us 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
+
+# ╔═╡ d552fb3d-0107-4a6e-b6e4-bdf966e81d87
+a = .0
+
+# ╔═╡ 3f908467-8391-4022-8647-63052fdad508
+b = 0.2
+
+# ╔═╡ 5753cfc6-4f00-4cb4-bc5c-8caacea23d7d
+d = 1.
+
+# ╔═╡ 3fa53803-1651-4639-b118-8cec5dfb2ca2
+p,α,L=0.5,0.27,50
+
 # ╔═╡ aa650c14-ff9f-4f6b-935e-7c9ecf2ff823
 function evolving_islandwbreak_a(d::IslandDeme, M, L, s, ngen; 
 	heterozygosities_p=heterozygosities_p, fit=directional_selection, trait_mean = trait_mean, allelefreqs_p = 
@@ -92,7 +110,7 @@ function evolving_islandwbreak_a(d::IslandDeme, M, L, s, ngen;
 		if popsize(d) < L
 		migrants = rand(Poisson(M))
 		for m in 1:migrants
-			migrant = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],1)[1]
+			migrant = randagent_p(p, α, L, [0., 1., 0., 0.],1)[1]
 			push!(d.agents,migrant)
 		end
 		d = mating_PnB_a(d,s)
@@ -111,15 +129,6 @@ function evolving_islandwbreak_a(d::IslandDeme, M, L, s, ngen;
 	end
 	(pop=pop, deme=d, p2=p2, p3=p3, p4=p4, ngen=c, het=het,tm=tm, af=af, fta=fta) 
 end
-
-# ╔═╡ 9d92f46e-a780-4e64-9846-4ab761cd84d3
-us = 0.2
-
-# ╔═╡ 8e760999-921a-41ef-8114-97501c0e46e7
-UGs = [0. 0. 0. 0. ; 1-us us 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.]
-
-# ╔═╡ d552fb3d-0107-4a6e-b6e4-bdf966e81d87
-a = .5
 
 # ╔═╡ 475064f2-b2f1-4dba-976b-d4b75cf40547
 #dz1, m=[0.01,0.1,1,10], u=0.01
@@ -205,14 +214,15 @@ end
 
 # ╔═╡ 02c3be6a-32f8-4cca-8397-b779899938bb
 begin
-estab2_01 = plot([1,2,3,4],[p1_001,p1_01,p1_1,p1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.2, a=0.5", yerror=[sep1_001, sep1_01, sep1_1, sep1_10])
-plot!([1,2,3,4],[p2_001,p2_01,p2_1,p2_10], label="△z=2", marker = ([:hex :d]), color=:blue, yerror=[sep2_001, sep2_01, sep2_1, sep2_10])
-plot!([1,2,3,4],[p3_001,p3_01,p3_1,p3_10], label="△z=3", marker = ([:hex :d]), color=:red, yerror=[sep3_001, sep3_01, sep3_1, sep3_10])
-plot!([1,2,3,4],[p4_001,p4_01,p4_1,p4_10], label="△z=4", marker = ([:hex :d]), color=:black, yerror=[sep4_001, sep4_01, sep4_1, sep4_10])
+estab2_01 = plot([1,2,3,4],[p1_001,p1_01,p1_1,p1_10], label="△z=1", marker = ([:utriangle :d]), color=:black, title="u=0.05, a=0", yerror=[sep1_001, sep1_01, sep1_1, sep1_10], xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=8, legend=true)
+plot!([1,2,3,4],[p2_001,p2_01,p2_1,p2_10], label="△z=2", marker = ([:square :d]), color=:black, yerror=[sep2_001, sep2_01, sep2_1, sep2_10])
+plot!([1,2,3,4],[p3_001,p3_01,p3_1,p3_10], label="△z=3", marker = ([:circle :d]), color=:black, yerror=[sep3_001, sep3_01, sep3_1, sep3_10])
+plot!([1,2,3,4],[p4_001,p4_01,p4_1,p4_10], label="△z=4", marker = ([:dtriangle :d]), color=:black, yerror=[sep4_001, sep4_01, sep4_1, sep4_10])
 #plot!([1,2,3,4],[p5_001,p5_01,p5_1,p5_10], label="△z=5", marker = ([:hex :d]), color=:blue, ribbon=[sep5_001, sep5_01, sep5_1, sep5_10])
 #plot!([1,2,3,4],[p6_001,p6_01,p6_1,p6_10], label="△z=6", marker = ([:hex :d]), color=:purple, ribbon=[sep6_001, sep6_01, sep6_1, sep6_10])
 xlabel!("Migration rate")
-ylabel!("Probability of tetraploid establishment")
+ylabel!("P estab")
+ylims!((0.,1.))
 #savefig(estab_01, "Estab_01")
 end
 
@@ -257,10 +267,10 @@ end
 
 # ╔═╡ abbca9c1-f65b-4f88-9ebb-713436e70314
 begin
-estab1_01 = plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:hex :d]), color=:green, title="u=0.2, a=.5", yerror=[se1_001, se1_01, se1_1, se1_10])
-plot!([1,2,3,4],[st2_001, st2_01, st2_1, st2_10], label="△z=2", marker = ([:hex :d]), color=:blue, yerror=[se2_001, se2_01, se2_1, se2_10])
-plot!([1,2,3,4],[st3_001, st3_01, st3_1, st3_10], label="△z=3", marker = ([:hex :d]), color=:red, yerror=[se3_001, se3_01, se3_1, se3_10])
-plot!([1,2,3,4],[st4_001, st4_01, st4_1, st4_10], label="△z=4", marker = ([:hex :d]), color=:black, yerror=[se4_001, se4_01, se4_1, se4_10])
+estab1_01 = plot([1,2,3,4],[st1_001, st1_01, st1_1, st1_10], label="△z=1", marker = ([:utriangle :d]), color=:black, title="u=0.05, a=0", yerror=[se1_001, se1_01, se1_1, se1_10],xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10,legend=false)
+plot!([1,2,3,4],[st2_001, st2_01, st2_1, st2_10], label="△z=2", marker = ([:square :d]), color=:black, yerror=[se2_001, se2_01, se2_1, se2_10])
+plot!([1,2,3,4],[st3_001, st3_01, st3_1, st3_10], label="△z=3", marker = ([:circle :d]), color=:black, yerror=[se3_001, se3_01, se3_1, se3_10])
+plot!([1,2,3,4],[st4_001, st4_01, st4_1, st4_10], label="△z=4", marker = ([:dtriangle :d]), color=:black, yerror=[se4_001, se4_01, se4_1, se4_10])
 #plot!([1,2,3,4],[st5_001, st5_01, st5_1, st5_10], label="△z=5", marker = ([:hex :d]), color=:orange, ribbon=[se5_001, se5_01, se5_1, se5_10])
 #plot!([1,2,3,4],[st6_001, st6_01, st6_1, st6_10], label="△z=6", marker = ([:hex :d]), color=:red, ribbon=[se6_001, se6_01, se6_1, se6_10])
 xlabel!("Migration rate")
@@ -270,8 +280,8 @@ end
 
 # ╔═╡ 331c6874-a968-46d1-87aa-32a6019ceb5b
 begin
-	c = plot(estab1_01, estab2_01)
-	#savefig(c, "Estab_005")
+	c = plot(estab1_01, estab2_01, size=(650,400))
+	savefig(c, "Estab_005_a00")
 end
 
 # ╔═╡ Cell order:
@@ -286,6 +296,9 @@ end
 # ╠═8e760999-921a-41ef-8114-97501c0e46e7
 # ╠═9d92f46e-a780-4e64-9846-4ab761cd84d3
 # ╠═d552fb3d-0107-4a6e-b6e4-bdf966e81d87
+# ╠═3f908467-8391-4022-8647-63052fdad508
+# ╠═5753cfc6-4f00-4cb4-bc5c-8caacea23d7d
+# ╠═3fa53803-1651-4639-b118-8cec5dfb2ca2
 # ╠═475064f2-b2f1-4dba-976b-d4b75cf40547
 # ╠═03af42af-5ce4-4a97-8270-5af2338f351a
 # ╠═f80deba9-6f73-4a39-96b4-8b4fcb587065
