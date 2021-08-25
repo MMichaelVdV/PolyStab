@@ -1,4 +1,4 @@
-##### POLYSTAB: INDIVIDUAL-BASED MODELING TO STUDY POLYPLOID ESTABLISHMENT FROM AN ECO-EVO PERSPECTIVE
+#### POLYSTAB: INDIVIDUAL-BASED MODELING TO STUDY POLYPLOID ESTABLISHMENT FROM AN ECO-EVO PERSPECTIVE
 
 This repository contains the individual-based model and accompanying Pluto notebooks with toy simulation for my master dissertation. 
 
