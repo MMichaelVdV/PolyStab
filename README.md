@@ -1,4 +1,4 @@
-#### PolyStab: Individual-based modeling to study popyploid establishment from an eco-evo perspective
+#### PolyStab: Individual-based modeling to study polyploid establishment from an eco-evo perspective
 
 This repository contains an individual-based model and accompanying Pluto notebooks with toy simulations 
 to study polyploid establishment from an integrated eco-evolutionary persepective. 
