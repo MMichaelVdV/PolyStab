@@ -3,7 +3,7 @@
 This repository contains an individual-based model and accompanying Pluto notebooks with toy simulations 
 to study polyploid establishment from an integrated eco-evolutionary persepective. 
 
-Notebooks:
+##### Overview of the Pluto notebooks:
 - scaling_phenotype.jl: More in depth look at phenotype scaler
 - AM.jl: Single deme simulations with assortative mating and/or selfing
 - Env_stoch.jl: Changing environment through time in a single deme
