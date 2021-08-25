@@ -25,12 +25,6 @@ using StatsFuns: logistic
 # ╔═╡ 47183362-97e7-11eb-2573-99a97f304e99
 using PolyStab: Agent, randagent_p, MixedPloidyDeme, trait, evolving_ugdeme, evolving_selectiondeme, heterozygosities_p, allelefreqs_p, evolving_neutraldeme, recombination, random_mating, allelefreqs_p, heterozygosities_p, AbstractDeme, ploidy
 
-# ╔═╡ 0df3cd69-7c87-4148-8b9d-222b227aa684
-begin
-Using Plots, Measures
-default(markersize=1.5, legend=false, title_loc=:left, titlefont=12, grid=false)
-end
-
 # ╔═╡ bd2ab750-7c60-11eb-3cc5-6d57dd448dfd
 md"""##### Minority Cytotype Exclusion in Local Plant Populations (Levin, 1995)"""
 
@@ -273,7 +267,7 @@ end
 stats_3 = grid_search_2(200)
 
 # ╔═╡ 5d85451e-f189-44eb-9a24-463b865b0e97
-Remark: Probability of tetraploid establishment is here caclulated as ratio of simulations where a majority of the individuals of the population are tetraploids after 50 generation to the total number all simulations, and not conditional on a certain population size. This is why P estab starts to drop from a certain value of `u`, since populations will no longer be sustainable due to cytotype load and the total number of established populations will drop (both 2n and 4n). (Could also plot the ratio of 4n to 2n conditional on a certain population size higher than 0)"""md""" 
+#Remark: Probability of tetraploid establishment is here caclulated as ratio of simulations where a majority of the individuals of the population are tetraploids after 50 generation to the total number all simulations, and not conditional on a certain population size. This is why P estab starts to drop from a certain value of `u`, since populations will no longer be sustainable due to cytotype load and the total number of established populations will drop (both 2n and 4n). (Could also plot the ratio of 4n to 2n conditional on a certain population size higher than 0)"""md""" 
 
 # ╔═╡ 99dcebd2-7cd6-11eb-3b96-85bc3a0940d8
 dp_3 = [(stats_3[2][i],stats_3[1][i],stats_3[3][i]) for i in 1:2000]
