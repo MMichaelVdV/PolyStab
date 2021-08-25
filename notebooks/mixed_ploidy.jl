@@ -1093,8 +1093,18 @@ begin
 	ylabel!("\$V_G\$")
 end
 
-# ╔═╡ 20f9a2ae-7c24-11eb-2a8a-493c2e8b3dd5
-(h::Habitat)(demes) = Habitat(h.demes, h.σ, h.θ, h.b, h.dm)
+# ╔═╡ 50310830-342f-11eb-1cf0-ff654c427368
+begin
+	# construct a new deme from an old one, this uses the 'type as function' syntax
+	(d::MixedPloidyDeme)(agents) = MixedPloidyDeme(agents, d.K, d.θ, d.rm, d.Vs, d.u, d.μ)
+	(d::SimpleDeme)(agents) = SimpleDeme(agents, d.K)
+end
+
+# ╔═╡ 66d75f30-342f-11eb-2e72-fdbed6aa1ffd
+@with_kw struct SimpleDeme{A} <: AbstractDeme{A}
+    agents::Vector{A}
+    K ::Int64 = 15
+end
 
 # ╔═╡ 2b000160-342f-11eb-07bc-0f389915fa2a
 # This is the initial thing we need, basic random mating but with gametes of
@@ -1121,6 +1131,9 @@ mutation).
     μ ::T     = 1e-6
 end
 
+# ╔═╡ 20f9a2ae-7c24-11eb-2a8a-493c2e8b3dd5
+(h::Habitat)(demes) = Habitat(h.demes, h.σ, h.θ, h.b, h.dm)
+
 # ╔═╡ 9b9bac30-342f-11eb-120b-9d2e7354f241
 """
     Habitat{D}
@@ -1133,19 +1146,6 @@ the migration aspects of the population genetic environment.
     b ::T = 0.1 #steepness of linear gradient
 	θ ::T = 12.5 #phenotypic optimum in the center
     Dm::T = 250. #number of demes to initialize
-end
-
-# ╔═╡ 50310830-342f-11eb-1cf0-ff654c427368
-begin
-	# construct a new deme from an old one, this uses the 'type as function' syntax
-	(d::MixedPloidyDeme)(agents) = MixedPloidyDeme(agents, d.K, d.θ, d.rm, d.Vs, d.u, d.μ)
-	(d::SimpleDeme)(agents) = SimpleDeme(agents, d.K)
-end
-
-# ╔═╡ 66d75f30-342f-11eb-2e72-fdbed6aa1ffd
-@with_kw struct SimpleDeme{A} <: AbstractDeme{A}
-    agents::Vector{A}
-    K ::Int64 = 15
 end
 
 # ╔═╡ Cell order:

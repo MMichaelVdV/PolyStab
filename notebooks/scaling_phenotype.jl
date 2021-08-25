@@ -53,7 +53,7 @@ md""" #### Simulations for d=0"""
 
 # ╔═╡ 18b2bd9f-2702-4c80-93ca-0e637324479b
 begin
-diploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
+diploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 2500, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
 tetraploid_d0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 0., 0., 1.], 200, d=0.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
 end
 
@@ -65,11 +65,16 @@ end
 
 # ╔═╡ 1927b5f2-fedb-45b7-82b4-2164c0c5e65e
 begin
-dist0=plot(Normal(mean(Sim_diploid_d0.fta[1]), std(Sim_diploid_d0.fta[1])), color=:blue, label="Diploid", title="d=0",xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10)
-plot!(Normal(mean(Sim_tetraploid_d0.fta[1]), std(Sim_tetraploid_d0.fta[1])), color=:red, label="Tetraploid")
-xlabel!("Phenotype before selection")
+dist0=plot(Normal(mean(Sim_diploid_d0.fta[1]), std(Sim_diploid_d0.fta[1])), color=:black, title="Source population",xtickfontsize=10, ytickfontsize=10,xguidefontsize=14, yguidefontsize=14, legendfontsize=10, linewidth=3,label=false)
+#plot!(Normal(mean(Sim_tetraploid_d0.fta[1]), std(Sim_tetraploid_d0.fta[1])), color=:red, label="Tetraploid")
+xlabel!("Phenotype")
 ylabel!("Frequency")
-xlims!(15.,35.)
+xlims!(5.,20.)
+vline!([12.5],colour="black",linestyle=:solid,label="△z=0",linewidth=3)
+vline!([13.5],colour="black",linestyle=:dot,label="△z=1",linewidth=3)
+vline!([14.5],colour="black",linestyle=:dash,label="△z=2",linewidth=3)
+vline!([15.5],colour="black",linestyle=:dashdot,label="△z=3",linewidth=3)
+vline!([16.5],colour="black",linestyle=:dashdotdot,label="△z=4",linewidth=3)
 end
 
 # ╔═╡ c4d1336c-ba1e-40a1-a1e4-0354ef020f2f
@@ -272,6 +277,7 @@ begin
 	diploid_u0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
 	diploid_u05 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
 	diploid_u10 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.90 0.10 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
+	diploid_u20 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.80 0.20 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 25., Vs = 1.)
 end
 
 # ╔═╡ 37d67078-0f39-4210-9598-ed6a9d6199b2
@@ -279,6 +285,7 @@ begin
 Sim_diploid_u0 = evolving_selectiondeme(diploid_u0,trait_exp,1000)
 Sim_diploid_u05 = evolving_selectiondeme(diploid_u05,trait_exp,1000)
 Sim_diploid_u10 = evolving_selectiondeme(diploid_u10,trait_exp,1000)
+Sim_diploid_u20 = evolving_selectiondeme(diploid_u10,trait_exp,1000)
 end
 
 # ╔═╡ 7414b7d8-950f-48d1-b596-196bf3997f21
@@ -298,27 +305,32 @@ end
 begin
 	diploid_2u0 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 0.90 0. 0.10], θ = 25., Vs = 1.)
 	diploid_2u05 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.05 0. 0. ; 0. 0. 0. 0. ; 0. 0.95 0. 0.05], θ = 25., Vs = 1.)
-	diploid_2u10 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.90 0.10 0. 0. ; 0. 0. 0. 0. ; 0. 0.90 0. 0.10], θ = 25., Vs = 1.)
+	diploid_2u10 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.95 0.15 0. 0. ; 0. 0. 0. 0. ; 0. 0.90 0. 0.10], θ = 25., Vs = 1.)
+	diploid_2u20 = MixedPloidyDeme(agents = randagent_p(p, α, L, [0., 1., 0., 0.], 200, d=1.), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [0. 0. 0. 0. ; 0.70 0.30 0. 0. ; 0. 0. 0. 0. ; 0. 0.70 0. 0.30], θ = 25., Vs = 1.)
 end
 
 # ╔═╡ f6b4cbcf-0c46-47b6-859f-4a4012ffa64a
 begin
-Sim_diploid_2u0 = evolving_selectiondeme(diploid_2u0,trait_exp,1000)
-Sim_diploid_2u05 = evolving_selectiondeme(diploid_2u05,trait_exp,1000)
-Sim_diploid_2u10 = evolving_selectiondeme(diploid_2u10,trait_exp,1000)
+Sim_diploid_2u0 = evolving_selectiondeme(diploid_2u0,trait_exp,250)
+#Sim_diploid_2u05 = evolving_selectiondeme(diploid_2u05,trait_exp,1000)
+Sim_diploid_2u10 = evolving_selectiondeme(diploid_2u10,trait_exp,250)
+#Sim_diploid_2u20 = evolving_selectiondeme(diploid_2u10,trait_exp,1000)
 end
 
 # ╔═╡ 7114a8a4-a940-419d-90b3-fd8872fbc00d
 begin
 popsize_2u0 = map(mean, Sim_diploid_2u0.pop)
-popsize_2u05 = map(mean, Sim_diploid_2u05.pop)
+#popsize_2u05 = map(mean, Sim_diploid_2u05.pop)
 popsize_2010 = map(mean, Sim_diploid_2u10.pop)
+#popsize_2020 = map(mean, Sim_diploid_2u20.pop)
 pop12ug = plot(popsize_2u0, grid=false, color=:black, label="u=v=0", title="Population growth, u=v",xtickfontsize=10, ytickfontsize=10,xguidefontsize=16,yguidefontsize=16, legendfontsize=10, legend=:bottomright)
-plot!(popsize_2u05, grid=false, color=:red, label="u=v=0.05")
-plot!(popsize_2010, grid=false, color=:blue, label="u=v=0.10")
+#plot!(popsize_2u05, grid=false, color=:red, label="u=v=0.05")
+plot!(popsize_2010, grid=false, color=:red, label="u=v=0.15")
+#plot!(popsize_2020, grid=false, color=:grey, label="u=v=0.20")
 hline!([diploid_d1.K],label=false,colour="black", linestyle=:dash, linewidth=2)
 xlabel!("\$t\$")
 ylabel!("Population size")
+savefig("popcrash.png")
 end
 
 # ╔═╡ 926f6e24-2aea-411d-bf70-f1ddc81f04fc

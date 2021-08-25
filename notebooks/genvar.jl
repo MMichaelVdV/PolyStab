@@ -26,7 +26,7 @@ md"""### Single deme dynamics of a mixed ploidy population"""
 md""" ##### Initialization of demes with different ploidy levels (haploid, diploid, tetraploid)"""
 
 # ╔═╡ 217c5170-8e52-11eb-175c-c9b8476ae81b
-d_p1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [1., 0., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 12.5, Vs = 1.)
+d_p1 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [1., 0., 0., 0.],2500), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = [1. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 12.5, Vs = 1.)
 
 # ╔═╡ 3f70dcc0-8bfd-11eb-3df6-6709900e71ce
 d_p2 = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.],200), OV = [1. 0. 0. 0. ; 0. 1. 0. 0. ; 0. 0. 0. 0. ; 0. 0. 0. 0.], UG = UG = [0. 0. 0. 0. ; 1. 0. 0. 0. ; 0. 0. 0. 0. ; 0. 1. 0. 0.], θ = 12.5, Vs = 1.)
@@ -311,7 +311,9 @@ end
 
 # ╔═╡ 809cf8b2-9926-11eb-2b5e-d97d23d44531
 begin
-	histogram(stabsel_p1.fta[1], bins = 25, fillalpha = 0.4, title="Haploid start")
+	plot(Normal(mean(stabsel_p1.fta[1]), std(stabsel_p1.fta[1])), label="", title="Haploid")
+	
+	histogram!(stabsel_p1.fta[1], bins = 25, fillalpha = 0.4, title="Haploid start",normalize = :probability)
 	xlabel!("Phenotype")
 end
 
