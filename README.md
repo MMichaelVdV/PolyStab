@@ -1,6 +1,7 @@
-# PolyStab
+# POLYSTAB: INDIVIDUAL-BASED MODELING TO STUDY POLYPOID ESTABLISHMENT FROM AN ECO-EVO PERSPECTIVE
 
-This repository contains the individual-based model and accompanying Pluto notebooks with toy simulations.
+This repository contains the individual-based model and accompanying Pluto notebooks with toy simulation for my master dissertation. 
+
 
 Notebooks:
 - scaling_phenotype.jl: More in depth look at phenotype scaler
