@@ -1,5 +1,7 @@
 # PolyStab
 
+This repository contains the individual-based model and accompanying Pluto notebooks with toy simulations.
+
 Notebooks:
 - scaling_phenotype.jl: More in depth look at phenotype scaler
 - AM.jl: Single deme simulations with assortative mating and/or selfing
