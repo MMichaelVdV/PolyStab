@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.17
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -12,7 +12,7 @@ Random.seed!(123)
 
 # ╔═╡ b93e3ee0-10c8-11eb-3db9-0f2cfebf6f7a
 md"""
-# Migration over a linear habitat
+# Migration in a linear habitat
 
 This notebook contains an extension of single deme population genetics to a linear habitat with migration.
 
@@ -638,7 +638,7 @@ end
 g_quad = quadratic_gradient(Dm)
 
 # ╔═╡ dde40220-1659-11eb-04e5-bfbde2b81208
-g_lin = linear_gradient(Dm,0.5)
+g_lin = linear_gradient(Dm,0.1)
 
 # ╔═╡ 04277ec0-2d21-11eb-0a40-c71b3333b788
 begin
@@ -674,7 +674,7 @@ function initiate_habitat(gradient,b,nd_s)
 end
 
 # ╔═╡ f47f5000-2d2b-11eb-2b47-055dcccaf248
-hab = initiate_habitat(g_lin, 0.5, 25)
+hab = initiate_habitat(g_lin, 0.1, 25)
 
 # ╔═╡ d34571b0-2ea4-11eb-1c44-dfef7bc82957
 md"""
@@ -730,7 +730,7 @@ end
 #end
 
 # ╔═╡ dc134e70-16d5-11eb-2c19-8dc7a5d152b7
-sim_hab = evolving_habitat(hab,10000,1.06,0.5,10^-6,0.50)
+sim_hab = evolving_habitat(hab,2500,1.06,0.5,10^-6,0.50)
 
 # ╔═╡ e30d8380-2ea4-11eb-3971-91192814178e
 md"""
@@ -840,7 +840,7 @@ het_demes, cordsh = f_het_demes(sim_hab)
 # ╔═╡ 5497f602-17fa-11eb-1fae-fbd03f58d6d6
 begin
 	#het_means_p = map(mean, het_demes)
-	p3 = plot(cordsh, het_demes, grid=false, color=:black, label="Z_mean deme")
+	p3 = plot(cordsh, het_demes, grid=false, color=:black, label="Vg_mean deme")
 	hline!([b*σ*sqrt(Vs)], label = "E(V_G)")
 	xlabel!("Space")
 	ylabel!("\$V_G\$")
@@ -981,7 +981,7 @@ end
 
 # ╔═╡ f706af60-2df5-11eb-3a8f-d53b0fbd0456
 """This line simulates data for fig. 2"""
-# PS, GS, BS, SS, PD = expansion_sim(500,50)
+PS, GS, BS, SS, PD = expansion_sim(500,50)
 
 # ╔═╡ e1d305c0-2df6-11eb-1e2c-67d412f00606
 simulated_points = [(a,b) = (SS[i],BS[i]) for i in 1:length(SS)]
@@ -990,18 +990,18 @@ simulated_points = [(a,b) = (SS[i],BS[i]) for i in 1:length(SS)]
 # Note, Polechova & Barton have double logarithmic axes!
 begin
 	x = 0:0.1:60
-	pBS = plot(x,0.15*x, legend = false, xlim=(0,60), ylim=(0,6), xscale=:log10, yscale=:log10)
+	pBS = plot(x,0.15*x, legend = false, xlim=(0,60), ylim=(0,6), xscale=:log10, yscale=:log10, color=:black)
 	xlabel!("N*σ*sqrt(s)")
 	ylabel!("B")
-    colors = [x < 1. ? :red : :black for x in simulated_points]
-    scatter(simulated_points, color=colors)  # I think this should work too, not tested
-	#for (i,point) in enumerate(simulated_points)
-	#		if PD[i] < 1
-	#			scatter!([point], color=:red, label = "expansion")
-	#		else PD[i] > 1
-	#			scatter!([point], color=:black, label = "contraction")
-	#		end
-	#end
+    #colors = [x < 1. ? :red : :black for x in simulated_points]
+    #scatter(simulated_points, color=colors)  # I think this should work too, not tested
+	for (i,point) in enumerate(simulated_points)
+			if PD[i] < 1
+				scatter!([point], color=:red, label = "expansion")
+			else PD[i] > 1
+				scatter!([point], color=:black, label = "contraction")
+			end
+	end
 	pBS
 end
 

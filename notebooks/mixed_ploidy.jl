@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.17
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -62,44 +62,6 @@ end
 abstract type AbstractDeme{A} 
 end
 
-# ╔═╡ 2b000160-342f-11eb-07bc-0f389915fa2a
-# This is the initial thing we need, basic random mating but with gametes of
-# different ploidy levels (we assume to freely fuse).
-"""
-    MixedPloidyDeme{A,T}
-A single random-mating, mixed-ploidy level deme, most of the 'population
-genetic' environment should be implemented at this level (drift, selection,
-mutation). 
-- `K` : Carrying capacity
-- `θ` : Environmental optimum
-- `rm`: Mean Malthusian fitness
-- `Vs`: Variance of stabilizing selection
-- `u` : Unreduced gamete formation rate
-- `μ` : Mutation rate
-"""
-@with_kw struct MixedPloidyDeme{A,T} <: AbstractDeme{A}
-    agents::Vector{A}
-    K ::Int64 = 100
-    θ ::T     = 12.5
-    rm::T     = 1.06
-    Vs::T     = 1/2
-    u ::T     = 0.01
-    μ ::T     = 1e-6
-end
-
-# ╔═╡ 66d75f30-342f-11eb-2e72-fdbed6aa1ffd
-@with_kw struct SimpleDeme{A} <: AbstractDeme{A}
-    agents::Vector{A}
-    K ::Int64 = 15
-end
-
-# ╔═╡ 50310830-342f-11eb-1cf0-ff654c427368
-begin
-	# construct a new deme from an old one, this uses the 'type as function' syntax
-	(d::MixedPloidyDeme)(agents) = MixedPloidyDeme(agents, d.K, d.θ, d.rm, d.Vs, d.u, d.μ)
-	(d::SimpleDeme)(agents) = SimpleDeme(agents, d.K)
-end
-
 # ╔═╡ 71e25e1e-342f-11eb-1d0a-359cb259d7f7
 begin
 Base.length(d::AbstractDeme) = length(d.agents)
@@ -134,8 +96,8 @@ end
 
 # ╔═╡ 94add6a0-342f-11eb-0142-79bf9e0f5a88
 # assumes haploid
-function heterozygosities(d::AbstractDeme, freqs=allelefreq(d)) 
-    map(p->p*(1-p), freqs)
+function heterozygosities(d::AbstractDeme) 
+    map(p->p*(1-p), freqs=allelefreq(d))
 end
 
 # ╔═╡ d42d81f0-3b40-11eb-01ed-6fb3dda13484
@@ -200,9 +162,9 @@ function allelefreqs_p(d::AbstractDeme)
 	for loc in 1:length(freq)
 		s = 0
     	for ag in d.agents
-			for chr in ploidy(ag)
+			for chr in 1:ploidy(ag)
         		if ag.loci[chr][loc] != 0
-            		s += 1
+            		s += 1/ploidy(ag)
 				end
 			end
         end
@@ -213,8 +175,9 @@ function allelefreqs_p(d::AbstractDeme)
 end	
 
 # ╔═╡ 66262ee0-3b46-11eb-0f77-4f65686d8a8b
-function heterozygosities_p(d::AbstractDeme, freqs=allelefreqs_p(d)) 
-    map(p->p*(1-p), freqs)
+function heterozygosities_p(d::AbstractDeme) 
+	freq = allelefreqs_p(d)
+    map(p->p*(1-p), freq)
 end
 
 # ╔═╡ db9c5d80-3ce4-11eb-33c8-01744ab5889f
@@ -333,7 +296,7 @@ end
 
 # ╔═╡ a4b40320-7099-11eb-27cb-1f27ef2645ee
 #Allocates some random probabalities for unreduced gamete formation for 2n, 3n, 4n individuals respectively, for example [0.9,0.1,0.,0.] -> 2n ind has probability of 0.9 to produce 1n gametes, 0.1 for 2n (unreduced) gamete,...this doesn't take into account aneuploid gametes yet.
-UG = UnreducedGamete([[0.9,0.1,0.,0.],[0.,0.,0.,0.],[0.0,1.,0.0,0.]])
+UG = UnreducedGamete([[0.95,0.05,0.,0.],[0.,0.,0.,0.],[0.0,1.,0.0,0.]])
 
 # ╔═╡ 940db692-70aa-11eb-1276-9d757f1ed1ba
 #On the rows/columns (symmetric matrix) are the ploidy levels of the gametes to be combined (1n to 4n).The upper bound is now at 4n, all ploidy levels above are not viable (ie. combination of 2n and 3n gamete has 0 viability).
@@ -816,7 +779,7 @@ begin
 end
 
 # ╔═╡ 3147a3b0-4097-11eb-34be-bf35f43bd3e1
-md""" ## To be continued"""
+md""" ## Mutation To be continued"""
 
 # ╔═╡ b42552a0-3e76-11eb-3ee2-a5bf1aabcff6
 function mutate(d::AbstractDeme, a::Agent) 
@@ -849,32 +812,16 @@ end
 # ╔═╡ 926a0e2e-7c1a-11eb-3c33-cdaa406618c4
 md""" ## Multiple demes"""
 
-# ╔═╡ 9b9bac30-342f-11eb-120b-9d2e7354f241
-"""
-    Habitat{D}
-A 1-dimensional habitat, i.e. an array of connected demes. This implements
-the migration aspects of the population genetic environment.
-"""
-@with_kw struct Habitat{D,T}
-    demes::Vector{D}
-    σ ::T = 1/2 #variance of dispersal
-    b ::T = 0.1 #steepness of linear gradient
-	θ ::T = 12.5 #phenotypic optimim in the center
-    Dm::T = 250. #number of demes to initialize
-end
-
 # ╔═╡ dc976fe0-7c1d-11eb-2224-33418463cae8
 d_p
 
 # ╔═╡ a1bee470-7c1d-11eb-019e-09dcff0c5c73
 habi = Habitat(demes=[d_p])
 
-# ╔═╡ 20f9a2ae-7c24-11eb-2a8a-493c2e8b3dd5
-(h::Habitat)(demes) = Habitat(h.demes, h.σ, h.θ, h.b, h.dm)
-
 # ╔═╡ ce14f100-4012-11eb-0daf-19617768225e
+ms"""
 function random_walk(h::Habitat, p)
-	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 45, [2], 0, d=2.)), θ=i.θ) for i in h.demes])
+	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 50, [2], 0, d=2.)), θ=i.θ) for i in h.demes])
     newdemes = similar(h.demes)
     for (i, deme) in enumerate(h.demes)
         for agent in deme.agents
@@ -889,6 +836,76 @@ function random_walk(h::Habitat, p)
     end
     #Habitat(demes=newdemes, h.σ, h.b, h.θ, h.Dm)
 	hab
+end
+"""
+
+# ╔═╡ e915ce50-8196-11eb-1829-432c796fdc53
+begin
+	emptycopy(d::MixedPloidyDeme{A,T}) where A where T = MixedPloidyDeme(A[], d.K, d.θ, d.rm, d.Vs, d.u, d.μ)
+	emptycopy(h::Habitat) = Habitat(emptycopy.(h.demes), h.σ, h.b, h.θ, h.Dm)
+end
+
+# ╔═╡ 91560d40-8198-11eb-002a-b5acad3c46b1
+function random_walk(h::Habitat, p)
+    new_h = emptycopy(h)
+    for (i, deme) in enumerate(h.demes)
+        for agent in deme.agents
+            step = rand() < p ? rand([-1,1]) : 0 
+            if step == -1 && i == 1
+                step = 0
+            elseif step == 1  && i == length(h)
+                step = 0
+            end
+            push!(new_h.demes[i+step], agent)
+        end
+    end
+    new_h
+end
+
+# ╔═╡ 43dab1b0-8198-11eb-1e6d-096172f2c4dd
+d_p
+
+# ╔═╡ 48776b50-8198-11eb-1417-dfd30174a3cd
+emptycopy(d_p)
+
+# ╔═╡ 8125f230-8195-11eb-2542-df4f24aa9a52
+function Gaussian_dispersal(h::Habitat,σ)
+    new_h = emptycopy(h)
+	dist = Normal(0,σ)
+	dist_trunc = truncated(dist,-2*σ,2*σ)
+	bin_1 = pdf(dist, σ)
+	for (i, deme) in enumerate(h.demes)
+        for agent in deme.agents
+            step = -bin_1 < rand(dist_trunc) < bin_1  ?  0 : rand([-1,1])
+            if step == -1 && i == 1
+                step = 0
+            elseif step == 1  && i == length(h)
+                step = 0
+            end
+            push!(new_h.demes[i+step].agents, agent)
+        end
+    end
+    new_h
+end
+
+# ╔═╡ 832f7dce-8195-11eb-30e6-8fb1533073ae
+function Cauchy_dispersal(h::Habitat,σ)
+    new_h = emptycopy(h)
+	dist = Cauchy(0,σ)
+	dist_trunc = truncated(dist,-2*σ,2*σ)
+	bin_1 = pdf(dist, σ)
+	for (i, deme) in enumerate(h.demes)
+        for agent in deme.agents
+            step = -bin_1 < rand(dist_trunc) < bin_1  ?  0 : rand([-1,1])
+            if step == -1 && i == 1
+                step = 0
+            elseif step == 1  && i == length(h)
+                step = 0
+            end
+            push!(new_h.demes[i+step], agent)
+        end
+    end
+    new_h
 end
 
 # ╔═╡ d124a200-4012-11eb-3644-2be0a62eab74
@@ -907,8 +924,8 @@ g_lin = linear_gradient(habi)
 function initiate_habitat(gradient)
 	"""The aim should be to initiate a population for nd_s demes on a linear gradient (with slope b) and with "optimal genetic variance" where one half of the genes are adapted, meaning their clines take the form and spacing as assumed for the deterministic model under linkage equilibrium"""
 	
-	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 45, [2], 0, d=2.)), θ=i) for i in gradient])
-	for a in randagent_p(0.5, 0.5, 45, [2], 100, d=2.)
+	hab = Habitat(demes=[MixedPloidyDeme(agents=(randagent_p(0.5, 0.5, 50, [2], 0, d=2.)), θ=i) for i in gradient])
+	for a in randagent_p(0.5, 0.5, 50, [2], 100, d=2.)
 	push!(hab.demes[Int(hab.Dm/2)].agents, a)
 	end
 
@@ -928,7 +945,7 @@ hab.demes[1]
 function evolving_habitat(h::Habitat{D}, ngen, UG, OV) where D
 	for n = 1:ngen
 		h = random_walk(h,0.5)
-		#h = Gaussian_dispersal(h,σ)
+		#ih = Gaussian_dispersal(h,σ)
 		new_h = Vector{D}(undef, length(h))
 		for (i, d) in enumerate(h.demes)
 			d = mating_PnB(d,UG,OV)
@@ -944,7 +961,7 @@ end
 Base.length(h::Habitat) = length(h.demes)
 
 # ╔═╡ 0832b7f0-4013-11eb-0d7e-d3f77e87aa9b
-sim_hab = evolving_habitat(hab, 100, UG, OV)
+sim_hab = evolving_habitat(hab, 3000, UG, OV)
 
 # ╔═╡ f39e2370-7c2a-11eb-0cd6-3775f3c203ed
 pop_sizes = [length(deme) for deme  in sim_hab[1].demes]
@@ -987,7 +1004,7 @@ end
 
 # ╔═╡ 0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
 begin
-	anim_range = @animate for i ∈ 1:100
+	anim_range = @animate for i ∈ 1:1
 		sim_habA = evolving_habitat(hab,i,UG,OV)
 		#if i != 1
 		#sim_habA = evolving_habitat(sim_habA[1],1,1.06,0.5,10^-6,0.50)
@@ -1017,7 +1034,7 @@ function f_trait_agents(sim_hab)
 	cordst = []
 	for (i, deme) in enumerate(sim_hab[1].demes)
 		for agent in deme.agents
-			t = sum(agent)
+			t = trait(agent)
 			p = (i,t)
 			push!(cordst,i)
 			push!(trait_agents,t)
@@ -1040,6 +1057,95 @@ begin
 	plot!(cordst,trait_agents, label="Z agents")
 	xlabel!("Space")
 	ylabel!("Trait Z")
+end
+
+# ╔═╡ a7efee70-7fa6-11eb-3811-55a84a7697b7
+function f_het_demes(sim_hab)
+	het_demes = []
+	cordsh = []
+	for (i, deme) in enumerate(sim_hab[1].demes)
+	if length(deme) != 0
+		het = 0.5^2*sum(heterozygosities_p(deme))
+		push!(cordsh,i)
+		push!(het_demes,het)
+	else
+		push!(cordsh,i)
+		push!(het_demes,0)
+		end
+	end
+	het_demes, cordsh
+end
+
+# ╔═╡ 7994c1a0-8680-11eb-1044-1b13b51f4831
+
+
+# ╔═╡ 78b5d350-8680-11eb-20e7-4167f0e16af6
+
+
+# ╔═╡ a1fc5762-7fa6-11eb-2b9f-799f43e01b8a
+begin
+	#het_means_p = map(mean, het_demes)
+	het_demes, cordsh = f_het_demes(sim_hab)
+
+	p3 = plot(cordsh, het_demes, grid=false, color=:black, label="Vg_mean deme")
+	hline!([0.1*0.5*sqrt(0.5)], label = "E(V_G)") #b*σ*sqrt(Vs)
+	xlabel!("Space")
+	ylabel!("\$V_G\$")
+end
+
+# ╔═╡ 50310830-342f-11eb-1cf0-ff654c427368
+begin
+	# construct a new deme from an old one, this uses the 'type as function' syntax
+	(d::MixedPloidyDeme)(agents) = MixedPloidyDeme(agents, d.K, d.θ, d.rm, d.Vs, d.u, d.μ)
+	(d::SimpleDeme)(agents) = SimpleDeme(agents, d.K)
+end
+
+# ╔═╡ 66d75f30-342f-11eb-2e72-fdbed6aa1ffd
+@with_kw struct SimpleDeme{A} <: AbstractDeme{A}
+    agents::Vector{A}
+    K ::Int64 = 15
+end
+
+# ╔═╡ 2b000160-342f-11eb-07bc-0f389915fa2a
+# This is the initial thing we need, basic random mating but with gametes of
+# different ploidy levels (we assume to freely fuse).
+"""
+    MixedPloidyDeme{A,T}
+A single random-mating, mixed-ploidy level deme, most of the 'population
+genetic' environment should be implemented at this level (drift, selection,
+mutation). 
+- `K` : Carrying capacity
+- `θ` : Environmental optimum
+- `rm`: Mean Malthusian fitness
+- `Vs`: Variance of stabilizing selection
+- `u` : Unreduced gamete formation rate
+- `μ` : Mutation rate
+"""
+@with_kw struct MixedPloidyDeme{A,T} <: AbstractDeme{A}
+    agents::Vector{A}
+    K ::Int64 = 100
+    θ ::T     = 12.5
+    rm::T     = 1.06
+    Vs::T     = 1/2
+    u ::T     = 0.01
+    μ ::T     = 1e-6
+end
+
+# ╔═╡ 20f9a2ae-7c24-11eb-2a8a-493c2e8b3dd5
+(h::Habitat)(demes) = Habitat(h.demes, h.σ, h.θ, h.b, h.dm)
+
+# ╔═╡ 9b9bac30-342f-11eb-120b-9d2e7354f241
+"""
+    Habitat{D}
+A 1-dimensional habitat, i.e. an array of connected demes. This implements
+the migration aspects of the population genetic environment.
+"""
+@with_kw struct Habitat{D,T}
+    demes::Vector{D}
+    σ ::T = 1/2 #variance of dispersal
+    b ::T = 0.1 #steepness of linear gradient
+	θ ::T = 12.5 #phenotypic optimum in the center
+    Dm::T = 250. #number of demes to initialize
 end
 
 # ╔═╡ Cell order:
@@ -1134,6 +1240,12 @@ end
 # ╠═a1bee470-7c1d-11eb-019e-09dcff0c5c73
 # ╠═20f9a2ae-7c24-11eb-2a8a-493c2e8b3dd5
 # ╠═ce14f100-4012-11eb-0daf-19617768225e
+# ╠═91560d40-8198-11eb-002a-b5acad3c46b1
+# ╠═e915ce50-8196-11eb-1829-432c796fdc53
+# ╠═43dab1b0-8198-11eb-1e6d-096172f2c4dd
+# ╠═48776b50-8198-11eb-1417-dfd30174a3cd
+# ╠═8125f230-8195-11eb-2542-df4f24aa9a52
+# ╠═832f7dce-8195-11eb-30e6-8fb1533073ae
 # ╠═eb36ad90-7c27-11eb-0ab3-33969b64dc36
 # ╠═39a60612-7c28-11eb-324a-238466b5c0aa
 # ╠═d124a200-4012-11eb-3644-2be0a62eab74
@@ -1145,11 +1257,15 @@ end
 # ╠═0832b7f0-4013-11eb-0d7e-d3f77e87aa9b
 # ╠═f39e2370-7c2a-11eb-0cd6-3775f3c203ed
 # ╠═6c282e70-7c2c-11eb-2a89-8971cf1b19f0
-# ╟─ce005ba0-7c2b-11eb-0037-655fb8d4d398
-# ╟─3238bff0-7c2b-11eb-1e9e-07866c41d6f4
+# ╠═ce005ba0-7c2b-11eb-0037-655fb8d4d398
+# ╠═3238bff0-7c2b-11eb-1e9e-07866c41d6f4
 # ╠═0f7d5380-4013-11eb-2a3b-614df9653550
 # ╠═0cf49a80-7cd4-11eb-2837-4bdbf5b5b319
 # ╠═375696f0-4013-11eb-1779-677909ec6e11
 # ╠═472b52f0-4013-11eb-1e90-4775755333ef
-# ╠═3ddde280-4013-11eb-39a3-130d6ec349ff
-# ╠═51427c00-4013-11eb-2be7-511a95abdf44
+# ╟─3ddde280-4013-11eb-39a3-130d6ec349ff
+# ╟─51427c00-4013-11eb-2be7-511a95abdf44
+# ╠═a7efee70-7fa6-11eb-3811-55a84a7697b7
+# ╠═7994c1a0-8680-11eb-1044-1b13b51f4831
+# ╠═78b5d350-8680-11eb-20e7-4167f0e16af6
+# ╠═a1fc5762-7fa6-11eb-2b9f-799f43e01b8a
