@@ -23,7 +23,7 @@ using Measures
 md""" ##### Simulations with mixed ploidy populations along a linear gradient."""
 
 # ╔═╡ 381b957c-e4d7-46bd-b164-c26ce9f3bf7c
-d = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.], 0), K=25,  OV = [1.0 0. 0.0 0.0; 0. 1.0 0.0 0.0; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0], UG = [0.0 0.0 0.0 0.0; 1.0 0.0 0.0 0.0; 0. 0. 0. 0.; 0. 1. 0.0 0.], Vs=1.)
+d = MixedPloidyDeme(agents = randagent_p(0.5, 0.5, 50, [0., 1., 0., 0.], 0), K=25,  OV = [1.0 0. 0.0 0.0; 0. 1.0 0.0 0.0; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0], UG = [0.0 0.0 0.0 0.0; 0.92 0.08 0.0 0.0; 0. 0. 0. 0.; 0. 1.0 0.0 0.], Vs=1.)
 
 # ╔═╡ 22341570-8e62-11eb-2dc0-919c8bbaeb55
 habi = Habitat(demes=[d], Dm=250., b=.1, σ=0.5)
@@ -107,6 +107,12 @@ begin
 	p4h2d = heatmap(reshape(ppf4b, 1, length(ppf4b)), c=cgrad([:white,:blue,:green,:red]), clim= (0.,4.))
 
 end
+
+# ╔═╡ 39ceadd2-cf83-4d42-b880-e4a91bbea2a4
+env(deme)=deme.θ
+
+# ╔═╡ 9f5a72e1-3f6b-4c9a-88a9-dc01ca35adfc
+heatmap(reshape(env.(sim_hab[1].demes),1,250),c=cgrad([:white,:black]))
 
 # ╔═╡ 30ebd7fd-2c6b-4e53-a664-be146460bc90
 plot(ph2d,p1h2d,p2h2d,p3h2d,p4h2d, layout = (5,1))
@@ -200,12 +206,12 @@ begin
 		#hline!([K*(1-(σ*b)*(1/(2*sqrt(Vs)*rm)))], label = "Expected pop size")
 		#vline!([Dm/2], label = "Starting deme")
 		#plot!([margin]*5, color=:yellow, label = "Deterministic range margin")
-		plot(ppf1, grid=false, color=:blue, label="Diploid", legend=false)
-		plot!(ppf2, grid=false, color=:green, label="Triploid")
+		plot(ppf1, grid=false, color=:blue, label="Diploid")
+		#plot!(ppf2, grid=false, color=:green, label="Triploid")
 		plot!(ppf3, grid=false, color=:red, label="Tetraploid")
 	
-		#xlabel!("Space")
-		#ylabel!("Population size N")
+		xlabel!("Space")
+		ylabel!("Population size")
 		
 	end every 1
 	gif(anim_range, "popsize.gif", fps = 4)
@@ -267,7 +273,7 @@ end
 # ╔═╡ 5df4d750-d4b9-4d05-9a94-0eba9b3e1165
 begin
 plot(p1,p1h,p1t,layout=(3,1), size=(400,1000), margin=5mm)
-savefig("linhabdiploid.png")
+#savefig("linhabdiploid.png")
 end
 
 # ╔═╡ 598b6c2c-9eeb-4907-932e-f359839b06f5
@@ -415,6 +421,8 @@ end
 # ╠═5df4d750-d4b9-4d05-9a94-0eba9b3e1165
 # ╠═e34a6b20-8efc-11eb-059d-397e876bd4bc
 # ╠═ca5f656c-1c71-4fe8-84e8-085ea64338ed
+# ╠═9f5a72e1-3f6b-4c9a-88a9-dc01ca35adfc
+# ╠═39ceadd2-cf83-4d42-b880-e4a91bbea2a4
 # ╠═30ebd7fd-2c6b-4e53-a664-be146460bc90
 # ╠═24e1603f-8934-4a8f-a5c5-216f5dedef46
 # ╠═82bcd140-8efb-11eb-1d4a-cf573d3bffe0
