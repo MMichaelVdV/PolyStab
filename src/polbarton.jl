@@ -39,11 +39,11 @@ end
 """
     MixedPloidyDeme{A,T}
 
-A single mixed-ploidy deme, most of the 'population
+Single mixed-ploidy deme, most of the 'population
 genetic' environment is implemented at this level (drift, selection,
 mutation). OV: Viability matrix, a symmetric matrix that contains the viability
 of offspring for each possible combination of gametes. Ug: Unreduced gamete
-formation matrix, a matrix that contains the probability of unreduced gametes
+formation rate matrix, a matrix that contains the probability of unreduced gamete formation
 for each level of ploidy in the population.
 
 - `K` : Carrying capacity
@@ -120,10 +120,6 @@ end
     Habitat2D{D}
 
 Two-dimensional habitat (matrix of connected demes).
-- `σ` : Variance of dispersal
-- `b` : Steepness of linear gradient
-- `θ` : Phenotypic optimum in the central deme of the habitat
-- `Dm` : Number of demes
 """
 @with_kw struct Habitat2D{D,T}
     demes::Matrix{D}
@@ -195,13 +191,6 @@ expected_heterozygosity(H₀, t, N) = ((1.0-1.0/N)^t)*H₀
 #Mating:
 
 """
-	viability(a::Agent, b::Agent, d::deme)
-"""
-function viability(a::Agent, b::Agent, d::AbstractDeme)
-	return d.OV[ploidy(a), ploidy(b)]
-end
-
-"""
 	recombination(a::Agent)
 
 Free recombination between loci in a mixed ploidy population. 
@@ -252,9 +241,18 @@ function gametogenesis(a::Agent, d::AbstractDeme)
 end	
 
 """
+	viability(a::Agent, b::Agent, d::deme)
+After fusing of gametes, calculate the viability of resulting individual. For example the viability of
+a triploid individual is by default set to 0, diploid and tetraploid individuals set to 1.
+"""
+function viability(a::Agent, b::Agent, d::AbstractDeme)
+	return d.OV[ploidy(a), ploidy(b)]
+end
+
+"""
 	meiosis(a::Agent,c)
 
-Meiosis in a diploid.
+UNDER CONSTRUCTION. Meiosis in a diploid.
 - `c` : Recombination rate
 """
 function meiosis(a::Agent,c)
